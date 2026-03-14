@@ -1,0 +1,69 @@
+/* Claymorphism Design System: "Puffy & Squishy" */
+
+:root {
+  --clay-bg: #fdf6f0;
+  --clay-primary: #ff9a9e;
+  --clay-secondary: #a18cd1;
+  --clay-success: #84fab0;
+  --clay-surface: #ffffff;
+  --clay-shadow-outer: rgba(174, 174, 192, 0.4);
+  --clay-shadow-inner-light: rgba(255, 255, 255, 0.7);
+  --clay-shadow-inner-dark: rgba(0, 0, 0, 0.05);
+}
+
+.card {
+  background: var(--clay-surface);
+  border-radius: 2rem;
+  padding: 2rem;
+  box-shadow: 
+    8px 8px 16px var(--clay-shadow-outer), 
+    inset 8px 8px 12px var(--clay-shadow-inner-light),
+    inset -8px -8px 12px var(--clay-shadow-inner-dark);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  will-change: transform, box-shadow;
+}
+
+/* LOD (Layer of Detail) Shadows: Simplify during scroll */
+.scrolling .card {
+  box-shadow: 4px 4px 8px var(--clay-shadow-outer);
+}
+
+.button {
+  background: var(--clay-primary);
+  border-radius: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  box-shadow: 
+    4px 4px 8px var(--clay-shadow-outer), 
+    inset 4px 4px 8px var(--clay-shadow-inner-light),
+    inset -4px -4px 8px var(--clay-shadow-inner-dark);
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
+}
+
+.button:active {
+  transform: scale(0.92);
+  box-shadow: 
+    2px 2px 4px var(--clay-shadow-outer), 
+    inset 2px 2px 4px var(--clay-shadow-inner-light),
+    inset -2px -2px 4px var(--clay-shadow-inner-dark);
+}
+
+.input {
+  background: var(--clay-bg);
+  border-radius: 1.2rem;
+  padding: 0.75rem 1rem;
+  border: none;
+  width: 100%;
+  box-shadow: 
+    inset 4px 4px 8px var(--clay-shadow-outer), 
+    inset -4px -4px 8px var(--clay-shadow-inner-light);
+  outline: none;
+}
+
+.puffyText {
+  color: #555;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+}
