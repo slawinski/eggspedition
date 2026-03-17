@@ -3,13 +3,14 @@ import { useState } from 'react'
 import { useServerFn } from '@tanstack/react-start'
 import { loginServerFn } from '../services/auth.api'
 import clay from '../styles/clay.module.css'
+
 import { z } from 'zod'
 
 export const Route = createFileRoute('/login')({
-  validateSearch: (search: Record<string, unknown>) => ({
-    returnTo: search.returnTo as string | undefined,
-    name: search.name as string | undefined,
-    quantity: search.quantity as string | undefined,
+  validateSearch: z.object({
+    returnTo: z.string().optional(),
+    name: z.string().optional(),
+    quantity: z.string().optional(),
   }),
   component: LoginComponent,
 })

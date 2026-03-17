@@ -1,6 +1,7 @@
 import { SignJWT, jwtVerify } from 'jose'
 import { randomBytes } from 'crypto'
-import { Session, sessionSchema } from './schemas'
+import type { Session } from './schemas'
+import { sessionSchema } from './schemas'
 
 const secret = new TextEncoder().encode(process.env.AUTH_SECRET!)
 

@@ -4,7 +4,7 @@ import { users, households, memberships, categories, stores, groceryItems, house
 
 export const userSchema = createSelectSchema(users)
 export const insertUserSchema = createInsertSchema(users, {
-  email: (s) => s.email.email(),
+  email: z.string().email(),
 })
 
 export const householdSchema = createSelectSchema(households)

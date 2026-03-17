@@ -4,6 +4,7 @@ import { addGroceryItemFn, getCategoriesFn, getStoresFn } from '../services/groc
 import styles from '../styles/clay.module.css'
 import { Plus, Tag, Store as StoreIcon, Hash } from 'lucide-react'
 import { z } from 'zod'
+import type { Category, Store } from '../lib/schemas'
 
 const addItemSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -62,7 +63,7 @@ export default function AddItemForm() {
 
     const result = addItemSchema.safeParse({ name, quantity, categoryId, storeId })
     if (!result.success) {
-      setError(result.error.errors[0].message)
+      setError(result.error.issues[0].message)
       return
     }
 
@@ -118,7 +119,7 @@ export default function AddItemForm() {
               className={`${styles.input} !py-1 text-sm appearance-none`}
             >
               <option value="">Category...</option>
-              {categories?.map(c => (
+              {categories?.map((c: Category) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
@@ -131,7 +132,7 @@ export default function AddItemForm() {
               className={`${styles.input} !py-1 text-sm appearance-none`}
             >
               <option value="">Store...</option>
-              {stores?.map(s => (
+              {stores?.map((s: Store) => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>

@@ -13,6 +13,7 @@ import {
   getHouseholdLogs,
 } from './grocery.service'
 import { z } from 'zod'
+import { zodValidator } from '@tanstack/zod-adapter'
 import { signalEmitter } from '../lib/signals'
 
 export const getGroceryItemsFn = createServerFn({ method: 'GET' })
@@ -22,47 +23,51 @@ export const getGroceryItemsFn = createServerFn({ method: 'GET' })
   })
 
 export const getGroceryItemsGroupedFn = createServerFn({ method: 'GET' })
+  .inputValidator(zodValidator(z.enum(['category', 'store'])))
   .middleware([protectedMiddleware])
-  .validator(z.enum(['category', 'store']))
   .handler(async ({ data, context }) => {
     return await getGroceryItemsGrouped(context.session.householdId, data)
   })
 
 export const addGroceryItemFn = createServerFn({ method: 'POST' })
-  .middleware([protectedMiddleware])
-  .validator(
-    z.object({
-      name: z.string().min(1),
-      quantity: z.string().optional(),
-      categoryId: z.string().uuid().optional(),
-      storeId: z.string().uuid().optional(),
-    })
+  .inputValidator(
+    zodValidator(
+      z.object({
+        name: z.string().min(1),
+        quantity: z.string().optional(),
+        categoryId: z.string().uuid().optional(),
+        storeId: z.string().uuid().optional(),
+      })
+    )
   )
+  .middleware([protectedMiddleware])
   .handler(async ({ data, context }) => {
     return await addGroceryItem(context.session.householdId, context.session.userId, data)
   })
 
-export const updateGroceryItemFn = createServerFn({ method: 'PATCH' })
-  .middleware([protectedMiddleware])
-  .validator(
-    z.object({
-      id: z.string().uuid(),
-      data: z.object({
-        name: z.string().min(1).optional(),
-        quantity: z.string().optional(),
-        categoryId: z.string().uuid().optional().nullable(),
-        storeId: z.string().uuid().optional().nullable(),
-        checked: z.enum(['true', 'false']).optional(),
-      }),
-    })
+export const updateGroceryItemFn = createServerFn({ method: 'POST' })
+  .inputValidator(
+    zodValidator(
+      z.object({
+        id: z.string().uuid(),
+        data: z.object({
+          name: z.string().min(1).optional(),
+          quantity: z.string().optional(),
+          categoryId: z.string().uuid().optional().nullable(),
+          storeId: z.string().uuid().optional().nullable(),
+          checked: z.enum(['true', 'false']).optional(),
+        }),
+      })
+    )
   )
+  .middleware([protectedMiddleware])
   .handler(async ({ data, context }) => {
     return await updateGroceryItem(data.id, context.session.userId, data.data)
   })
 
 export const deleteGroceryItemFn = createServerFn({ method: 'POST' })
+  .inputValidator(zodValidator(z.string().uuid()))
   .middleware([protectedMiddleware])
-  .validator(z.string().uuid())
   .handler(async ({ data: id, context }) => {
     return await deleteGroceryItem(id, context.session.userId)
   })
@@ -74,8 +79,8 @@ export const getCategoriesFn = createServerFn({ method: 'GET' })
   })
 
 export const addCategoryFn = createServerFn({ method: 'POST' })
+  .inputValidator(zodValidator(z.string().min(1)))
   .middleware([protectedMiddleware])
-  .validator(z.string().min(1))
   .handler(async ({ data: name, context }) => {
     return await addCategory(context.session.householdId, name)
   })
@@ -87,8 +92,8 @@ export const getStoresFn = createServerFn({ method: 'GET' })
   })
 
 export const addStoreFn = createServerFn({ method: 'POST' })
+  .inputValidator(zodValidator(z.string().min(1)))
   .middleware([protectedMiddleware])
-  .validator(z.string().min(1))
   .handler(async ({ data: name, context }) => {
     return await addStore(context.session.householdId, name)
   })

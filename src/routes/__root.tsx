@@ -2,7 +2,8 @@ import { HeadContent, Scripts, createRootRouteWithContext, Outlet } from '@tanst
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import type { QueryClient } from '@tanstack/react-query'
-import { authMiddleware } from '../lib/middleware'
+import type { Session } from '../lib/schemas'
+import { getSessionServerFn } from '../services/auth.api'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 
@@ -12,8 +13,12 @@ const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getIte
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
+  session: Session | null
 }>()({
-  middlewares: [authMiddleware],
+  beforeLoad: async () => {
+    const session = await getSessionServerFn()
+    return { session }
+  },
   head: () => ({
     meta: [
       {

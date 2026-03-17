@@ -1,7 +1,8 @@
 import { db } from '../db'
 import { groceryItems, categories, stores, householdLogs, households, memberships } from '../db/schema'
-import { eq, and, desc } from 'drizzle-orm'
-import { GroceryItem, Category, Store, insertGroceryItemSchema, insertCategorySchema, insertStoreSchema } from '../lib/schemas'
+import { eq, desc } from 'drizzle-orm'
+import type { GroceryItem, Category, Store } from '../lib/schemas'
+import { insertGroceryItemSchema, insertCategorySchema, insertStoreSchema } from '../lib/schemas'
 import { notifyHousehold } from '../lib/signals'
 
 export async function getOrCreateDefaultHousehold(userId: string) {
@@ -20,6 +21,10 @@ export async function getOrCreateDefaultHousehold(userId: string) {
     .insert(households)
     .values({ name: 'My Household' })
     .returning()
+
+  if (!newHousehold) {
+    throw new Error('Failed to create default household')
+  }
 
   await db.insert(memberships).values({
     userId,

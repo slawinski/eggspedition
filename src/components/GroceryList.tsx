@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getGroceryItemsFn, updateGroceryItemFn, deleteGroceryItemFn, householdSignalFn } from '../services/grocery.api'
-import { GroceryItem } from '../lib/schemas'
+import type { GroceryItem } from '../lib/schemas'
 import styles from '../styles/clay.module.css'
 import { CheckCircle2, Circle, Trash2, Tag, Store as StoreIcon } from 'lucide-react'
+import { useRef, useState, useEffect } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { useRef, useState, useEffect, useCallback } from 'react'
 
 function useHouseholdSignals() {
   const queryClient = useQueryClient()
@@ -45,9 +45,9 @@ function useHouseholdSignals() {
 export default function GroceryList() {
   const queryClient = useQueryClient()
   useHouseholdSignals()
-  const parentRef = useRef<HTMLDivElement>(null)
   const [isScrolling, setIsScrolling] = useState(false)
-  const scrollTimeout = useRef<Timer | null>(null)
+  const scrollTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const parentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const el = parentRef.current
@@ -71,8 +71,8 @@ export default function GroceryList() {
   const rowVirtualizer = useVirtualizer({
     count: items?.length || 0,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 90,
-    overscan: 5,
+    estimateSize: () => 100, // Slightly larger estimate for safety
+    overscan: 10,
   })
 
   const updateMutation = useMutation({
@@ -86,7 +86,7 @@ export default function GroceryList() {
       )
       return { previousItems }
     },
-    onError: (err, newItem, context) => {
+    onError: (_err, _newItem, context) => {
       queryClient.setQueryData(['grocery-items'], context?.previousItems)
     },
     onSettled: () => {
@@ -104,7 +104,7 @@ export default function GroceryList() {
       )
       return { previousItems }
     },
-    onError: (err, id, context) => {
+    onError: (_err, _id, context) => {
       queryClient.setQueryData(['grocery-items'], context?.previousItems)
     },
     onSettled: () => {
@@ -117,7 +117,7 @@ export default function GroceryList() {
 
   if (!items || items.length === 0) {
     return (
-      <div className={`${styles.card} text-center py-12`}>
+      <div className={`${styles.card} text-center py-12 !p-8`}>
         <p className="text-[var(--sea-ink-soft)]">Your list is empty. Add something yummy!</p>
       </div>
     )
@@ -128,7 +128,7 @@ export default function GroceryList() {
       ref={parentRef}
       className={`max-h-[60vh] overflow-auto pr-2 custom-scrollbar ${isScrolling ? styles.scrolling : ''}`}
       style={{
-        contain: 'strict',
+        position: 'relative',
       }}
     >
       <div
@@ -152,38 +152,41 @@ export default function GroceryList() {
                 width: '100%',
                 height: `${virtualRow.size}px`,
                 transform: `translateY(${virtualRow.start}px)`,
-                paddingBottom: '16px',
+                paddingBottom: '12px', // Space between cards
               }}
             >
-              <div className={`${styles.card} flex items-center justify-between p-4 sm:p-5 transition-all hover:translate-y-[-2px] h-full`}>
+              <div 
+                className={`${styles.card} flex items-center justify-between !p-4 sm:!p-5 transition-all hover:translate-y-[-2px] h-[calc(100%-12px)]`}
+              >
                 <div className="flex items-center gap-4 flex-1">
                   <button
                     onClick={() => updateMutation.mutate({ id: item.id, checked: item.checked === 'true' ? 'false' : 'true' })}
-                    className="focus:outline-none transition-transform active:scale-90"
+                    className="focus:outline-none transition-transform active:scale-90 cursor-pointer"
+                    aria-label={item.checked === 'true' ? 'Uncheck item' : 'Check item'}
                   >
                     {item.checked === 'true' ? (
-                      <CheckCircle2 className="h-6 w-6 text-[#84fab0]" />
+                      <CheckCircle2 className="h-7 w-7 text-[#84fab0] drop-shadow-sm" />
                     ) : (
-                      <Circle className="h-6 w-6 text-[var(--sea-ink-soft)] opacity-40" />
+                      <Circle className="h-7 w-7 text-[var(--sea-ink-soft)] opacity-60 hover:opacity-100 transition-opacity" />
                     )}
                   </button>
                   <div className="flex flex-col">
-                    <span className={`text-lg font-medium transition-all ${item.checked === 'true' ? 'line-through opacity-40' : 'text-[var(--sea-ink)]'}`}>
+                    <span className={`text-lg font-bold transition-all ${item.checked === 'true' ? 'line-through opacity-40' : 'text-[var(--sea-ink)]'}`}>
                       {item.name}
                     </span>
                     <div className="flex gap-3 mt-1">
                       {item.quantity !== '1' && (
-                        <span className="text-xs bg-[rgba(161,140,209,0.1)] px-2 py-0.5 rounded-full text-[#a18cd1]">
-                          {item.quantity}
+                        <span className="text-[10px] font-bold bg-[#a18cd1]/10 px-2 py-0.5 rounded-full text-[#a18cd1] uppercase tracking-wider">
+                          Qty: {item.quantity}
                         </span>
                       )}
                       {item.categoryId && (
-                        <span className="text-xs flex items-center gap-1 opacity-60">
-                          <Tag className="h-3 w-3" /> Category
+                        <span className="text-[10px] font-bold flex items-center gap-1 opacity-50 uppercase tracking-wider">
+                          <Tag className="h-3 w-3" /> Cat
                         </span>
                       )}
                       {item.storeId && (
-                        <span className="text-xs flex items-center gap-1 opacity-60">
+                        <span className="text-[10px] font-bold flex items-center gap-1 opacity-50 uppercase tracking-wider">
                           <StoreIcon className="h-3 w-3" /> Store
                         </span>
                       )}
@@ -192,7 +195,8 @@ export default function GroceryList() {
                 </div>
                 <button
                   onClick={() => deleteMutation.mutate(item.id)}
-                  className="p-2 rounded-xl text-red-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                  className="p-2 rounded-xl text-red-400 hover:text-red-600 transition-all active:scale-90 cursor-pointer"
+                  aria-label="Delete item"
                 >
                   <Trash2 className="h-5 w-5" />
                 </button>

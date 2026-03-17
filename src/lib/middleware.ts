@@ -1,8 +1,8 @@
 import { createMiddleware } from '@tanstack/react-start'
-import { getCookie } from 'vinxi/http'
+import { getCookie } from '@tanstack/react-start/server'
 import { verifySession } from '../lib/auth-utils'
 
-export const authMiddleware = createMiddleware().handler(async ({ next }) => {
+export const authMiddleware = createMiddleware({ type: 'request' }).server(async ({ next }) => {
   const token = getCookie('session_token')
   const session = token ? await verifySession(token) : null
 
@@ -13,7 +13,7 @@ export const authMiddleware = createMiddleware().handler(async ({ next }) => {
   })
 })
 
-export const protectedMiddleware = createMiddleware().handler(async ({ next, context }) => {
+export const protectedMiddleware = createMiddleware().server(async ({ next }) => {
   const token = getCookie('session_token')
   const session = token ? await verifySession(token) : null
 
@@ -25,7 +25,7 @@ export const protectedMiddleware = createMiddleware().handler(async ({ next, con
     context: {
       session: {
         ...session,
-        householdId: session.householdId, // Ensure it's not undefined
+        householdId: session.householdId,
       },
     },
   })

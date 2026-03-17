@@ -7,9 +7,8 @@ export const Route = createFileRoute('/add')({
     name: z.string().min(1),
     quantity: z.string().optional(),
   }),
-  loader: async ({ search, context }) => {
-    // We use the middleware context to check for session
-    // Since this is a deep link, if no session, we redirect to login with a returnTo param
+  loaderDeps: ({ search }) => search,
+  loader: async ({ deps: search, context }) => {
     const { session } = context as any
     
     if (!session) {

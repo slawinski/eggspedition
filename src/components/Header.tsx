@@ -1,9 +1,19 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useRouter } from '@tanstack/react-router'
 import ThemeToggle from './ThemeToggle'
-import { ShoppingBasket } from 'lucide-react'
+import { ShoppingBasket, LogOut } from 'lucide-react'
 import SyncIndicator from './SyncIndicator'
+import { logoutServerFn } from '../services/auth.api'
+import { Route } from '../routes/__root'
 
 export default function Header() {
+  const { session } = Route.useRouteContext()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    await logoutServerFn()
+    router.invalidate()
+  }
+
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--line)] bg-[var(--header-bg)] px-4 backdrop-blur-lg">
       <nav className="page-wrap flex items-center justify-between py-3 sm:py-4">
@@ -22,12 +32,27 @@ export default function Header() {
         <div className="flex items-center gap-4">
           <SyncIndicator />
           <ThemeToggle />
-          <Link
-            to="/login"
-            className="text-sm font-semibold text-[var(--sea-ink-soft)] hover:text-[var(--sea-ink)]"
-          >
-            Login
-          </Link>
+          {session ? (
+            <div className="flex items-center gap-3">
+              <span className="hidden md:inline text-xs text-[var(--sea-ink-soft)] font-medium">
+                {session.email}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 rounded-xl bg-[var(--link-bg-hover)] px-3 py-1.5 text-xs font-bold text-[var(--sea-ink-soft)] hover:text-[#ff9a9e] transition-colors"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                <span>Logout</span>
+              </button>
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              className="text-sm font-semibold text-[var(--sea-ink-soft)] hover:text-[var(--sea-ink)]"
+            >
+              Login
+            </Link>
+          )}
         </div>
       </nav>
     </header>

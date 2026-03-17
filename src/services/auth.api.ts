@@ -1,14 +1,28 @@
 import { createServerFn } from '@tanstack/react-start'
-import { setCookie, deleteCookie } from 'vinxi/http'
+import { setCookie, deleteCookie, getCookie } from '@tanstack/react-start/server'
 import { sendMagicLink, verifyMagicLink } from './auth.service'
-import { loginSchema } from '../lib/schemas'
+import { verifySession } from '../lib/auth-utils'
+
+export const getSessionServerFn = createServerFn({ method: 'GET' }).handler(async () => {
+  const token = getCookie('session_token')
+  if (!token) return null
+  return await verifySession(token)
+})
+import { z } from 'zod'
+import { zodValidator } from '@tanstack/zod-adapter'
 
 export const loginServerFn = createServerFn({ method: 'POST' })
-  .validator((data: { email: string; returnTo?: string; name?: string; quantity?: string }) => data)
+  .inputValidator(
+    zodValidator(
+      z.object({
+        email: z.string().email(),
+        returnTo: z.string().optional(),
+        name: z.string().optional(),
+        quantity: z.string().optional(),
+      })
+    )
+  )
   .handler(async ({ data }) => {
-    // Generate the return URL to be included in the magic link if necessary
-    // However, the current auth service doesn't support custom magic link URLs easily per request
-    // Let's modify auth.service.ts to accept a custom redirect path
     await sendMagicLink(data.email, data.returnTo, { name: data.name, quantity: data.quantity })
     return { success: true }
   })
@@ -20,7 +34,7 @@ export const logoutServerFn = createServerFn({ method: 'POST' })
   })
 
 export const verifyMagicLinkServerFn = createServerFn({ method: 'GET' })
-  .validator((token: string) => token)
+  .inputValidator(zodValidator(z.string()))
   .handler(async ({ data: token }) => {
     const sessionToken = await verifyMagicLink(token)
     

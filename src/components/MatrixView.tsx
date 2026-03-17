@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { getGroceryItemsGroupedFn, householdSignalFn } from '../services/grocery.api'
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
+import { getGroceryItemsGroupedFn, householdSignalFn, updateGroceryItemFn, deleteGroceryItemFn } from '../services/grocery.api'
 import styles from '../styles/clay.module.css'
-import { Tag, Store, LayoutGrid } from 'lucide-react'
-import { GroceryItem, Category, Store as StoreType } from '../lib/schemas'
+import { Tag, Store, LayoutGrid, CheckCircle2, Circle, Trash2 } from 'lucide-react'
+import type { GroceryItem } from '../lib/schemas'
 
 function useHouseholdSignals() {
   const queryClient = useQueryClient()
@@ -36,12 +36,30 @@ function useHouseholdSignals() {
 }
 
 export default function MatrixView() {
+  const queryClient = useQueryClient()
   useHouseholdSignals()
   const [groupBy, setGroupBy] = useState<'category' | 'store'>('category')
 
   const { data: groupedData, isLoading } = useQuery({
     queryKey: ['grocery-items-grouped', groupBy],
     queryFn: () => getGroceryItemsGroupedFn({ data: groupBy }),
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: (vars: { id: string; checked: 'true' | 'false' }) =>
+      updateGroceryItemFn({ data: { id: vars.id, data: { checked: vars.checked } } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['grocery-items'] })
+      queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'] })
+    }
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteGroceryItemFn({ data: id }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['grocery-items'] })
+      queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'] })
+    }
   })
 
   if (isLoading) return <div className="text-center py-4 opacity-50">Grouping items...</div>
@@ -80,14 +98,34 @@ export default function MatrixView() {
             </h3>
             <div className="flex flex-col gap-2">
               {group.items.map((item: GroceryItem) => (
-                <div key={item.id} className="flex items-center justify-between text-sm p-2 rounded-lg bg-[rgba(255,255,255,0.5)]">
-                  <span className={item.checked === 'true' ? 'line-through opacity-40' : ''}>
-                    {item.name}
-                  </span>
-                  {item.quantity !== '1' && <span className="text-xs opacity-50">{item.quantity}</span>}
+                <div key={item.id} className="flex items-center justify-between text-sm p-3 rounded-xl bg-[rgba(255,255,255,0.5)] border border-white/20 shadow-sm">
+                  <div className="flex items-center gap-3 flex-1">
+                    <button
+                      onClick={() => updateMutation.mutate({ id: item.id, checked: item.checked === 'true' ? 'false' : 'true' })}
+                      className="focus:outline-none transition-transform active:scale-90 cursor-pointer"
+                    >
+                      {item.checked === 'true' ? (
+                        <CheckCircle2 className="h-5 w-5 text-[#84fab0]" />
+                      ) : (
+                        <Circle className="h-5 w-5 text-[var(--sea-ink-soft)] opacity-40" />
+                      )}
+                    </button>
+                    <span className={`font-medium ${item.checked === 'true' ? 'line-through opacity-40' : ''}`}>
+                      {item.name}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {item.quantity !== '1' && <span className="text-[10px] bg-black/5 px-1.5 py-0.5 rounded text-[var(--sea-ink-soft)]">{item.quantity}</span>}
+                    <button
+                      onClick={() => deleteMutation.mutate(item.id)}
+                      className="p-1.5 rounded-lg text-red-400 hover:text-red-600 transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
-              {group.items.length === 0 && <p className="text-xs opacity-30 italic">No items</p>}
+              {group.items.length === 0 && <p className="text-xs opacity-30 italic px-2">No items</p>}
             </div>
           </div>
         ))}

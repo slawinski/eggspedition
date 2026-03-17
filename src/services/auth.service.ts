@@ -34,8 +34,6 @@ export async function sendMagicLink(emailInput: string, returnTo?: string, extra
   }
 
   if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === 're_123') {
-...
-
     console.log('--- [DEV MODE] Magic Link Generated ---')
     console.log(`URL: ${magicLink}`)
     console.log('---------------------------------------')
