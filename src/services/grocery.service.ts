@@ -1,5 +1,5 @@
 import { db } from '../db'
-import { groceryItems, categories, stores, householdLogs, households, memberships } from '../db/schema'
+import { users, groceryItems, categories, stores, householdLogs, households, memberships } from '../db/schema'
 import { eq, desc, and } from 'drizzle-orm'
 import type { GroceryItem, Category, Store } from '../lib/schemas'
 import { insertGroceryItemSchema, insertCategorySchema, insertStoreSchema } from '../lib/schemas'
@@ -189,10 +189,24 @@ export async function joinHousehold(userId: string, householdId: string) {
 }
 
 export async function getHouseholdLogs(householdId: string) {
-  return await db
-    .select()
+  const logs = await db
+    .select({
+      id: householdLogs.id,
+      action: householdLogs.action,
+      itemName: householdLogs.itemName,
+      timestamp: householdLogs.timestamp,
+      userName: users.name,
+      userEmail: users.email,
+    })
     .from(householdLogs)
+    .leftJoin(users, eq(householdLogs.userId, users.id))
     .where(eq(householdLogs.householdId, householdId))
     .orderBy(desc(householdLogs.timestamp))
     .limit(50)
+
+  // Ensure dates are serialized as strings for TanStack Start compatibility
+  return logs.map(log => ({
+    ...log,
+    timestamp: log.timestamp.toISOString(),
+  }))
 }

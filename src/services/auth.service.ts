@@ -1,7 +1,7 @@
 import { Resend } from 'resend'
 import { db } from '../db'
 import { users, magicLinks, memberships } from '../db/schema'
-import { eq, and, gt } from 'drizzle-orm'
+import { eq, and, gt, desc } from 'drizzle-orm'
 import { generateToken, signSession } from '../lib/auth-utils'
 import { loginSchema } from '../lib/schemas'
 import { getOrCreateDefaultHousehold } from './grocery.service'
@@ -68,11 +68,12 @@ export async function verifyMagicLink(token: string) {
   // 3. Delete used token
   await db.delete(magicLinks).where(eq(magicLinks.token, token))
 
-  // 4. Get household membership
+  // 4. Get household membership (most recent first)
   const [membership] = await db
     .select()
     .from(memberships)
     .where(eq(memberships.userId, user.id))
+    .orderBy(desc(memberships.joinedAt))
     .limit(1)
 
   const householdId = membership ? membership.householdId : await getOrCreateDefaultHousehold(user.id)

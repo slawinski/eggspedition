@@ -37,12 +37,22 @@ function useHouseholdSignals() {
 
 export default function HouseholdActivityFeed() {
   useHouseholdSignals()
-  const { data: logs, isLoading } = useQuery({
+  const { data: logs, isLoading, error } = useQuery({
     queryKey: ['household-logs'],
     queryFn: () => getHouseholdLogsFn(),
   })
 
   if (isLoading) return null
+
+  if (error) {
+    return (
+      <div className={`${styles.card} mt-8 p-4 border-[#ff9a9e]/20`}>
+        <p className="text-xs text-[#ff9a9e] flex items-center gap-2 font-bold">
+          <XCircle className="h-4 w-4" /> Failed to load activity logs.
+        </p>
+      </div>
+    )
+  }
 
   if (!logs || logs.length === 0) return null
 
@@ -62,12 +72,15 @@ export default function HouseholdActivityFeed() {
         <History className="h-4 w-4" /> Household Activity
       </h3>
       <div className="flex flex-col gap-3 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
-        {logs.map((log: HouseholdLog) => (
+        {logs.map((log: any) => (
           <div key={log.id} className="flex items-center justify-between text-xs animate-in fade-in slide-in-from-left-2">
             <div className="flex items-center gap-2">
               {getActionIcon(log.action)}
               <span className="text-[var(--sea-ink)]">
-                <span className="font-semibold">User</span> {log.action}{' '}
+                <span className="font-semibold text-[#a18cd1]">
+                  {log.userName || log.userEmail?.split('@')[0] || 'Member'}
+                </span>{' '}
+                {log.action}{' '}
                 <span className="font-semibold">{log.itemName}</span>
               </span>
             </div>

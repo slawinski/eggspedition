@@ -66,9 +66,9 @@ function Home() {
           {session.householdId && <ShareHousehold householdId={session.householdId} />}
         </header>
 
-        <AddItemForm />
+        <AddItemForm session={session} />
         
-        {view === 'list' ? <GroceryList /> : <MatrixView />}
+        {view === 'list' ? <GroceryList session={session} /> : <MatrixView session={session} />}
         
         <HouseholdActivityFeed />
       </div>

@@ -4,23 +4,35 @@ import { queryClient } from '../db'
 export const signalEmitter = new EventEmitter()
 
 // Listen for Postgres NOTIFY events
-// This allows multiple server instances (e.g. port 3000 and 3001) to sync
 async function setupPostgresListener() {
-  await queryClient.listen('household_update', (payload) => {
-    try {
-      const data = JSON.parse(payload)
-      console.log(`[Postgres Signal] Received for household: ${data.householdId}`)
-      signalEmitter.emit('household-signal', data)
-    } catch (err) {
-      console.error('[Postgres Signal] Failed to parse payload:', payload)
-    }
-  })
+  console.log('[Signals] Setting up Postgres listener...')
+  try {
+    await queryClient.listen('household_update', (payload) => {
+      try {
+        const data = typeof payload === 'string' ? JSON.parse(payload) : payload
+        console.log(`[Postgres Signal] Processed for household: ${data.householdId} action: ${data.action}`)
+        signalEmitter.emit('household-signal', data)
+      } catch (err) {
+        console.error('[Postgres Signal] Error handling payload:', err)
+        console.error('[Postgres Signal] Raw payload:', payload)
+      }
+    })
+    console.log('[Signals] Postgres listener active.')
+  } catch (err) {
+    console.error('[Signals] Failed to start Postgres listener:', err)
+    // Retry after delay
+    setTimeout(setupPostgresListener, 5000)
+  }
 }
 
-setupPostgresListener().catch(console.error)
+// In development, the module might be re-loaded. 
+// We want to ensure we don't have multiple listeners if possible, 
+// but postgres.js .listen handles some of this.
+setupPostgresListener()
 
 export async function notifyHousehold(householdId: string, action: string) {
-  // Use Postgres NOTIFY to broadcast to all server instances
   const payload = JSON.stringify({ householdId, action })
-  await queryClient`NOTIFY household_update, ${payload}`
+  console.log(`[Signals] Notifying household ${householdId} via Postgres...`)
+  // Using SELECT pg_notify is the most compatible way to send payloads
+  await queryClient`SELECT pg_notify('household_update', ${payload})`
 }

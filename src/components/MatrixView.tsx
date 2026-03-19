@@ -3,8 +3,7 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { getGroceryItemsGroupedFn, householdSignalFn, updateGroceryItemFn, deleteGroceryItemFn } from '../services/grocery.api'
 import styles from '../styles/clay.module.css'
 import { Tag, Store, LayoutGrid, CheckCircle2, Circle, Trash2 } from 'lucide-react'
-import type { GroceryItem } from '../lib/schemas'
-import { Route } from '../routes/index'
+import type { GroceryItem, Session } from '../lib/schemas'
 
 function useHouseholdSignals() {
   const queryClient = useQueryClient()
@@ -38,8 +37,7 @@ function useHouseholdSignals() {
   }, [queryClient])
 }
 
-export default function MatrixView() {
-  const { session } = Route.useRouteContext()
+export default function MatrixView({ session }: { session: Session | null }) {
   const queryClient = useQueryClient()
   useHouseholdSignals()
   const [groupBy, setGroupBy] = useState<'category' | 'store'>('category')

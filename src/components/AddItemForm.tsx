@@ -4,8 +4,7 @@ import { addGroceryItemFn, getCategoriesFn, getStoresFn } from '../services/groc
 import styles from '../styles/clay.module.css'
 import { Plus, Tag, Store as StoreIcon, Hash } from 'lucide-react'
 import { z } from 'zod'
-import type { Category, Store } from '../lib/schemas'
-import { Route } from '../routes/index'
+import type { Category, Store, Session } from '../lib/schemas'
 
 const addItemSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -14,8 +13,7 @@ const addItemSchema = z.object({
   storeId: z.string().uuid().optional().or(z.literal('')),
 })
 
-export default function AddItemForm() {
-  const { session } = Route.useRouteContext()
+export default function AddItemForm({ session }: { session: Session | null }) {
   const [name, setName] = useState('')
   const [quantity, setQuantity] = useState('1')
   const [categoryId, setCategoryId] = useState('')
@@ -45,13 +43,14 @@ export default function AddItemForm() {
         } 
       }),
     onSuccess: () => {
+      console.log('[AddItemForm] Item added successfully, invalidating...')
       setName('')
       setQuantity('1')
       setCategoryId('')
       setStoreId('')
       setShowExtras(false)
       setError(null)
-      queryClient.invalidateQueries({ queryKey: ['grocery-items', session?.householdId] })
+      queryClient.invalidateQueries({ queryKey: ['grocery-items'] })
       queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'] })
       queryClient.invalidateQueries({ queryKey: ['household-logs'] })
     },

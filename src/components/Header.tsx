@@ -1,16 +1,20 @@
 import { Link, useRouter } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import ThemeToggle from './ThemeToggle'
 import { ShoppingBasket, LogOut } from 'lucide-react'
 import SyncIndicator from './SyncIndicator'
 import { logoutServerFn } from '../services/auth.api'
-import { Route } from '../routes/__root'
+import { Route as rootRoute } from '../routes/__root'
 
 export default function Header() {
-  const { session } = Route.useRouteContext()
+  const { session } = rootRoute.useRouteContext()
   const router = useRouter()
+  const queryClient = useQueryClient()
 
   const handleLogout = async () => {
     await logoutServerFn()
+    queryClient.clear()
+    localStorage.clear()
     router.invalidate()
   }
 
@@ -30,7 +34,7 @@ export default function Header() {
         </h1>
 
         <div className="flex items-center gap-4">
-          <SyncIndicator />
+          <SyncIndicator session={session} />
           <ThemeToggle />
           {session ? (
             <div className="flex items-center gap-3">

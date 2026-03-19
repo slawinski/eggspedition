@@ -1,9 +1,10 @@
 import { useIsFetching, useIsMutating } from '@tanstack/react-query'
 import { Cloud, CloudOff, RefreshCw, User, Home } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { Route } from '../routes/index'
+import type { Session } from '../lib/schemas'
+import { Route as rootRoute } from '../routes/__root'
 
-export default function SyncIndicator() {
+export default function SyncIndicator({ session }: { session: Session | null }) {
   const isFetching = useIsFetching()
   const isMutating = useIsMutating()
   const [isOnline, setIsOnline] = useState(true)
@@ -23,7 +24,6 @@ export default function SyncIndicator() {
   }, [])
 
   const isSyncing = isFetching > 0 || isMutating > 0
-  const { session } = Route.useRouteContext()
 
   if (!isOnline) {
     return (

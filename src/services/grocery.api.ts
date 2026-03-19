@@ -22,7 +22,9 @@ import { signSession } from '../lib/auth-utils'
 export const getGroceryItemsFn = createServerFn({ method: 'GET' })
   .middleware([protectedMiddleware])
   .handler(async ({ context }) => {
-    return await getGroceryItems(context.session.householdId)
+    const items = await getGroceryItems(context.session.householdId)
+    console.log(`[API] getGroceryItems for ${context.session.householdId} returned ${items.length} items`)
+    return items
   })
 
 export const getGroceryItemsGroupedFn = createServerFn({ method: 'GET' })
@@ -45,6 +47,7 @@ export const addGroceryItemFn = createServerFn({ method: 'POST' })
   )
   .middleware([protectedMiddleware])
   .handler(async ({ data, context }) => {
+    console.log(`[API] addGroceryItem: ${data.name} for household: ${context.session.householdId}`)
     return await addGroceryItem(context.session.householdId, context.session.userId, data)
   })
 
@@ -104,7 +107,9 @@ export const addStoreFn = createServerFn({ method: 'POST' })
 export const getHouseholdLogsFn = createServerFn({ method: 'GET' })
   .middleware([protectedMiddleware])
   .handler(async ({ context }) => {
-    return await getHouseholdLogs(context.session.householdId)
+    const logs = await getHouseholdLogs(context.session.householdId)
+    console.log(`[API] getHouseholdLogs for ${context.session.householdId} returned ${logs.length} logs`)
+    return logs
   })
 
 export const joinHouseholdFn = createServerFn({ method: 'POST' })
@@ -140,8 +145,13 @@ export const householdSignalFn = createServerFn({ method: 'GET' })
         console.log(`[SSE] Connection opened for household: ${householdId}`)
         const handler = (data: { householdId: string; action: string }) => {
           if (data.householdId === householdId) {
-            console.log(`[SSE] Enqueuing signal: ${data.action}`)
-            controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`))
+            try {
+              console.log(`[SSE] Enqueuing signal: ${data.action}`)
+              controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`))
+            } catch (err) {
+              // Usually means controller is closed
+              signalEmitter.off('household-signal', handler)
+            }
           }
         }
 
@@ -149,14 +159,16 @@ export const householdSignalFn = createServerFn({ method: 'GET' })
 
         const keepAlive = setInterval(() => {
           try {
-            console.log(`[SSE] Sending keep-alive for ${householdId}`)
             controller.enqueue(new TextEncoder().encode(': keep-alive\n\n'))
           } catch (err) {
-            console.log(`[SSE] Connection closed for ${householdId}`)
             clearInterval(keepAlive)
             signalEmitter.off('household-signal', handler)
           }
         }, 30000)
+      },
+      cancel() {
+        console.log(`[SSE] Stream cancelled for ${householdId}`)
+        // We can't easily reach the 'handler' here unless we define it outside
       }
     })
 

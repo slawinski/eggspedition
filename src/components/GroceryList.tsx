@@ -5,7 +5,7 @@ import styles from '../styles/clay.module.css'
 import { CheckCircle2, Circle, Trash2, Tag, Store as StoreIcon } from 'lucide-react'
 import { useRef, useState, useEffect } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { Route } from '../routes/index'
+import type { Session } from '../lib/schemas'
 
 function useHouseholdSignals() {
   const queryClient = useQueryClient()
@@ -45,8 +45,7 @@ function useHouseholdSignals() {
   }, [queryClient])
 }
 
-export default function GroceryList() {
-  const { session } = Route.useRouteContext()
+export default function GroceryList({ session }: { session: Session | null }) {
   const queryClient = useQueryClient()
   useHouseholdSignals()
   const [isScrolling, setIsScrolling] = useState(false)
