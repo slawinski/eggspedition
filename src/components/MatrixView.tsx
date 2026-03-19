@@ -4,6 +4,7 @@ import { getGroceryItemsGroupedFn, householdSignalFn, updateGroceryItemFn, delet
 import styles from '../styles/clay.module.css'
 import { Tag, Store, LayoutGrid, CheckCircle2, Circle, Trash2 } from 'lucide-react'
 import type { GroceryItem } from '../lib/schemas'
+import { Route } from '../routes/index'
 
 function useHouseholdSignals() {
   const queryClient = useQueryClient()
@@ -20,7 +21,9 @@ function useHouseholdSignals() {
           const { done, value } = await reader.read()
           if (done) break
           const chunk = decoder.decode(value)
+          console.log(`[SSE Matrix] Received chunk:`, chunk)
           if (chunk.includes('data:')) {
+            console.log(`[SSE Matrix] Invalidating queries...`)
             queryClient.invalidateQueries({ queryKey: ['grocery-items'] })
             queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'] })
             queryClient.invalidateQueries({ queryKey: ['household-logs'] })
@@ -36,12 +39,13 @@ function useHouseholdSignals() {
 }
 
 export default function MatrixView() {
+  const { session } = Route.useRouteContext()
   const queryClient = useQueryClient()
   useHouseholdSignals()
   const [groupBy, setGroupBy] = useState<'category' | 'store'>('category')
 
   const { data: groupedData, isLoading } = useQuery({
-    queryKey: ['grocery-items-grouped', groupBy],
+    queryKey: ['grocery-items-grouped', groupBy, session?.householdId],
     queryFn: () => getGroceryItemsGroupedFn({ data: groupBy }),
   })
 
@@ -49,16 +53,16 @@ export default function MatrixView() {
     mutationFn: (vars: { id: string; checked: 'true' | 'false' }) =>
       updateGroceryItemFn({ data: { id: vars.id, data: { checked: vars.checked } } }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['grocery-items'] })
-      queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'] })
+      queryClient.invalidateQueries({ queryKey: ['grocery-items', session?.householdId] })
+      queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped', groupBy, session?.householdId] })
     }
   })
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteGroceryItemFn({ data: id }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['grocery-items'] })
-      queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'] })
+      queryClient.invalidateQueries({ queryKey: ['grocery-items', session?.householdId] })
+      queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped', groupBy, session?.householdId] })
     }
   })
 

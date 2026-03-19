@@ -35,25 +35,25 @@ A delightful, family-oriented grocery list application that simplifies household
 
 ## Environment Management
 - **Varlock:** Used for declarative, type-safe environment variable management via a `.env.schema` file.
-    - **@env-spec Decorators:** Employs JSDoc-style comments (e.g., `@type`, `@required`, `@sensitive`) to define validation rules directly in the environment configuration.
-    - **Automatic Type Generation:** Configured to auto-generate `env.d.ts` for end-to-end type safety across Bun and TanStack Start.
-    - **Validation:** Ensures critical variables (e.g., `DATABASE_URL`, `RESEND_API_KEY`) are present and correctly formatted before the app starts.
-    - **Secret Masking:** Leverages `@sensitive` to prevent accidental logging of credentials in CI/CD or production logs.
+    - **[x] @env-spec Decorators:** Employs JSDoc-style comments (e.g., `@type`, `@required`, `@sensitive`) to define validation rules directly in the environment configuration.
+    - **[x] Automatic Type Generation:** Configured to auto-generate `env.d.ts` for end-to-end type safety across Bun and TanStack Start.
+    - **[x] Validation:** Ensures critical variables (e.g., `DATABASE_URL`, `RESEND_API_KEY`) are present and correctly formatted before the app starts.
+    - **[x] Secret Masking:** Leverages `@sensitive` to prevent accidental logging of credentials in CI/CD or production logs.
 
 ## Validation & Type Safety
 - **Zod:** Used as the single source of truth for validation across the entire stack:
-    - **API Boundaries:** All Server Functions in TanStack Start will use Zod schemas to parse and validate incoming data (e.g., adding an item, user login).
-    - **Form Validation:** Client-side forms will use the same Zod schemas to provide instant, reactive validation feedback within the "squishy" UI.
-    - **Database Integration:** Zod schemas will be used alongside Drizzle ORM to ensure data integrity between the application and PostgreSQL.
-    - **Type Inference:** Automatic TypeScript type generation from Zod schemas to maintain strict end-to-end type safety.
+    - **[x] API Boundaries:** All Server Functions in TanStack Start will use Zod schemas to parse and validate incoming data (e.g., adding an item, user login).
+    - **[x] Form Validation:** Client-side forms will use the same Zod schemas to provide instant, reactive validation feedback within the "squishy" UI.
+    - **[x] Database Integration:** Zod schemas will be used alongside Drizzle ORM to ensure data integrity between the application and PostgreSQL.
+    - **[x] Type Inference:** Automatic TypeScript type generation from Zod schemas to maintain strict end-to-end type safety.
 
 ## Data Sync & State Management
 - **TanStack Query (React Query):** This is the core engine for data fetching and synchronization. It must be implemented with all its advanced features:
-    - **Caching & Stale Time:** Aggressive caching strategies to ensure the list feels instant on subsequent opens.
-    - **Optimistic Updates:** When a family member adds or removes an item, the UI must update *instantly* before the server confirms, with rollback logic on failure.
-    - **Loading & Error States:** Each claymorphic component (buttons, inputs) should have distinct "squishy" loading and error states.
-    - **Background Refetching:** Automatic synchronization when the tab is refocused or the network reconnects to ensure family members see changes immediately.
-    - **Prefetching:** Proactive fetching of household data to eliminate loading spinners.
+    - **[x] Caching & Stale Time:** Aggressive caching strategies to ensure the list feels instant on subsequent opens.
+    - **[x] Optimistic Updates:** When a family member adds or removes an item, the UI must update *instantly* before the server confirms, with rollback logic on failure.
+    - **[x] Loading & Error States:** Each claymorphic component (buttons, inputs) should have distinct "squishy" loading and error states.
+    - **[x] Background Refetching:** Automatic synchronization when the tab is refocused or the network reconnects to ensure family members see changes immediately.
+    - **[x] Prefetching:** Proactive fetching of household data to eliminate loading spinners.
 
 ## Target Audience
 Families or households who shop together and want a shared, real-time list that is both functional and aesthetically pleasing.
@@ -160,18 +160,18 @@ Handles the actual grocery list logic and categorization.
 ## Project Roadmap
 
 ## Phase 1: Foundation (MVP)
-- [ ] **Authentication:** Email OTP (Magic Link) setup with Bun + PostgreSQL.
-- [ ] **Core List Management:** CRUD for grocery items.
-- [ ] **Collaboration:** Basic household/group sharing mechanism.
-- [ ] **Categorization:** Grouping items by store or category.
-- [ ] **Design Implementation:** Basic claymorphism UI using CSS Modules.
+- [x] **Authentication:** Email OTP (Magic Link) setup with Bun + PostgreSQL.
+- [x] **Core List Management:** CRUD for grocery items.
+- [ ] **Collaboration:** Basic household/group sharing mechanism. (In Progress)
+- [x] **Categorization:** Grouping items by store or category.
+- [x] **Design Implementation:** Basic claymorphism UI using CSS Modules.
 
 ## Phase 2: UX & Microinteractions
-- [ ] **Animations:** "Squishy" buttons and transitions.
-- [ ] **Real-time Updates & Data Sync:** TanStack Query implementation with:
-    - [ ] Full optimistic updates for adding/removing items.
-    - [ ] Advanced caching strategies and background refetching.
-    - [ ] Real-time polling or WebSockets/SSE for family-wide synchronization.
+- [x] **Animations:** "Squishy" buttons and transitions.
+- [x] **Real-time Updates & Data Sync:** TanStack Query implementation with:
+    - [x] Full optimistic updates for adding/removing items.
+    - [x] Advanced caching strategies and background refetching.
+    - [x] Real-time polling or WebSockets/SSE for family-wide synchronization. (SSE Implemented)
 - [ ] **Mobile Optimization:** Touch-friendly drag-and-drop for categorization.
 
 ## Phase 3: Enhancements
@@ -183,44 +183,44 @@ Handles the actual grocery list logic and categorization.
 ## Implementation Tasks
 
 ## Phase 1: Environment & Auth (Foundation)
-- [ ] Initialize Bun project with TanStack Start.
-- [ ] **Configure Varlock for Environment Management:**
-    - [ ] Create `.env.schema` with `@env-spec` decorators for `DATABASE_URL`, `RESEND_API_KEY`, and `AUTH_SECRET`.
-    - [ ] Enable automatic type generation (`env.d.ts`).
-- [ ] Configure PostgreSQL with Drizzle ORM.
-- [ ] Define **Zod schemas** for `user` and `session` objects.
-- [ ] Implement Magic Link Email Service with Zod input validation.
-- [ ] **Sticky Sessions:** Configure auth cookies for 30-90 day persistent sessions.
-- [ ] Create `users`, `households`, and `memberships` tables.
-- [ ] Set up Auth middleware (JWT or session-based) with schema validation.
+- [x] Initialize Bun project with TanStack Start.
+- [x] **Configure Varlock for Environment Management:**
+    - [x] Create `.env.schema` with `@env-spec` decorators for `DATABASE_URL`, `RESEND_API_KEY`, and `AUTH_SECRET`.
+    - [x] Enable automatic type generation (`env.d.ts`).
+- [x] Configure PostgreSQL with Drizzle ORM.
+- [x] Define **Zod schemas** for `user` and `session` objects.
+- [x] Implement Magic Link Email Service with Zod input validation.
+- [x] **Sticky Sessions:** Configure auth cookies for 30-90 day persistent sessions.
+- [x] Create `users`, `households`, and `memberships` tables.
+- [x] Set up Auth middleware (JWT or session-based) with schema validation.
 
 ## Phase 2: Schema & Core Backend (Thin Logic)
-- [ ] **Domain Isolation:** Build pure TypeScript services for grocery logic (decoupled from TanStack Start).
-- [ ] **Matrix Schema:** Create `grocery_items` table with support for multiple tag fields (e.g., `store_id`, `category_id`).
-- [ ] **Activity Log Schema:** Create `household_logs` table (user_id, action, item_name, timestamp).
-- [ ] Implement CRUD API for items using Zod for payload validation.
-- [ ] Implement Matrix categorization logic (server-side grouping/filtering).
+- [x] **Domain Isolation:** Build pure TypeScript services for grocery logic (decoupled from TanStack Start).
+- [x] **Matrix Schema:** Create `grocery_items` table with support for multiple tag fields (e.g., `store_id`, `category_id`).
+- [x] **Activity Log Schema:** Create `household_logs` table (user_id, action, item_name, timestamp).
+- [x] Implement CRUD API for items using Zod for payload validation.
+- [x] Implement Matrix categorization logic (server-side grouping/filtering).
 
 ## Phase 3: Frontend Construction & Advanced State Management
-- [ ] Set up TanStack Query with Zod-inferred types for data fetching.
-- [ ] **UI Performance:**
-    - [ ] Integrate **TanStack Virtual** for item lists.
-    - [ ] Implement **LOD CSS Shadows** for scroll performance.
-- [ ] Create base "Clay" components (Button, Card, Input) with CSS Modules.
-- [ ] **Habit Formation Features:**
-    - [ ] Implement **Deep Linking** for quick-add (`/add?name=...`).
-    - [ ] Add the **Household Activity Feed** (recent actions log).
-- [ ] Build the "Add Item" interface with Zod-powered form validation.
-- [ ] Build the List View with Matrix-based togglable filtering.
+- [x] Set up TanStack Query with Zod-inferred types for data fetching.
+- [x] **UI Performance:**
+    - [x] Integrate **TanStack Virtual** for item lists.
+    - [x] Implement **LOD CSS Shadows** for scroll performance.
+- [x] Create base "Clay" components (Button, Card, Input) with CSS Modules.
+- [x] **Habit Formation Features:**
+    - [x] Implement **Deep Linking** for quick-add (`/add?name=...`).
+    - [x] Add the **Household Activity Feed** (recent actions log).
+- [x] Build the "Add Item" interface with Zod-powered form validation.
+- [x] Build the List View with Matrix-based togglable filtering.
 
 ## Phase 4: Real-Time Synchronization & Final Polish
-- [ ] **Offline-First Resilience:**
-    - [ ] Set up `persistQueryClient` with LocalStorage for offline persistence.
-    - [ ] Add the **Claymorphic Sync Indicator** (Puffy cloud) to UI.
-- [ ] **SSE Signaling Service:**
-    - [ ] Implement a Streaming Server Function in TanStack Start for real-time signaling.
-    - [ ] Set up PostgreSQL `LISTEN/NOTIFY` for multi-member signaling.
-    - [ ] Integrate TanStack Query invalidation upon receiving signals.
+- [x] **Offline-First Resilience:**
+    - [x] Set up `persistQueryClient` with LocalStorage for offline persistence.
+    - [x] Add the **Claymorphic Sync Indicator** (Puffy cloud) to UI.
+- [x] **SSE Signaling Service:**
+    - [x] Implement a Streaming Server Function in TanStack Start for real-time signaling.
+    - [x] Set up PostgreSQL `LISTEN/NOTIFY` for multi-member signaling. (Using internal EventEmitter for now)
+    - [x] Integrate TanStack Query invalidation upon receiving signals.
 - [ ] **Final UX Polish:**
     - [ ] Apply final claymorphic shadows, "pop" animations, and squishy transitions.
     - [ ] Add **"Panic Undo"** capability from the activity feed.

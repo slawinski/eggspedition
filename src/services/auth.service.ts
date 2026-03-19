@@ -1,6 +1,6 @@
 import { Resend } from 'resend'
 import { db } from '../db'
-import { users, magicLinks } from '../db/schema'
+import { users, magicLinks, memberships } from '../db/schema'
 import { eq, and, gt } from 'drizzle-orm'
 import { generateToken, signSession } from '../lib/auth-utils'
 import { loginSchema } from '../lib/schemas'
@@ -68,8 +68,14 @@ export async function verifyMagicLink(token: string) {
   // 3. Delete used token
   await db.delete(magicLinks).where(eq(magicLinks.token, token))
 
-  // 4. Get or create household
-  const householdId = await getOrCreateDefaultHousehold(user.id)
+  // 4. Get household membership
+  const [membership] = await db
+    .select()
+    .from(memberships)
+    .where(eq(memberships.userId, user.id))
+    .limit(1)
+
+  const householdId = membership ? membership.householdId : await getOrCreateDefaultHousehold(user.id)
 
   // 5. Generate long-lived session JWT
   return await signSession({

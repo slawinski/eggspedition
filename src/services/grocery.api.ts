@@ -1,4 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
+import { setCookie } from '@tanstack/react-start/server'
 import { protectedMiddleware } from '../lib/middleware'
 import {
   getGroceryItems,
@@ -11,10 +12,12 @@ import {
   getStores,
   addStore,
   getHouseholdLogs,
+  joinHousehold,
 } from './grocery.service'
 import { z } from 'zod'
 import { zodValidator } from '@tanstack/zod-adapter'
 import { signalEmitter } from '../lib/signals'
+import { signSession } from '../lib/auth-utils'
 
 export const getGroceryItemsFn = createServerFn({ method: 'GET' })
   .middleware([protectedMiddleware])
@@ -104,6 +107,29 @@ export const getHouseholdLogsFn = createServerFn({ method: 'GET' })
     return await getHouseholdLogs(context.session.householdId)
   })
 
+export const joinHouseholdFn = createServerFn({ method: 'POST' })
+  .inputValidator(zodValidator(z.string().uuid()))
+  .middleware([protectedMiddleware])
+  .handler(async ({ data: householdId, context }) => {
+    const result = await joinHousehold(context.session.userId, householdId)
+    
+    // Update the session cookie with the new householdId
+    const newToken = await signSession({
+      ...context.session,
+      householdId: result,
+    })
+
+    setCookie('session_token', newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 30 * 24 * 60 * 60,
+    })
+
+    return result
+  })
+
 export const householdSignalFn = createServerFn({ method: 'GET' })
   .middleware([protectedMiddleware])
   .handler(async ({ context }) => {
@@ -111,8 +137,10 @@ export const householdSignalFn = createServerFn({ method: 'GET' })
 
     const stream = new ReadableStream({
       start(controller) {
+        console.log(`[SSE] Connection opened for household: ${householdId}`)
         const handler = (data: { householdId: string; action: string }) => {
           if (data.householdId === householdId) {
+            console.log(`[SSE] Enqueuing signal: ${data.action}`)
             controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`))
           }
         }
@@ -121,8 +149,10 @@ export const householdSignalFn = createServerFn({ method: 'GET' })
 
         const keepAlive = setInterval(() => {
           try {
+            console.log(`[SSE] Sending keep-alive for ${householdId}`)
             controller.enqueue(new TextEncoder().encode(': keep-alive\n\n'))
           } catch (err) {
+            console.log(`[SSE] Connection closed for ${householdId}`)
             clearInterval(keepAlive)
             signalEmitter.off('household-signal', handler)
           }

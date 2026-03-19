@@ -5,6 +5,7 @@ import styles from '../styles/clay.module.css'
 import { Plus, Tag, Store as StoreIcon, Hash } from 'lucide-react'
 import { z } from 'zod'
 import type { Category, Store } from '../lib/schemas'
+import { Route } from '../routes/index'
 
 const addItemSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -14,6 +15,7 @@ const addItemSchema = z.object({
 })
 
 export default function AddItemForm() {
+  const { session } = Route.useRouteContext()
   const [name, setName] = useState('')
   const [quantity, setQuantity] = useState('1')
   const [categoryId, setCategoryId] = useState('')
@@ -49,8 +51,9 @@ export default function AddItemForm() {
       setStoreId('')
       setShowExtras(false)
       setError(null)
-      queryClient.invalidateQueries({ queryKey: ['grocery-items'] })
+      queryClient.invalidateQueries({ queryKey: ['grocery-items', session?.householdId] })
       queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'] })
+      queryClient.invalidateQueries({ queryKey: ['household-logs'] })
     },
     onError: (err: any) => {
       setError(err.message || 'Failed to add item')

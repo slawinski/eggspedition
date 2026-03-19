@@ -5,6 +5,7 @@ import styles from '../styles/clay.module.css'
 import { CheckCircle2, Circle, Trash2, Tag, Store as StoreIcon } from 'lucide-react'
 import { useRef, useState, useEffect } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
+import { Route } from '../routes/index'
 
 function useHouseholdSignals() {
   const queryClient = useQueryClient()
@@ -24,7 +25,9 @@ function useHouseholdSignals() {
           if (done) break
           
           const chunk = decoder.decode(value)
+          console.log(`[SSE] Received chunk:`, chunk)
           if (chunk.includes('data:')) {
+            console.log(`[SSE] Invalidating queries...`)
             queryClient.invalidateQueries({ queryKey: ['grocery-items'] })
             queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'] })
             queryClient.invalidateQueries({ queryKey: ['household-logs'] })
@@ -43,6 +46,7 @@ function useHouseholdSignals() {
 }
 
 export default function GroceryList() {
+  const { session } = Route.useRouteContext()
   const queryClient = useQueryClient()
   useHouseholdSignals()
   const [isScrolling, setIsScrolling] = useState(false)
@@ -64,7 +68,7 @@ export default function GroceryList() {
   }, [])
 
   const { data: items, isLoading, error } = useQuery({
-    queryKey: ['grocery-items'],
+    queryKey: ['grocery-items', session?.householdId],
     queryFn: () => getGroceryItemsFn(),
   })
 
@@ -79,36 +83,36 @@ export default function GroceryList() {
     mutationFn: (vars: { id: string; checked: 'true' | 'false' }) =>
       updateGroceryItemFn({ data: { id: vars.id, data: { checked: vars.checked } } }),
     onMutate: async (newItem) => {
-      await queryClient.cancelQueries({ queryKey: ['grocery-items'] })
-      const previousItems = queryClient.getQueryData(['grocery-items'])
-      queryClient.setQueryData(['grocery-items'], (old: GroceryItem[]) =>
+      await queryClient.cancelQueries({ queryKey: ['grocery-items', session?.householdId] })
+      const previousItems = queryClient.getQueryData(['grocery-items', session?.householdId])
+      queryClient.setQueryData(['grocery-items', session?.householdId], (old: GroceryItem[]) =>
         old.map((item) => (item.id === newItem.id ? { ...item, checked: newItem.checked } : item))
       )
       return { previousItems }
     },
     onError: (_err, _newItem, context) => {
-      queryClient.setQueryData(['grocery-items'], context?.previousItems)
+      queryClient.setQueryData(['grocery-items', session?.householdId], context?.previousItems)
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['grocery-items'] })
+      queryClient.invalidateQueries({ queryKey: ['grocery-items', session?.householdId] })
     },
   })
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteGroceryItemFn({ data: id }),
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: ['grocery-items'] })
-      const previousItems = queryClient.getQueryData(['grocery-items'])
-      queryClient.setQueryData(['grocery-items'], (old: GroceryItem[]) =>
+      await queryClient.cancelQueries({ queryKey: ['grocery-items', session?.householdId] })
+      const previousItems = queryClient.getQueryData(['grocery-items', session?.householdId])
+      queryClient.setQueryData(['grocery-items', session?.householdId], (old: GroceryItem[]) =>
         old.filter((item) => item.id !== id)
       )
       return { previousItems }
     },
     onError: (_err, _id, context) => {
-      queryClient.setQueryData(['grocery-items'], context?.previousItems)
+      queryClient.setQueryData(['grocery-items', session?.householdId], context?.previousItems)
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['grocery-items'] })
+      queryClient.invalidateQueries({ queryKey: ['grocery-items', session?.householdId] })
     },
   })
 

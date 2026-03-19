@@ -4,6 +4,7 @@ import GroceryList from '../components/GroceryList'
 import AddItemForm from '../components/AddItemForm'
 import HouseholdActivityFeed from '../components/HouseholdActivityFeed'
 import MatrixView from '../components/MatrixView'
+import ShareHousehold from '../components/ShareHousehold'
 import { List, LayoutGrid } from 'lucide-react'
 
 export const Route = createFileRoute('/')({
@@ -44,22 +45,25 @@ function Home() {
   return (
     <main className="page-wrap px-4 pb-8 pt-6">
       <div className="flex flex-col gap-6">
-        <header className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-[var(--sea-ink)]">My List</h2>
-          <div className="flex items-center gap-2 rounded-xl bg-[rgba(0,0,0,0.05)] p-1">
-            <button
-              onClick={() => setView('list')}
-              className={`p-2 rounded-lg transition-all ${view === 'list' ? 'bg-white shadow-sm text-[#ff9a9e]' : 'text-[var(--sea-ink-soft)]'}`}
-            >
-              <List className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => setView('matrix')}
-              className={`p-2 rounded-lg transition-all ${view === 'matrix' ? 'bg-white shadow-sm text-[#a18cd1]' : 'text-[var(--sea-ink-soft)]'}`}
-            >
-              <LayoutGrid className="h-5 w-5" />
-            </button>
+        <header className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-[var(--sea-ink)]">My List</h2>
+            <div className="flex items-center gap-2 rounded-xl bg-[rgba(0,0,0,0.05)] p-1">
+              <button
+                onClick={() => setView('list')}
+                className={`p-2 rounded-lg transition-all ${view === 'list' ? 'bg-white shadow-sm text-[#ff9a9e]' : 'text-[var(--sea-ink-soft)]'}`}
+              >
+                <List className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setView('matrix')}
+                className={`p-2 rounded-lg transition-all ${view === 'matrix' ? 'bg-white shadow-sm text-[#a18cd1]' : 'text-[var(--sea-ink-soft)]'}`}
+              >
+                <LayoutGrid className="h-5 w-5" />
+              </button>
+            </div>
           </div>
+          {session.householdId && <ShareHousehold householdId={session.householdId} />}
         </header>
 
         <AddItemForm />

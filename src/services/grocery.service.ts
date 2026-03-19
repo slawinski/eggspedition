@@ -1,6 +1,6 @@
 import { db } from '../db'
 import { groceryItems, categories, stores, householdLogs, households, memberships } from '../db/schema'
-import { eq, desc } from 'drizzle-orm'
+import { eq, desc, and } from 'drizzle-orm'
 import type { GroceryItem, Category, Store } from '../lib/schemas'
 import { insertGroceryItemSchema, insertCategorySchema, insertStoreSchema } from '../lib/schemas'
 import { notifyHousehold } from '../lib/signals'
@@ -95,7 +95,8 @@ export async function addGroceryItem(
     itemName: item.name,
   })
 
-  notifyHousehold(householdId, 'add')
+  console.log(`[Service] Item added, notifying household: ${householdId}`)
+  await notifyHousehold(householdId, 'add')
 
   return item
 }
@@ -126,7 +127,8 @@ export async function updateGroceryItem(
     itemName: updated.name,
   })
 
-  notifyHousehold(existing.householdId, action)
+  console.log(`[Service] Item updated, notifying household: ${existing.householdId}`)
+  await notifyHousehold(existing.householdId, action)
 
   return updated
 }
@@ -144,6 +146,7 @@ export async function deleteGroceryItem(itemId: string, userId: string) {
     itemName: existing.name,
   })
 
+  console.log(`[Service] Item removed, notifying household: ${existing.householdId}`)
   notifyHousehold(existing.householdId, 'remove')
 }
 
@@ -165,6 +168,24 @@ export async function addStore(householdId: string, name: string) {
   const data = insertStoreSchema.parse({ name, householdId })
   const [store] = await db.insert(stores).values(data).returning()
   return store
+}
+
+export async function joinHousehold(userId: string, householdId: string) {
+  const [existing] = await db
+    .select()
+    .from(memberships)
+    .where(and(eq(memberships.userId, userId), eq(memberships.householdId, householdId)))
+    .limit(1)
+
+  if (existing) return householdId
+
+  await db.insert(memberships).values({
+    userId,
+    householdId,
+    role: 'member',
+  })
+
+  return householdId
 }
 
 export async function getHouseholdLogs(householdId: string) {
