@@ -6,6 +6,7 @@ import type { Session } from '../lib/schemas'
 import { getSessionServerFn } from '../services/auth.api'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
+import Signals from '../components/Signals'
 
 import appCss from '../styles.css?url'
 
@@ -44,8 +45,11 @@ export const Route = createRootRouteWithContext<{
 })
 
 function RootComponent() {
+  const { session } = Route.useRouteContext()
+
   return (
     <div className="flex min-h-screen flex-col">
+      {session && <Signals />}
       <Header />
       <div className="flex-1">
         <Outlet />

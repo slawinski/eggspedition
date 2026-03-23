@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AddRouteImport } from './routes/add'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
@@ -18,6 +19,11 @@ import { Route as ApiAuthVerifyRouteImport } from './routes/api/auth/verify'
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AddRoute = AddRouteImport.update({
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/add': typeof AddRoute
+  '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/api/auth/verify': typeof ApiAuthVerifyRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/add': typeof AddRoute
+  '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/api/auth/verify': typeof ApiAuthVerifyRoute
 }
@@ -60,21 +68,30 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/add': typeof AddRoute
+  '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/api/auth/verify': typeof ApiAuthVerifyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/add' | '/login' | '/api/auth/verify'
+  fullPaths: '/' | '/about' | '/add' | '/admin' | '/login' | '/api/auth/verify'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/add' | '/login' | '/api/auth/verify'
-  id: '__root__' | '/' | '/about' | '/add' | '/login' | '/api/auth/verify'
+  to: '/' | '/about' | '/add' | '/admin' | '/login' | '/api/auth/verify'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/add'
+    | '/admin'
+    | '/login'
+    | '/api/auth/verify'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AddRoute: typeof AddRoute
+  AdminRoute: typeof AdminRoute
   LoginRoute: typeof LoginRoute
   ApiAuthVerifyRoute: typeof ApiAuthVerifyRoute
 }
@@ -86,6 +103,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/add': {
@@ -123,6 +147,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AddRoute: AddRoute,
+  AdminRoute: AdminRoute,
   LoginRoute: LoginRoute,
   ApiAuthVerifyRoute: ApiAuthVerifyRoute,
 }

@@ -57,6 +57,15 @@ export const groceryItems = pgTable('grocery_items', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
 
+export const quickAddItems = pgTable('quick_add_items', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  categoryId: uuid('category_id').references(() => categories.id),
+  storeId: uuid('store_id').references(() => stores.id),
+  householdId: uuid('household_id').notNull().references(() => households.id),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
 export const householdLogs = pgTable('household_logs', {
   id: uuid('id').primaryKey().defaultRandom(),
   householdId: uuid('household_id').notNull().references(() => households.id),

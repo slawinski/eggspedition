@@ -1,7 +1,7 @@
 import { Link, useRouter } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import ThemeToggle from './ThemeToggle'
-import { ShoppingBasket, LogOut } from 'lucide-react'
+import { ShoppingBasket, LogOut, Settings } from 'lucide-react'
 import SyncIndicator from './SyncIndicator'
 import { logoutServerFn } from '../services/auth.api'
 import { Route as rootRoute } from '../routes/__root'
@@ -35,6 +35,15 @@ export default function Header() {
 
         <div className="flex items-center gap-4">
           <SyncIndicator session={session} />
+          {session && (
+            <Link
+              to="/admin"
+              className="flex items-center gap-1.5 rounded-xl bg-[var(--link-bg-hover)] px-3 py-1.5 text-xs font-bold text-[var(--sea-ink-soft)] hover:text-[#a18cd1] transition-colors"
+            >
+              <Settings className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Manage</span>
+            </Link>
+          )}
           <ThemeToggle />
           {session ? (
             <div className="flex items-center gap-3">

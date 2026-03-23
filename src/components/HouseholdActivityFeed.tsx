@@ -1,52 +1,23 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { getHouseholdLogsFn, householdSignalFn } from '../services/grocery.api'
-import type { HouseholdLog } from '../lib/schemas'
+import { useQuery } from '@tanstack/react-query'
+import { getHouseholdLogsFn } from '../services/grocery.api'
 import styles from '../styles/clay.module.css'
 import { History, PlusCircle, CheckCircle, XCircle, RefreshCcw } from 'lucide-react'
-import { useEffect } from 'react'
-
-function useHouseholdSignals() {
-  const queryClient = useQueryClient()
-
-  useEffect(() => {
-    const ctrl = new AbortController()
-    const connect = async () => {
-      try {
-        const response = await householdSignalFn({ signal: ctrl.signal })
-        const reader = response.body?.getReader()
-        if (!reader) return
-        const decoder = new TextDecoder()
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-          const chunk = decoder.decode(value)
-          if (chunk.includes('data:')) {
-            queryClient.invalidateQueries({ queryKey: ['grocery-items'] })
-            queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'] })
-            queryClient.invalidateQueries({ queryKey: ['household-logs'] })
-          }
-        }
-      } catch (err) {
-        if (!ctrl.signal.aborted) setTimeout(connect, 3000)
-      }
-    }
-    connect()
-    return () => ctrl.abort()
-  }, [queryClient])
-}
 
 export default function HouseholdActivityFeed() {
-  useHouseholdSignals()
   const { data: logs, isLoading, error } = useQuery({
     queryKey: ['household-logs'],
     queryFn: () => getHouseholdLogsFn(),
   })
 
-  if (isLoading) return null
+  if (isLoading) return (
+    <div className="flex justify-center p-8">
+      <RefreshCcw className="h-6 w-6 animate-spin text-[#a18cd1]" />
+    </div>
+  )
 
   if (error) {
     return (
-      <div className={`${styles.card} mt-8 p-4 border-[#ff9a9e]/20`}>
+      <div className={`${styles.card} p-4 border-[#ff9a9e]/20`}>
         <p className="text-xs text-[#ff9a9e] flex items-center gap-2 font-bold">
           <XCircle className="h-4 w-4" /> Failed to load activity logs.
         </p>
@@ -54,7 +25,13 @@ export default function HouseholdActivityFeed() {
     )
   }
 
-  if (!logs || logs.length === 0) return null
+  if (!logs || logs.length === 0) {
+    return (
+      <div className="p-8 text-center text-sm text-[var(--sea-ink-soft)] opacity-60 italic">
+        No recent activity yet.
+      </div>
+    )
+  }
 
   const getActionIcon = (action: string) => {
     switch (action) {
@@ -67,29 +44,24 @@ export default function HouseholdActivityFeed() {
   }
 
   return (
-    <div className={`${styles.card} mt-8 p-4`}>
-      <h3 className="text-sm font-bold flex items-center gap-2 mb-3 text-[var(--sea-ink-soft)]">
-        <History className="h-4 w-4" /> Household Activity
-      </h3>
-      <div className="flex flex-col gap-3 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
-        {logs.map((log: any) => (
-          <div key={log.id} className="flex items-center justify-between text-xs animate-in fade-in slide-in-from-left-2">
-            <div className="flex items-center gap-2">
-              {getActionIcon(log.action)}
-              <span className="text-[var(--sea-ink)]">
-                <span className="font-semibold text-[#a18cd1]">
-                  {log.userName || log.userEmail?.split('@')[0] || 'Member'}
-                </span>{' '}
-                {log.action}{' '}
-                <span className="font-semibold">{log.itemName}</span>
-              </span>
-            </div>
-            <span className="text-[var(--sea-ink-soft)] opacity-60">
-              {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+    <div className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+      {logs.map((log: any) => (
+        <div key={log.id} className="flex items-center justify-between text-xs animate-in fade-in slide-in-from-left-2 py-1 border-b border-[var(--line)] last:border-0">
+          <div className="flex items-center gap-2">
+            {getActionIcon(log.action)}
+            <span className="text-[var(--sea-ink)]">
+              <span className="font-semibold text-[#a18cd1]">
+                {log.userName || log.userEmail?.split('@')[0] || 'Member'}
+              </span>{' '}
+              {log.action}{' '}
+              <span className="font-semibold">{log.itemName}</span>
             </span>
           </div>
-        ))}
-      </div>
+          <span className="text-[var(--sea-ink-soft)] opacity-60">
+            {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        </div>
+      ))}
     </div>
   )
 }

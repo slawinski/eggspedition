@@ -4,7 +4,9 @@ import { addGroceryItemFn, getCategoriesFn, getStoresFn } from '../services/groc
 import styles from '../styles/clay.module.css'
 import { Plus, Tag, Store as StoreIcon, Hash } from 'lucide-react'
 import { z } from 'zod'
-import type { Category, Store, Session } from '../lib/schemas'
+import type { Category, Store } from '../lib/schemas'
+import Modal from './Modal'
+import ManageTags from './ManageTags'
 
 const addItemSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -13,13 +15,15 @@ const addItemSchema = z.object({
   storeId: z.string().uuid().optional().or(z.literal('')),
 })
 
-export default function AddItemForm({ session }: { session: Session | null }) {
+export default function AddItemForm() {
   const [name, setName] = useState('')
   const [quantity, setQuantity] = useState('1')
   const [categoryId, setCategoryId] = useState('')
   const [storeId, setStoreId] = useState('')
   const [showExtras, setShowExtras] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  
+  const [managingType, setManagingType] = useState<'category' | 'store' | null>(null)
 
   const queryClient = useQueryClient()
 
@@ -53,6 +57,7 @@ export default function AddItemForm({ session }: { session: Session | null }) {
       queryClient.invalidateQueries({ queryKey: ['grocery-items'] })
       queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'] })
       queryClient.invalidateQueries({ queryKey: ['household-logs'] })
+      queryClient.invalidateQueries({ queryKey: ['frequent-items'] })
     },
     onError: (err: any) => {
       setError(err.message || 'Failed to add item')
@@ -113,36 +118,66 @@ export default function AddItemForm({ session }: { session: Session | null }) {
               className={`${styles.input} !py-1 text-sm`}
             />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 relative">
             <Tag className="h-4 w-4 text-[var(--sea-ink-soft)]" />
             <select
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
-              className={`${styles.input} !py-1 text-sm appearance-none`}
+              className={`${styles.input} !py-1 text-sm appearance-none pr-8`}
             >
               <option value="">Category...</option>
               {categories?.map((c: Category) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
+            <button
+              type="button"
+              onClick={() => setManagingType('category')}
+              className="absolute right-1 p-1 rounded-full text-[var(--sea-ink-soft)] hover:bg-[var(--line)]"
+              title="Add Category"
+            >
+              <Plus className="h-3 w-3" />
+            </button>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 relative">
             <StoreIcon className="h-4 w-4 text-[var(--sea-ink-soft)]" />
             <select
               value={storeId}
               onChange={(e) => setStoreId(e.target.value)}
-              className={`${styles.input} !py-1 text-sm appearance-none`}
+              className={`${styles.input} !py-1 text-sm appearance-none pr-8`}
             >
               <option value="">Store...</option>
               {stores?.map((s: Store) => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>
+            <button
+              type="button"
+              onClick={() => setManagingType('store')}
+              className="absolute right-1 p-1 rounded-full text-[var(--sea-ink-soft)] hover:bg-[var(--line)]"
+              title="Add Store"
+            >
+              <Plus className="h-3 w-3" />
+            </button>
           </div>
         </div>
       )}
       
       {error && <p className="text-xs text-red-400 ml-2">{error}</p>}
+
+      <Modal 
+        isOpen={!!managingType} 
+        onClose={() => setManagingType(null)} 
+        title={`Manage ${managingType === 'category' ? 'Categories' : 'Stores'}`}
+      >
+        {managingType && (
+          <ManageTags 
+            type={managingType} 
+            tags={managingType === 'category' ? (categories || []) : (stores || [])} 
+            onClose={() => setManagingType(null)}
+          />
+        )}
+      </Modal>
     </div>
   )
 }

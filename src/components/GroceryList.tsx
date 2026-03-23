@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getGroceryItemsFn, updateGroceryItemFn, deleteGroceryItemFn, householdSignalFn } from '../services/grocery.api'
+import { getGroceryItemsFn, updateGroceryItemFn, deleteGroceryItemFn, householdSignalFn, getCategoriesFn, getStoresFn } from '../services/grocery.api'
 import type { GroceryItem } from '../lib/schemas'
 import styles from '../styles/clay.module.css'
 import { CheckCircle2, Circle, Trash2, Tag, Store as StoreIcon } from 'lucide-react'
@@ -66,15 +66,28 @@ export default function GroceryList({ session }: { session: Session | null }) {
     return () => el.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const { data: items, isLoading, error } = useQuery({
+  const { data: items, isLoading: isLoadingItems, error: itemsError } = useQuery({
     queryKey: ['grocery-items', session?.householdId],
     queryFn: () => getGroceryItemsFn(),
+    enabled: !!session?.householdId,
+  })
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories', session?.householdId],
+    queryFn: () => getCategoriesFn(),
+    enabled: !!session?.householdId,
+  })
+
+  const { data: stores = [] } = useQuery({
+    queryKey: ['stores', session?.householdId],
+    queryFn: () => getStoresFn(),
+    enabled: !!session?.householdId,
   })
 
   const rowVirtualizer = useVirtualizer({
     count: items?.length || 0,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 100, // Slightly larger estimate for safety
+    estimateSize: () => 110, // Slightly larger estimate for safety
     overscan: 10,
   })
 
@@ -94,6 +107,7 @@ export default function GroceryList({ session }: { session: Session | null }) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['grocery-items', session?.householdId] })
+      queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'] })
     },
   })
 
@@ -112,11 +126,12 @@ export default function GroceryList({ session }: { session: Session | null }) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['grocery-items', session?.householdId] })
+      queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'] })
     },
   })
 
-  if (isLoading) return <div className="text-center py-10 text-[var(--sea-ink-soft)]">Loading list...</div>
-  if (error) return <div className="text-center py-10 text-red-400">Error loading list.</div>
+  if (isLoadingItems) return <div className="text-center py-10 text-[var(--sea-ink-soft)]">Loading list...</div>
+  if (itemsError) return <div className="text-center py-10 text-red-400">Error loading list.</div>
 
   if (!items || items.length === 0) {
     return (
@@ -144,6 +159,9 @@ export default function GroceryList({ session }: { session: Session | null }) {
         {rowVirtualizer.getVirtualItems().map((virtualRow) => {
           const item = items[virtualRow.index]
           if (!item) return null
+          
+          const category = categories.find(c => c.id === item.categoryId)
+          const store = stores.find(s => s.id === item.storeId)
           
           return (
             <div
@@ -174,23 +192,25 @@ export default function GroceryList({ session }: { session: Session | null }) {
                     )}
                   </button>
                   <div className="flex flex-col">
-                    <span className={`text-lg font-bold transition-all ${item.checked === 'true' ? 'line-through opacity-40' : 'text-[var(--sea-ink)]'}`}>
-                      {item.name}
-                    </span>
-                    <div className="flex gap-3 mt-1">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-lg font-bold transition-all ${item.checked === 'true' ? 'line-through opacity-40' : 'text-[var(--sea-ink)]'}`}>
+                        {item.name}
+                      </span>
                       {item.quantity !== '1' && (
                         <span className="text-[10px] font-bold bg-[#a18cd1]/10 px-2 py-0.5 rounded-full text-[#a18cd1] uppercase tracking-wider">
-                          Qty: {item.quantity}
+                          x{item.quantity}
                         </span>
                       )}
-                      {item.categoryId && (
-                        <span className="text-[10px] font-bold flex items-center gap-1 opacity-50 uppercase tracking-wider">
-                          <Tag className="h-3 w-3" /> Cat
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {category && (
+                        <span className="text-[10px] font-bold flex items-center gap-1 text-[var(--sea-ink-soft)] opacity-60 uppercase tracking-wider bg-[var(--page-bg)] px-2 py-0.5 rounded border border-[var(--line)]">
+                          <Tag className="h-2.5 w-2.5" /> {category.name}
                         </span>
                       )}
-                      {item.storeId && (
-                        <span className="text-[10px] font-bold flex items-center gap-1 opacity-50 uppercase tracking-wider">
-                          <StoreIcon className="h-3 w-3" /> Store
+                      {store && (
+                        <span className="text-[10px] font-bold flex items-center gap-1 text-[#ff9a9e] opacity-80 uppercase tracking-wider bg-[#fecfef]/30 px-2 py-0.5 rounded border border-[#ff9a9e]/20">
+                          <StoreIcon className="h-2.5 w-2.5" /> {store.name}
                         </span>
                       )}
                     </div>

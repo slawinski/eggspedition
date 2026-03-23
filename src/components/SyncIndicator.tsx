@@ -2,7 +2,6 @@ import { useIsFetching, useIsMutating } from '@tanstack/react-query'
 import { Cloud, CloudOff, RefreshCw, User, Home } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import type { Session } from '../lib/schemas'
-import { Route as rootRoute } from '../routes/__root'
 
 export default function SyncIndicator({ session }: { session: Session | null }) {
   const isFetching = useIsFetching()

@@ -12,7 +12,12 @@ import {
   getStores,
   addStore,
   getHouseholdLogs,
+  getFrequentItems,
   joinHousehold,
+  getQuickAddItems,
+  addQuickAddItem,
+  updateQuickAddItem,
+  deleteQuickAddItem,
 } from './grocery.service'
 import { z } from 'zod'
 import { zodValidator } from '@tanstack/zod-adapter'
@@ -110,6 +115,58 @@ export const getHouseholdLogsFn = createServerFn({ method: 'GET' })
     const logs = await getHouseholdLogs(context.session.householdId)
     console.log(`[API] getHouseholdLogs for ${context.session.householdId} returned ${logs.length} logs`)
     return logs
+  })
+
+export const getFrequentItemsFn = createServerFn({ method: 'GET' })
+  .middleware([protectedMiddleware])
+  .handler(async ({ context }) => {
+    return await getFrequentItems(context.session.householdId)
+  })
+
+export const getQuickAddItemsFn = createServerFn({ method: 'GET' })
+  .middleware([protectedMiddleware])
+  .handler(async ({ context }) => {
+    return await getQuickAddItems(context.session.householdId)
+  })
+
+export const addQuickAddItemFn = createServerFn({ method: 'POST' })
+  .inputValidator(
+    zodValidator(
+      z.object({
+        name: z.string().min(1),
+        categoryName: z.string().optional().nullable(),
+        storeName: z.string().optional().nullable(),
+      })
+    )
+  )
+  .middleware([protectedMiddleware])
+  .handler(async ({ data, context }) => {
+    return await addQuickAddItem(context.session.householdId, data)
+  })
+
+export const updateQuickAddItemFn = createServerFn({ method: 'POST' })
+  .inputValidator(
+    zodValidator(
+      z.object({
+        id: z.string().uuid(),
+        data: z.object({
+          name: z.string().min(1).optional(),
+          categoryName: z.string().optional().nullable(),
+          storeName: z.string().optional().nullable(),
+        }),
+      })
+    )
+  )
+  .middleware([protectedMiddleware])
+  .handler(async ({ data }) => {
+    return await updateQuickAddItem(data.id, data.data)
+  })
+
+export const deleteQuickAddItemFn = createServerFn({ method: 'POST' })
+  .inputValidator(zodValidator(z.string().uuid()))
+  .middleware([protectedMiddleware])
+  .handler(async ({ data: id }) => {
+    return await deleteQuickAddItem(id)
   })
 
 export const joinHouseholdFn = createServerFn({ method: 'POST' })

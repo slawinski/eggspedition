@@ -1,8 +1,8 @@
 import { db } from '../db'
-import { users, groceryItems, categories, stores, householdLogs, households, memberships } from '../db/schema'
-import { eq, desc, and } from 'drizzle-orm'
-import type { GroceryItem, Category, Store } from '../lib/schemas'
-import { insertGroceryItemSchema, insertCategorySchema, insertStoreSchema } from '../lib/schemas'
+import { users, groceryItems, categories, stores, householdLogs, households, memberships, quickAddItems } from '../db/schema'
+import { eq, desc, and, count } from 'drizzle-orm'
+import type { GroceryItem, Category, Store, QuickAddItem } from '../lib/schemas'
+import { insertGroceryItemSchema, insertCategorySchema, insertStoreSchema, insertQuickAddItemSchema } from '../lib/schemas'
 import { notifyHousehold } from '../lib/signals'
 
 export async function getOrCreateDefaultHousehold(userId: string) {
@@ -80,6 +80,46 @@ export async function addGroceryItem(
   userId: string,
   input: { name: string; quantity?: string; categoryId?: string; storeId?: string }
 ) {
+  // Check if an unchecked item with the same name already exists in this household
+  const [existing] = await db
+    .select()
+    .from(groceryItems)
+    .where(
+      and(
+        eq(groceryItems.name, input.name),
+        eq(groceryItems.householdId, householdId),
+        eq(groceryItems.checked, 'false')
+      )
+    )
+    .limit(1)
+
+  if (existing) {
+    // Increment quantity
+    const currentQty = parseInt(existing.quantity) || 1
+    const newQty = (currentQty + (parseInt(input.quantity || '1') || 1)).toString()
+    
+    const [updated] = await db
+      .update(groceryItems)
+      .set({ 
+        quantity: newQty,
+        updatedAt: new Date()
+      })
+      .where(eq(groceryItems.id, existing.id))
+      .returning()
+
+    await db.insert(householdLogs).values({
+      householdId,
+      userId,
+      action: 'update',
+      itemName: updated.name,
+    })
+
+    console.log(`[Service] Item quantity incremented, notifying household: ${householdId}`)
+    await notifyHousehold(householdId, 'update')
+    return updated
+  }
+
+  // Otherwise, create new item
   const data = insertGroceryItemSchema.parse({
     ...input,
     householdId,
@@ -87,6 +127,29 @@ export async function addGroceryItem(
   })
 
   const [item] = await db.insert(groceryItems).values(data).returning()
+
+  // Auto-populate Quick Add templates if it doesn't exist for this household
+  const [existingTemplate] = await db
+    .select()
+    .from(quickAddItems)
+    .where(
+      and(
+        eq(quickAddItems.name, input.name),
+        eq(quickAddItems.householdId, householdId)
+      )
+    )
+    .limit(1)
+
+  if (!existingTemplate) {
+    await db.insert(quickAddItems).values({
+      name: input.name,
+      categoryId: input.categoryId,
+      storeId: input.storeId,
+      householdId: householdId,
+    })
+    console.log(`[Service] Auto-created template for: ${input.name}`)
+    await notifyHousehold(householdId, 'quick-add-update')
+  }
 
   await db.insert(householdLogs).values({
     householdId,
@@ -209,4 +272,132 @@ export async function getHouseholdLogs(householdId: string) {
     ...log,
     timestamp: log.timestamp.toISOString(),
   }))
+}
+
+export async function getFrequentItems(householdId: string) {
+  const results = await db
+    .select({
+      name: householdLogs.itemName,
+      count: count(householdLogs.id),
+    })
+    .from(householdLogs)
+    .where(and(eq(householdLogs.householdId, householdId), eq(householdLogs.action, 'add')))
+    .groupBy(householdLogs.itemName)
+    .orderBy(desc(count(householdLogs.id)))
+    .limit(12)
+
+  return results
+}
+
+export async function getQuickAddItems(householdId: string) {
+  console.log(`[Service] Fetching quick add items for household: ${householdId}`)
+  const results = await db
+    .select()
+    .from(quickAddItems)
+    .where(eq(quickAddItems.householdId, householdId))
+    .orderBy(desc(quickAddItems.createdAt))
+  console.log(`[Service] Found ${results.length} quick add items`)
+  return results
+}
+
+async function resolveCategoryId(householdId: string, name?: string | null) {
+  if (!name?.trim()) return null
+  const trimmedName = name.trim()
+  const [existing] = await db
+    .select()
+    .from(categories)
+    .where(and(eq(categories.name, trimmedName), eq(categories.householdId, householdId)))
+    .limit(1)
+  
+  if (existing) return existing.id
+  
+  const [newCat] = await db
+    .insert(categories)
+    .values({ name: trimmedName, householdId })
+    .returning()
+  return newCat.id
+}
+
+async function resolveStoreId(householdId: string, name?: string | null) {
+  if (!name?.trim()) return null
+  const trimmedName = name.trim()
+  const [existing] = await db
+    .select()
+    .from(stores)
+    .where(and(eq(stores.name, trimmedName), eq(stores.householdId, householdId)))
+    .limit(1)
+  
+  if (existing) return existing.id
+  
+  const [newStore] = await db
+    .insert(stores)
+    .values({ name: trimmedName, householdId })
+    .returning()
+  return newStore.id
+}
+
+export async function addQuickAddItem(householdId: string, input: { name: string; categoryName?: string | null; storeName?: string | null }) {
+  const categoryId = await resolveCategoryId(householdId, input.categoryName)
+  const storeId = await resolveStoreId(householdId, input.storeName)
+  
+  const data = insertQuickAddItemSchema.parse({ 
+    name: input.name,
+    categoryId,
+    storeId,
+    householdId 
+  })
+  
+  const [item] = await db.insert(quickAddItems).values(data).returning()
+  await notifyHousehold(householdId, 'quick-add-update')
+  return item
+}
+
+export async function updateQuickAddItem(id: string, input: { name?: string; categoryName?: string | null; storeName?: string | null }) {
+  const [existing] = await db.select().from(quickAddItems).where(eq(quickAddItems.id, id)).limit(1)
+  if (!existing) throw new Error('Item not found')
+
+  const categoryId = input.categoryName !== undefined ? await resolveCategoryId(existing.householdId, input.categoryName) : undefined
+  const storeId = input.storeName !== undefined ? await resolveStoreId(existing.householdId, input.storeName) : undefined
+
+  const [updated] = await db
+    .update(quickAddItems)
+    .set({
+      name: input.name,
+      ...(categoryId !== undefined && { categoryId }),
+      ...(storeId !== undefined && { storeId }),
+    })
+    .where(eq(quickAddItems.id, id))
+    .returning()
+
+  // Propagate changes to existing grocery items with the same name in this household
+  // We match by the OLD name to find items that need updating
+  await db
+    .update(groceryItems)
+    .set({
+      ...(input.name && { name: input.name }),
+      ...(categoryId !== undefined && { categoryId }),
+      ...(storeId !== undefined && { storeId }),
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(groceryItems.name, existing.name),
+        eq(groceryItems.householdId, existing.householdId),
+        eq(groceryItems.checked, 'false') // Usually only update items not yet purchased
+      )
+    )
+  
+  console.log(`[Service] Propagated template changes to grocery items for: ${existing.name}`)
+  await notifyHousehold(existing.householdId, 'quick-add-update')
+  await notifyHousehold(existing.householdId, 'update') // Notify list view to refresh
+  
+  return updated
+}
+
+export async function deleteQuickAddItem(id: string) {
+  const [existing] = await db.select().from(quickAddItems).where(eq(quickAddItems.id, id)).limit(1)
+  if (!existing) return
+
+  await db.delete(quickAddItems).where(eq(quickAddItems.id, id))
+  await notifyHousehold(existing.householdId, 'quick-add-update')
 }

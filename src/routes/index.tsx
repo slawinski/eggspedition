@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import GroceryList from '../components/GroceryList'
 import AddItemForm from '../components/AddItemForm'
+import QuickAdd from '../components/QuickAdd'
 import HouseholdActivityFeed from '../components/HouseholdActivityFeed'
-import MatrixView from '../components/MatrixView'
+import SmartView from '../components/SmartView'
 import ShareHousehold from '../components/ShareHousehold'
-import { List, LayoutGrid } from 'lucide-react'
+import Modal from '../components/Modal'
+import { List, Sparkles, History } from 'lucide-react'
 
 export const Route = createFileRoute('/')({
   component: Home,
@@ -13,7 +15,8 @@ export const Route = createFileRoute('/')({
 
 function Home() {
   const { session } = Route.useRouteContext()
-  const [view, setView] = useState<'list' | 'matrix'>('list')
+  const [view, setView] = useState<'list' | 'smart'>('list')
+  const [isActivityOpen, setIsActivityOpen] = useState(false)
 
   if (!session) {
     return (
@@ -51,26 +54,44 @@ function Home() {
             <div className="flex items-center gap-2 rounded-xl bg-[rgba(0,0,0,0.05)] p-1">
               <button
                 onClick={() => setView('list')}
+                title="List View"
                 className={`p-2 rounded-lg transition-all ${view === 'list' ? 'bg-white shadow-sm text-[#ff9a9e]' : 'text-[var(--sea-ink-soft)]'}`}
               >
                 <List className="h-5 w-5" />
               </button>
               <button
-                onClick={() => setView('matrix')}
-                className={`p-2 rounded-lg transition-all ${view === 'matrix' ? 'bg-white shadow-sm text-[#a18cd1]' : 'text-[var(--sea-ink-soft)]'}`}
+                onClick={() => setView('smart')}
+                title="Smart View (Grouped by Category, Filter by Store)"
+                className={`p-2 rounded-lg transition-all ${view === 'smart' ? 'bg-white shadow-sm text-[#a18cd1]' : 'text-[var(--sea-ink-soft)]'}`}
               >
-                <LayoutGrid className="h-5 w-5" />
+                <Sparkles className="h-5 w-5" />
+              </button>
+              <div className="w-px h-4 bg-[var(--line)] mx-1" />
+              <button
+                onClick={() => setIsActivityOpen(true)}
+                title="Activity Log"
+                className="p-2 rounded-lg transition-all text-[var(--sea-ink-soft)] hover:bg-white hover:shadow-sm hover:text-[#a18cd1]"
+              >
+                <History className="h-5 w-5" />
               </button>
             </div>
           </div>
           {session.householdId && <ShareHousehold householdId={session.householdId} />}
         </header>
 
-        <AddItemForm session={session} />
+        <AddItemForm />
         
-        {view === 'list' ? <GroceryList session={session} /> : <MatrixView session={session} />}
+        <QuickAdd />
         
-        <HouseholdActivityFeed />
+        {view === 'list' ? <GroceryList session={session} /> : <SmartView session={session} />}
+        
+        <Modal 
+          isOpen={isActivityOpen} 
+          onClose={() => setIsActivityOpen(false)} 
+          title="Household Activity"
+        >
+          <HouseholdActivityFeed />
+        </Modal>
       </div>
     </main>
   )
