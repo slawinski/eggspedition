@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { getGroceryItemsGroupedFn, householdSignalFn, updateGroceryItemFn, deleteGroceryItemFn } from '../services/grocery.api'
 import styles from '../styles/clay.module.css'
+import utils from '../styles/utils.module.css'
 import { Tag, Store, LayoutGrid, CheckCircle2, Circle, Trash2 } from 'lucide-react'
 import type { GroceryItem, Session } from '../lib/schemas'
 
@@ -20,9 +21,7 @@ function useHouseholdSignals() {
           const { done, value } = await reader.read()
           if (done) break
           const chunk = decoder.decode(value)
-          console.log(`[SSE Matrix] Received chunk:`, chunk)
           if (chunk.includes('data:')) {
-            console.log(`[SSE Matrix] Invalidating queries...`)
             queryClient.invalidateQueries({ queryKey: ['grocery-items'] })
             queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'] })
             queryClient.invalidateQueries({ queryKey: ['household-logs'] })
@@ -64,70 +63,82 @@ export default function MatrixView({ session }: { session: Session | null }) {
     }
   })
 
-  if (isLoading) return <div className="text-center py-4 opacity-50">Grouping items...</div>
+  if (isLoading) return <div className={`${utils.textCenter} ${utils.py4} ${utils.opacity60}`}>Grouping items...</div>
 
   if (!groupedData) return null
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex justify-center">
-        <div className={`${styles.card} flex p-1 gap-1 !rounded-2xl`}>
+    <div className={`${utils.flex} ${utils.flexCol} ${utils.gap6}`}>
+      <div className={`${utils.flex} ${utils.justifyCenter}`}>
+        <div className={`${styles.card} ${utils.flex} ${utils.p1} ${utils.gap1} ${utils.rounded2xl}`}>
           <button
             onClick={() => setGroupBy('category')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
-              groupBy === 'category' ? 'bg-[#ff9a9e] text-white shadow-md' : 'text-[var(--sea-ink-soft)]'
-            }`}
+            className={`${utils.flex} ${utils.itemsCenter} ${utils.gap2} ${utils.px4} ${utils.py2} ${utils.roundedXl} ${utils.transition}`}
+            style={{ 
+              backgroundColor: groupBy === 'category' ? '#ff9a9e' : 'transparent',
+              color: groupBy === 'category' ? 'white' : 'var(--sea-ink-soft)',
+              boxShadow: groupBy === 'category' ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : 'none',
+              border: 'none',
+              cursor: 'pointer'
+            }}
           >
-            <Tag className="h-4 w-4" /> Category
+            <Tag className={utils.icon} /> Category
           </button>
           <button
             onClick={() => setGroupBy('store')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
-              groupBy === 'store' ? 'bg-[#a18cd1] text-white shadow-md' : 'text-[var(--sea-ink-soft)]'
-            }`}
+            className={`${utils.flex} ${utils.itemsCenter} ${utils.gap2} ${utils.px4} ${utils.py2} ${utils.roundedXl} ${utils.transition}`}
+            style={{ 
+              backgroundColor: groupBy === 'store' ? '#a18cd1' : 'transparent',
+              color: groupBy === 'store' ? 'white' : 'var(--sea-ink-soft)',
+              boxShadow: groupBy === 'store' ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : 'none',
+              border: 'none',
+              cursor: 'pointer'
+            }}
           >
-            <Store className="h-4 w-4" /> Store
+            <Store className={utils.icon} /> Store
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className={`${utils.grid} ${utils.gridCols1} ${utils.smGridCols3} ${utils.gap6}`} style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
         {Object.entries(groupedData).map(([key, group]: [string, any]) => (
-          <div key={key} className={`${styles.card} flex flex-col gap-3`}>
-            <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--sea-ink-soft)] flex items-center gap-2">
-              <LayoutGrid className="h-4 w-4" />
+          <div key={key} className={`${styles.card} ${utils.flex} ${utils.flexCol} ${utils.gap3}`}>
+            <h3 className={`${utils.textSm} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWider} ${utils.flex} ${utils.itemsCenter} ${utils.gap2}`} style={{ color: 'var(--sea-ink-soft)' }}>
+              <LayoutGrid className={utils.icon} />
               {groupBy === 'category' ? group.category?.name || 'Uncategorized' : group.store?.name || 'Any Store'}
             </h3>
-            <div className="flex flex-col gap-2">
+            <div className={`${utils.flex} ${utils.flexCol} ${utils.gap2}`}>
               {group.items.map((item: GroceryItem) => (
-                <div key={item.id} className="flex items-center justify-between text-sm p-3 rounded-xl bg-[rgba(255,255,255,0.5)] border border-white/20 shadow-sm">
-                  <div className="flex items-center gap-3 flex-1">
+                <div key={item.id} className={`${utils.flex} ${utils.itemsCenter} ${utils.justifyBetween} ${utils.textSm} ${utils.p3} ${utils.roundedXl} ${utils.shadowChip}`} style={{ backgroundColor: 'rgba(255, 255, 255, 0.5)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                  <div className={`${utils.flex} ${utils.itemsCenter} ${utils.gap3} ${utils.flex1}`}>
                     <button
                       onClick={() => updateMutation.mutate({ id: item.id, checked: item.checked === 'true' ? 'false' : 'true' })}
-                      className="focus:outline-none transition-transform active:scale-90 cursor-pointer"
+                      className={`${utils.outlineNone} ${utils.transitionTransform} ${utils.activeScale90} ${utils.cursorPointer}`}
+                      style={{ background: 'none', border: 'none', padding: 0 }}
                     >
                       {item.checked === 'true' ? (
-                        <CheckCircle2 className="h-5 w-5 text-[#84fab0]" />
+                        <CheckCircle2 className={`${utils.h5} ${utils.w5}`} style={{ color: '#84fab0' }} />
                       ) : (
-                        <Circle className="h-5 w-5 text-[var(--sea-ink-soft)] opacity-40" />
+                        <Circle className={`${utils.h5} ${utils.w5} ${utils.opacity40}`} style={{ color: 'var(--sea-ink-soft)' }} />
                       )}
                     </button>
-                    <span className={`font-medium ${item.checked === 'true' ? 'line-through opacity-40' : ''}`}>
+                    <span className={`${utils.fontMedium} ${item.checked === 'true' ? `${utils.lineThrough} ${utils.opacity40}` : ''}`} style={{ color: 'var(--sea-ink)' }}>
                       {item.name}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {item.quantity !== '1' && <span className="text-[10px] bg-black/5 px-1.5 py-0.5 rounded text-[var(--sea-ink-soft)]">{item.quantity}</span>}
+                  <div className={`${utils.flex} ${utils.itemsCenter} ${utils.gap2}`}>
+                    {item.quantity !== '1' && <span className={`${utils.text10px} ${utils.px2} ${utils.py1} ${utils.rounded}`} style={{ backgroundColor: 'rgba(0,0,0,0.05)', color: 'var(--sea-ink-soft)' }}>{item.quantity}</span>}
                     <button
                       onClick={() => deleteMutation.mutate(item.id)}
-                      className="p-1.5 rounded-lg text-red-400 hover:text-red-600 transition-colors cursor-pointer"
+                      className={`${utils.p1_5} ${utils.rounded} ${utils.textRed400} ${utils.transitionColors} ${utils.cursorPointer}`}
+                      style={{ background: 'none', border: 'none' }}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className={utils.icon} />
                     </button>
                   </div>
                 </div>
               ))}
-              {group.items.length === 0 && <p className="text-xs opacity-30 italic px-2">No items</p>}
+              {group.items.length === 0 && <p className={`${utils.textXs} ${utils.opacity40} ${utils.px2}`} style={{ fontStyle: 'italic' }}>No items</p>}
             </div>
           </div>
         ))}

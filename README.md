@@ -27,16 +27,14 @@ bun --bun run test
 
 ## Styling
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
+This project uses **CSS Modules** for styling, with a custom "Claymorphism" design system.
 
-### Removing Tailwind CSS
+- `src/styles.css`: Global styles and CSS Reset.
+- `src/styles/utils.module.css`: Common utility classes (flexbox, grid, spacing).
+- `src/styles/clay.module.css`: Design system components (cards, buttons, inputs).
+- `*.module.css`: Component-specific styles.
 
-If you prefer not to use Tailwind CSS:
-
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Uninstall the packages: `bun install @tailwindcss/vite tailwindcss -D`
+We strictly avoid utility-first frameworks like Tailwind to maintain a highly custom, performant, and maintainable aesthetic.
 
 
 

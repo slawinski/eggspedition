@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getFrequentItemsFn, addGroceryItemFn, getQuickAddItemsFn } from '../services/grocery.api'
 import { Zap, Plus } from 'lucide-react'
 import { Route as rootRoute } from '../routes/__root'
+import utils from '../styles/utils.module.css'
 
 export default function QuickAdd() {
   const { session } = rootRoute.useRouteContext()
@@ -18,9 +19,6 @@ export default function QuickAdd() {
     queryFn: () => getQuickAddItemsFn(),
     enabled: !!session?.householdId,
   })
-
-  console.log('[QuickAdd] quickAddItems count:', quickAddItems.length)
-  console.log('[QuickAdd] frequentItems count:', frequentItems.length)
 
   const mutation = useMutation({
     mutationFn: (item: { name: string; categoryId?: string | null; storeId?: string | null }) => 
@@ -40,38 +38,35 @@ export default function QuickAdd() {
     }
   })
 
-  // Combine and deduplicate or prioritize
-  // For now, if templates exist, only show templates. 
-  // If not, show frequent items.
   const hasTemplates = quickAddItems && quickAddItems.length > 0
-  const hasFrequent = frequentItems && frequentItems.length > 0
-
-  console.log('[QuickAdd] State:', { hasTemplates, templateCount: quickAddItems?.length, hasFrequent, frequentCount: frequentItems?.length })
-
+  
   const displayItems = hasTemplates 
     ? quickAddItems.map(i => ({ id: i.id, name: i.name, categoryId: i.categoryId, storeId: i.storeId, type: 'template' }))
     : frequentItems.map(i => ({ id: i.name, name: i.name, categoryId: null, storeId: null, type: 'frequent' }))
 
-  if (displayItems.length === 0) {
-    console.log('[QuickAdd] No items to display')
-    return null
-  }
+  if (displayItems.length === 0) return null
 
   return (
-    <div className="flex flex-col gap-3 mb-8">
-      <h3 className="text-xs font-bold flex items-center gap-1.5 text-[var(--sea-ink-soft)] uppercase tracking-wider opacity-60 px-1">
-        <Zap className="h-3 w-3 text-[#ff9a9e]" /> 
+    <div className={`${utils.flex} ${utils.flexCol} ${utils.gap3}`} style={{ marginBottom: '2rem' }}>
+      <h3 className={`${utils.textXs} ${utils.fontBold} ${utils.flex} ${utils.itemsCenter} ${utils.gap1_5} ${utils.uppercase} ${utils.trackingWider} ${utils.opacity60} ${utils.px1}`} style={{ color: 'var(--sea-ink-soft)' }}>
+        <Zap className={utils.iconXs} style={{ color: '#ff9a9e' }} /> 
         {hasTemplates ? 'Your Templates' : 'Frequently Added'}
       </h3>
-      <div className="flex flex-wrap gap-2">
+      <div className={`${utils.flex} ${utils.flexWrap} ${utils.gap2}`}>
         {displayItems.map((item) => (
           <button
             key={`${item.type}-${item.id}`}
             onClick={() => mutation.mutate(item)}
             disabled={mutation.isPending}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white border border-[var(--line)] shadow-clay-sm text-sm font-bold text-[var(--sea-ink)] hover:bg-white hover:shadow-clay-md hover:translate-y-[-2px] active:scale-95 transition-all disabled:opacity-50"
+            className={`${utils.flex} ${utils.itemsCenter} ${utils.gap2} ${utils.px4} ${utils.py2_5} ${utils.rounded2xl} ${utils.shadowChip} ${utils.textSm} ${utils.fontBold} ${utils.transition} ${utils.activeScale95} ${utils.hoverTranslateY0_5}`}
+            style={{ 
+              backgroundColor: 'white', 
+              border: '1px solid var(--line)', 
+              color: 'var(--sea-ink)',
+              cursor: 'pointer'
+            }}
           >
-            <Plus className="h-3.5 w-3.5 text-[#ff9a9e]" />
+            <Plus className={utils.iconSm} style={{ color: '#ff9a9e' }} />
             {item.name}
           </button>
         ))}

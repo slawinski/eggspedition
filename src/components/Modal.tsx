@@ -1,5 +1,7 @@
 import { X } from 'lucide-react'
 import { useEffect, useRef } from 'react'
+import styles from './Modal.module.css'
+import utils from '../styles/utils.module.css'
 
 interface ModalProps {
   isOpen: boolean
@@ -28,29 +30,29 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+    <div className={styles.overlay}>
       {/* Overlay */}
       <div 
-        className="fixed inset-0 bg-black/20 backdrop-blur-sm animate-in fade-in duration-300"
+        className={styles.backdrop}
         onClick={onClose}
       />
       
       {/* Content */}
       <div 
         ref={modalRef}
-        className="island-shell relative w-full max-w-lg overflow-hidden rounded-[2rem] p-6 shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-300"
+        className={styles.content}
       >
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-[var(--sea-ink)]">{title}</h3>
+        <div className={styles.header}>
+          <h3 className={styles.title}>{title}</h3>
           <button 
             onClick={onClose}
-            className="rounded-full p-2 hover:bg-[var(--line)] transition-colors text-[var(--sea-ink-soft)]"
+            className={styles.closeButton}
           >
-            <X className="h-5 w-5" />
+            <X className={`${utils.h5} ${utils.w5}`} />
           </button>
         </div>
         
-        <div className="relative">
+        <div className={utils.relative}>
           {children}
         </div>
       </div>

@@ -14,6 +14,7 @@
 - **Offline-First:** All list-related queries must use `persistQueryClient` with LocalStorage.
 
 ## UI/UX & Design Mandates
+- **Styling:** CSS Modules with `utils.module.css` for layout and `clay.module.css` for design system. Strictly NO Tailwind.
 - **Design System:** Strict Claymorphism (Large radii, dual inner-shadows, pastel colors).
 - **Performance:** Use `TanStack Virtual` for all lists and LOD (Layer of Detail) CSS for shadows.
 - **Frictionless Auth:** Sticky sessions (30-90 days) by default.

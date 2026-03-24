@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import utils from '../styles/utils.module.css'
 
 type ThemeMode = 'light' | 'dark' | 'auto'
 
@@ -73,7 +74,8 @@ export default function ThemeToggle() {
       onClick={toggleMode}
       aria-label={label}
       title={label}
-      className="rounded-full border border-[var(--chip-line)] bg-[var(--chip-bg)] px-3 py-1.5 text-sm font-semibold text-[var(--sea-ink)] shadow-[0_8px_22px_rgba(30,90,72,0.08)] transition hover:-translate-y-0.5"
+      className={`${utils.roundedFull} ${utils.borderChip} ${utils.bgChip} ${utils.px3} ${utils.py1_5} ${utils.textSm} ${utils.fontSemibold} ${utils.shadowChip} ${utils.transition} ${utils.hoverTranslateY0_5}`}
+      style={{ color: 'var(--sea-ink)', border: 'none', cursor: 'pointer' }}
     >
       {mode === 'auto' ? 'Auto' : mode === 'dark' ? 'Dark' : 'Light'}
     </button>

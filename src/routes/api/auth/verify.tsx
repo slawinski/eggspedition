@@ -1,11 +1,8 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { verifyMagicLinkServerFn } from '../../../services/auth.api'
+import utils from '../../../styles/utils.module.css'
 
-/**
- * Handles magic link verification and redirects users to their intended destination.
- */
 export const Route = createFileRoute('/api/auth/verify')({
-
   validateSearch: (search: Record<string, unknown>) => ({
     token: search.token as string,
     returnTo: search.returnTo as string | undefined,
@@ -38,11 +35,11 @@ function VerifyComponent() {
   const { error } = Route.useLoaderData()
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#fdf6f0' }}>
-      <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '2rem', boxShadow: '8px 8px 16px rgba(174, 174, 192, 0.4)' }}>
-        <h2 style={{ color: '#ff9a9e' }}>Oops! 🥚</h2>
-        <p>{error}</p>
-        <a href="/login" style={{ color: '#a18cd1', textDecoration: 'none', fontWeight: 'bold' }}>Try logging in again</a>
+    <div className={`${utils.flex} ${utils.justifyCenter} ${utils.itemsCenter}`} style={{ height: '100vh', backgroundColor: '#fdf6f0' }}>
+      <div className={`${utils.p8} ${utils.rounded2xl}`} style={{ backgroundColor: 'white', boxShadow: '8px 8px 16px rgba(174, 174, 192, 0.4)' }}>
+        <h2 className={`${utils.mb4}`} style={{ color: '#ff9a9e' }}>Oops! 🥚</h2>
+        <p className={`${utils.mb4}`}>{error}</p>
+        <a href="/login" className={`${utils.fontBold}`} style={{ color: '#a18cd1', textDecoration: 'none' }}>Try logging in again</a>
       </div>
     </div>
   )

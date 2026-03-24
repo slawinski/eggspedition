@@ -6,6 +6,8 @@ import SyncIndicator from './SyncIndicator'
 import { logoutServerFn } from '../services/auth.api'
 import { Route as rootRoute } from '../routes/__root'
 import { useState, useRef, useEffect } from 'react'
+import styles from './Header.module.css'
+import utils from '../styles/utils.module.css'
 
 export default function Header() {
   const { session } = rootRoute.useRouteContext()
@@ -32,43 +34,43 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[var(--line)] bg-[var(--header-bg)] px-4 backdrop-blur-lg">
-      <nav className="page-wrap flex items-center justify-between py-3 sm:py-4">
-        <h1 className="m-0 text-base font-semibold tracking-tight">
+    <header className={styles.header}>
+      <nav className={`${utils.flex} ${utils.itemsCenter} ${utils.justifyBetween} ${utils.py3} ${utils.smPy4} page-wrap`}>
+        <h1 className={`${utils.m0} ${utils.textSm} ${utils.fontSemibold} ${utils.trackingTight}`}>
           <Link
             to="/"
-            className="inline-flex items-center gap-2 rounded-full border border-[var(--chip-line)] bg-[var(--chip-bg)] px-3 py-1.5 text-sm text-[var(--sea-ink)] no-underline shadow-[0_8px_24px_rgba(30,90,72,0.08)] sm:px-4 sm:py-2"
+            className={styles.logoLink}
           >
-            <ShoppingBasket className="h-5 w-5 text-[#ff9a9e]" />
-            <span className="bg-gradient-to-r from-[#ff9a9e] to-[#a18cd1] bg-clip-text text-transparent font-bold">
+            <ShoppingBasket className={`${utils.h5} ${utils.w5}`} style={{ color: '#ff9a9e' }} />
+            <span className={styles.logoText}>
               Eggspedition
             </span>
           </Link>
         </h1>
 
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className={`${utils.flex} ${utils.itemsCenter} ${utils.gap2} ${utils.smGap4}`}>
           <SyncIndicator session={session} />
           <ThemeToggle />
           
           {session ? (
-            <div className="relative" ref={dropdownRef}>
+            <div className={utils.relative} ref={dropdownRef}>
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className={`flex items-center gap-1 p-1.5 rounded-2xl transition-all active:scale-95 ${isProfileOpen ? 'bg-[var(--line)] shadow-inner' : 'bg-white shadow-clay-sm hover:shadow-clay-md'}`}
+                className={`${styles.userButton} ${isProfileOpen ? styles.userButtonActive : styles.userButtonInactive}`}
               >
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#ff9a9e] to-[#fecfef] text-white">
-                  <User className="h-5 w-5" />
+                <div className={styles.userAvatar}>
+                  <User className={`${utils.h5} ${utils.w5}`} />
                 </div>
-                <ChevronDown className={`h-4 w-4 text-[var(--sea-ink-soft)] transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`${utils.h4} ${utils.w4} ${utils.transitionTransform} ${utils.duration300} ${isProfileOpen ? utils.rotate180 : ''}`} style={{ color: 'var(--sea-ink-soft)' }} />
               </button>
 
               {isProfileOpen && (
-                <div className="absolute right-0 mt-3 w-64 origin-top-right rounded-3xl border border-[var(--line)] bg-white p-2 shadow-clay-lg animate-in fade-in zoom-in-95 duration-200">
-                  <div className="px-4 py-3 border-b border-[var(--line)] mb-1">
-                    <p className="m-0 text-xs font-bold uppercase tracking-widest text-[var(--sea-ink-soft)] opacity-60">Account</p>
-                    <p className="m-0 mt-1 truncate text-sm font-bold text-[var(--sea-ink)]">{session.email}</p>
+                <div className={`${styles.dropdown} ${utils.animateIn}`}>
+                  <div className={`${utils.px4} ${utils.py3} ${utils.mb1}`} style={{ borderBottom: '1px solid var(--line)' }}>
+                    <p className={`${utils.m0} ${utils.textXs} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWidest} ${utils.opacity60}`} style={{ color: 'var(--sea-ink-soft)' }}>Account</p>
+                    <p className={`${utils.m0} ${utils.mt1} ${utils.truncate} ${utils.textSm} ${utils.fontBold}`} style={{ color: 'var(--sea-ink)' }}>{session.email}</p>
                     {session.householdId && (
-                      <p className="m-0 mt-0.5 truncate text-[10px] font-medium text-[var(--sea-ink-soft)]">
+                      <p className={`${utils.m0} ${utils.mt0_5} ${utils.truncate} ${utils.text10px} ${utils.fontMedium}`} style={{ color: 'var(--sea-ink-soft)' }}>
                         ID: {session.householdId}
                       </p>
                     )}
@@ -77,9 +79,9 @@ export default function Header() {
                   <Link
                     to="/admin"
                     onClick={() => setIsProfileOpen(false)}
-                    className="flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-bold text-[var(--sea-ink-soft)] hover:bg-[var(--page-bg)] hover:text-[#a18cd1] transition-colors"
+                    className={styles.dropdownItem}
                   >
-                    <Settings className="h-4 w-4" />
+                    <Settings className={`${utils.h4} ${utils.w4}`} />
                     Manage Household
                   </Link>
 
@@ -88,9 +90,9 @@ export default function Header() {
                       setIsProfileOpen(false)
                       handleLogout()
                     }}
-                    className="flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-bold text-[var(--sea-ink-soft)] hover:bg-red-50 hover:text-red-500 transition-colors"
+                    className={`${styles.dropdownItem} ${styles.logoutItem}`}
                   >
-                    <LogOut className="h-4 w-4" />
+                    <LogOut className={`${utils.h4} ${utils.w4}`} />
                     Logout
                   </button>
                 </div>
@@ -99,7 +101,7 @@ export default function Header() {
           ) : (
             <Link
               to="/login"
-              className="rounded-xl bg-white px-4 py-2 text-sm font-bold text-[#a18cd1] shadow-clay-sm hover:shadow-clay-md transition-all active:scale-95"
+              className={styles.loginLink}
             >
               Login
             </Link>

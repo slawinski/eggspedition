@@ -4,6 +4,7 @@ import { getQuickAddItemsFn, addQuickAddItemFn, updateQuickAddItemFn, deleteQuic
 import { useState } from 'react'
 import { Plus, Trash2, Edit2, Check, Settings, Zap } from 'lucide-react'
 import Signals from '../components/Signals'
+import utils from '../styles/utils.module.css'
 
 export const Route = createFileRoute('/admin')({
   beforeLoad: ({ context }) => {
@@ -114,17 +115,17 @@ function AdminPage() {
   const error = addMutation.error || updateMutation.error || deleteMutation.error
 
   return (
-    <main className="min-h-screen bg-[var(--page-bg)] pb-20 pt-6">
+    <main className={`${utils.pb14} ${utils.pt10}`} style={{ minHeight: '100vh', backgroundColor: 'var(--page-bg)' }}>
       <Signals />
-      <div className="page-wrap px-4">
-        <header className="mb-8 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-clay-sm">
-              <Settings className="h-6 w-6 text-[#a18cd1]" />
+      <div className={`${utils.pageWrap} ${utils.px4}`}>
+        <header className={`${utils.mb4} ${utils.flex} ${utils.itemsCenter} ${utils.justifyBetween}`}>
+          <div className={`${utils.flex} ${utils.itemsCenter} ${utils.gap3}`}>
+            <div className={`${utils.flex} ${utils.itemsCenter} ${utils.justifyCenter} ${utils.rounded2xl} ${utils.shadowChip}`} style={{ width: '3rem', height: '3rem', backgroundColor: 'white' }}>
+              <Settings className={`${utils.h6} ${utils.w6}`} style={{ color: '#a18cd1' }} />
             </div>
             <div>
-              <h2 className="m-0 text-2xl font-bold tracking-tight text-[var(--sea-ink)]">Admin Dashboard</h2>
-              <p className="m-0 text-sm font-medium text-[var(--sea-ink-soft)]">Manage your household's Quick Add items</p>
+              <h2 className={`${utils.m0} ${utils.textLg} ${utils.fontBold} ${utils.trackingTight}`} style={{ color: 'var(--sea-ink)' }}>Admin Dashboard</h2>
+              <p className={`${utils.m0} ${utils.textSm} ${utils.fontMedium}`} style={{ color: 'var(--sea-ink-soft)' }}>Manage templates</p>
             </div>
           </div>
           <button
@@ -134,22 +135,23 @@ function AdminPage() {
               resetForm()
               window.scrollTo({ top: 0, behavior: 'smooth' })
             }}
-            className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-[#ff9a9e] shadow-clay-sm hover:shadow-clay-md transition-all active:scale-95"
+            className={`${utils.flex} ${utils.itemsCenter} ${utils.gap2} ${utils.roundedXl} ${utils.px4} ${utils.py2_5} ${utils.textSm} ${utils.fontBold} ${utils.shadowChip} ${utils.transition} ${utils.activeScale95}`}
+            style={{ backgroundColor: 'white', color: '#ff9a9e', border: 'none', cursor: 'pointer' }}
           >
-            <Plus className="h-4 w-4" />
+            <Plus className={utils.icon} />
             Add Template
           </button>
         </header>
 
         {(isAdding || editingId) && (
-          <div id="template-form" className="mb-8 rounded-3xl bg-white p-6 shadow-clay-md border border-[var(--line)] animate-in fade-in slide-in-from-top-4 duration-300">
-            <h3 className="mb-4 text-lg font-bold text-[var(--sea-ink)] flex items-center gap-2">
-              {editingId ? <Edit2 className="h-5 w-5 text-[#a18cd1]" /> : <Plus className="h-5 w-5 text-[#ff9a9e]" />}
+          <div className={`${utils.mb4} ${utils.rounded3xl} ${utils.p6} ${utils.shadowChip} ${utils.animateIn}`} style={{ backgroundColor: 'white', border: '1px solid var(--line)' }}>
+            <h3 className={`${utils.mb4} ${utils.textLg} ${utils.fontBold} ${utils.flex} ${utils.itemsCenter} ${utils.gap2}`} style={{ color: 'var(--sea-ink)' }}>
+              {editingId ? <Edit2 className={utils.icon} style={{ color: '#a18cd1' }} /> : <Plus className={utils.icon} style={{ color: '#ff9a9e' }} />}
               {editingId ? 'Edit Template' : 'Add New Template'}
             </h3>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-[var(--sea-ink-soft)] px-1">Item Name</label>
+            <div className={`${utils.grid} ${utils.gap4} ${utils.smGridCols3}`}>
+              <div className={`${utils.flex} ${utils.flexCol} ${utils.gap1}`}>
+                <label className={`${utils.textXs} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWider} ${utils.px1}`} style={{ color: 'var(--sea-ink-soft)' }}>Item Name</label>
                 <input
                   type="text"
                   autoFocus
@@ -157,11 +159,12 @@ function AdminPage() {
                   onChange={(e) => setName(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="e.g. Oat Milk"
-                  className="w-full rounded-2xl border border-[var(--line)] bg-[var(--page-bg)] px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#a18cd1]/20"
+                  className={`${utils.wFull} ${utils.rounded2xl} ${utils.px4} ${utils.py3} ${utils.textSm} ${utils.fontMedium} ${utils.outlineNone}`}
+                  style={{ border: '1px solid var(--line)', backgroundColor: 'var(--bg-base)' }}
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-[var(--sea-ink-soft)] px-1">Category</label>
+              <div className={`${utils.flex} ${utils.flexCol} ${utils.gap1}`}>
+                <label className={`${utils.textXs} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWider} ${utils.px1}`} style={{ color: 'var(--sea-ink-soft)' }}>Category</label>
                 <input
                   type="text"
                   list="category-list"
@@ -169,7 +172,8 @@ function AdminPage() {
                   onChange={(e) => setCategoryName(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="e.g. Dairy"
-                  className="w-full rounded-2xl border border-[var(--line)] bg-[var(--page-bg)] px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#a18cd1]/20"
+                  className={`${utils.wFull} ${utils.rounded2xl} ${utils.px4} ${utils.py3} ${utils.textSm} ${utils.fontMedium} ${utils.outlineNone}`}
+                  style={{ border: '1px solid var(--line)', backgroundColor: 'var(--bg-base)' }}
                 />
                 <datalist id="category-list">
                   {categories.map((c) => (
@@ -177,8 +181,8 @@ function AdminPage() {
                   ))}
                 </datalist>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-[var(--sea-ink-soft)] px-1">Preferred Store</label>
+              <div className={`${utils.flex} ${utils.flexCol} ${utils.gap1}`}>
+                <label className={`${utils.textXs} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWider} ${utils.px1}`} style={{ color: 'var(--sea-ink-soft)' }}>Preferred Store</label>
                 <input
                   type="text"
                   list="store-list"
@@ -186,7 +190,8 @@ function AdminPage() {
                   onChange={(e) => setStoreName(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="e.g. Trader Joe's"
-                  className="w-full rounded-2xl border border-[var(--line)] bg-[var(--page-bg)] px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#a18cd1]/20"
+                  className={`${utils.wFull} ${utils.rounded2xl} ${utils.px4} ${utils.py3} ${utils.textSm} ${utils.fontMedium} ${utils.outlineNone}`}
+                  style={{ border: '1px solid var(--line)', backgroundColor: 'var(--bg-base)' }}
                 />
                 <datalist id="store-list">
                   {stores.map((s) => (
@@ -195,32 +200,40 @@ function AdminPage() {
                 </datalist>
               </div>
             </div>
-            <div className="mt-6 flex flex-col gap-3">
+            <div className={`${utils.mt3} ${utils.flex} ${utils.flexCol} ${utils.gap3}`}>
               {error && (
-                <p className="rounded-xl bg-red-50 p-3 text-xs font-medium text-red-500 border border-red-100 animate-in fade-in duration-300">
-                  {error instanceof Error ? error.message : 'Something went wrong. Please try again.'}
+                <p className={`${utils.roundedXl} ${utils.p3} ${utils.textXs} ${utils.fontMedium} ${utils.animateIn}`} style={{ backgroundColor: '#fef2f2', color: '#ef4444', border: '1px solid #fee2e2' }}>
+                  {error instanceof Error ? error.message : 'Something went wrong.'}
                 </p>
               )}
-              <div className="flex justify-end gap-3">
+              <div className={`${utils.flex} ${utils.justifyEnd} ${utils.gap3}`}>
                 <button
                   onClick={() => {
                     setIsAdding(false)
                     setEditingId(null)
                   }}
                   disabled={isPending}
-                  className="rounded-xl border border-[var(--line)] px-4 py-2 text-sm font-bold text-[var(--sea-ink-soft)] hover:bg-[var(--page-bg)] transition-colors disabled:opacity-50"
+                  className={`${utils.roundedXl} ${utils.px4} ${utils.py2} ${utils.textSm} ${utils.fontBold} ${utils.transition}`}
+                  style={{ border: '1px solid var(--line)', color: 'var(--sea-ink-soft)', background: 'none', cursor: 'pointer' }}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={!name || isPending}
-                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#ff9a9e] to-[#fecfef] px-6 py-2 text-sm font-bold text-white shadow-clay-sm hover:shadow-clay-md transition-all active:scale-95 disabled:opacity-50"
+                  className={`${utils.flex} ${utils.itemsCenter} ${utils.gap2} ${utils.roundedXl} ${utils.px6} ${utils.py2} ${utils.textSm} ${utils.fontBold} ${utils.transition} ${utils.activeScale95}`}
+                  style={{ 
+                    background: 'linear-gradient(to right, #ff9a9e, #fecfef)', 
+                    color: 'white', 
+                    border: 'none', 
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
                 >
                   {isPending ? (
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    <div className={`${utils.animateSpin}`} style={{ height: '1rem', width: '1rem', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white' }} />
                   ) : (
-                    <Check className="h-4 w-4" />
+                    <Check className={utils.icon} />
                   )}
                   {editingId ? 'Update' : 'Create'}
                 </button>
@@ -229,14 +242,14 @@ function AdminPage() {
           </div>
         )}
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className={`${utils.grid} ${utils.gap4} ${utils.smGridCols3}`} style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
           {isLoadingItems ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-24 animate-pulse rounded-3xl bg-white shadow-clay-sm border border-[var(--line)]/10" />
+              <div key={i} className={`${utils.rounded3xl} ${utils.animateSpin}`} style={{ height: '6rem', backgroundColor: 'white', border: '1px solid var(--line)', opacity: 0.1 }} />
             ))
           ) : isErrorItems ? (
-            <div className="col-span-full py-12 text-center text-red-400 font-medium">
-              Failed to load Quick Add items. Please refresh.
+            <div className={`${utils.textCenter} ${utils.py12} ${utils.fontMedium}`} style={{ gridColumn: '1 / -1', color: '#f87171' }}>
+              Failed to load templates.
             </div>
           ) : (
             items.map((item) => {
@@ -247,42 +260,48 @@ function AdminPage() {
               return (
                 <div
                   key={item.id}
-                  className={`group relative overflow-hidden rounded-3xl shadow-clay-sm transition-all hover:shadow-clay-md border ${isEditingThis ? 'bg-[#a18cd1]/5 border-[#a18cd1]/30 ring-2 ring-[#a18cd1]/10' : 'bg-white border-transparent hover:border-[var(--line)]'}`}
+                  className={`${utils.relative} ${utils.rounded3xl} ${utils.shadowChip} ${utils.transition}`}
+                  style={{ 
+                    backgroundColor: isEditingThis ? 'rgba(161, 140, 209, 0.05)' : 'white', 
+                    border: isEditingThis ? '1px solid rgba(161, 140, 209, 0.3)' : '1px solid transparent',
+                    overflow: 'hidden'
+                  }}
                 >
-                  <div className="flex items-start justify-between p-5">
+                  <div className={`${utils.flex} ${utils.flexCol} ${utils.p4}`}>
                     <div 
                       onClick={() => handleEdit(item)}
-                      className="flex-1 cursor-pointer"
+                      style={{ cursor: 'pointer', flex: 1 }}
                     >
-                      <h4 className={`m-0 text-base font-bold ${isEditingThis ? 'text-[#a18cd1]' : 'text-[var(--sea-ink)]'}`}>{item.name}</h4>
-                      <div className="mt-2 flex flex-wrap gap-2">
+                      <h4 className={`${utils.m0} ${utils.textSm} ${utils.fontBold}`} style={{ color: isEditingThis ? '#a18cd1' : 'var(--sea-ink)' }}>{item.name}</h4>
+                      <div className={`${utils.mt3} ${utils.flex} ${utils.flexWrap} ${utils.gap2}`}>
                         {category ? (
-                          <span className="rounded-full bg-[var(--page-bg)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--sea-ink-soft)] border border-[var(--line)]">
+                          <span className={`${utils.roundedFull} ${utils.px2} ${utils.py0_5} ${utils.text10px} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWider}`} style={{ backgroundColor: 'var(--bg-base)', color: 'var(--sea-ink-soft)', border: '1px solid var(--line)' }}>
                             {category.name}
                           </span>
                         ) : (
-                          <span className="rounded-full bg-[var(--page-bg)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 border border-dashed border-[var(--line)]">
+                          <span className={`${utils.roundedFull} ${utils.px2} ${utils.py0_5} ${utils.text10px} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWider}`} style={{ backgroundColor: 'var(--bg-base)', color: '#9ca3af', border: '1px dashed var(--line)' }}>
                             No Category
                           </span>
                         )}
                         {store ? (
-                          <span className="rounded-full bg-[#fecfef]/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#ff9a9e] border border-[#ff9a9e]/20">
+                          <span className={`${utils.roundedFull} ${utils.px2} ${utils.py0_5} ${utils.text10px} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWider}`} style={{ backgroundColor: 'rgba(254, 207, 239, 0.3)', color: '#ff9a9e', border: '1px solid rgba(255, 154, 158, 0.2)' }}>
                             {store.name}
                           </span>
                         ) : (
-                          <span className="rounded-full bg-[var(--page-bg)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 border border-dashed border-[var(--line)]">
+                          <span className={`${utils.roundedFull} ${utils.px2} ${utils.py0_5} ${utils.text10px} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWider}`} style={{ backgroundColor: 'var(--bg-base)', color: '#9ca3af', border: '1px dashed var(--line)' }}>
                             Any Store
                           </span>
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-1 relative z-20">
+                    <div className={`${utils.flex} ${utils.justifyEnd} ${utils.gap1} ${utils.mt3}`}>
                       <button
                         onClick={() => handleEdit(item)}
-                        className={`p-2 rounded-lg transition-colors ${isEditingThis ? 'text-[#a18cd1] bg-[#a18cd1]/10' : 'text-gray-400 hover:text-[#a18cd1] hover:bg-[#a18cd1]/10'}`}
+                        className={`${utils.p1} ${utils.rounded}`}
+                        style={{ color: isEditingThis ? '#a18cd1' : '#9ca3af', background: 'none', border: 'none', cursor: 'pointer' }}
                         title="Edit Template"
                       >
-                        <Edit2 className="h-4 w-4" />
+                        <Edit2 className={utils.iconSm} />
                       </button>
                       <button
                         onClick={() => {
@@ -290,15 +309,16 @@ function AdminPage() {
                             deleteMutation.mutate(item.id)
                           }
                         }}
-                        className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                        className={`${utils.p1} ${utils.rounded}`}
+                        style={{ color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer' }}
                         title="Delete Template"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className={utils.iconSm} />
                       </button>
                     </div>
                   </div>
-                  <div className={`absolute right-[-10px] bottom-[-10px] rotate-[-15deg] opacity-[0.03] transition-all pointer-events-none ${isEditingThis ? 'opacity-[0.1] scale-110' : 'group-hover:opacity-[0.07]'}`}>
-                    <Zap className="h-20 w-20 text-[#a18cd1]" />
+                  <div className={`${utils.absolute}`} style={{ right: '-10px', bottom: '-10px', transform: 'rotate(-15deg)', opacity: 0.03, pointerEvents: 'none' }}>
+                    <Zap style={{ width: '5rem', height: '5rem', color: '#a18cd1' }} />
                   </div>
                 </div>
               )
@@ -306,13 +326,13 @@ function AdminPage() {
           )}
           
           {items.length === 0 && !isAdding && !isLoadingItems && !isErrorItems && (
-            <div className="col-span-full flex flex-col items-center justify-center rounded-[3rem] border-2 border-dashed border-[var(--line)] py-16 text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-white shadow-clay-sm">
-                <Zap className="h-8 w-8 text-gray-300" />
+            <div className={`${utils.flex} ${utils.flexCol} ${utils.itemsCenter} ${utils.justifyCenter} ${utils.py12} ${utils.textCenter}`} style={{ gridColumn: '1 / -1', borderRadius: '3rem', border: '2px dashed var(--line)' }}>
+              <div className={`${utils.mb4} ${utils.flex} ${utils.itemsCenter} ${utils.justifyCenter} ${utils.rounded2xl} ${utils.shadowChip}`} style={{ width: '4rem', height: '4rem', backgroundColor: 'white' }}>
+                <Zap className={`${utils.h8} ${utils.w8}`} style={{ color: '#d1d5db' }} />
               </div>
-              <h3 className="text-lg font-bold text-[var(--sea-ink)]">No Quick Add templates yet</h3>
-              <p className="max-w-xs text-sm font-medium text-[var(--sea-ink-soft)]">
-                Create templates to quickly add items with pre-set categories and stores.
+              <h3 className={`${utils.textLg} ${utils.fontBold}`} style={{ color: 'var(--sea-ink)' }}>No templates yet</h3>
+              <p className={`${utils.textSm} ${utils.fontMedium}`} style={{ color: 'var(--sea-ink-soft)', maxWidth: '20rem' }}>
+                Create templates to quickly add items.
               </p>
             </div>
           )}

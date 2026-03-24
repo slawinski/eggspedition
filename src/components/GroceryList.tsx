@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getGroceryItemsFn, updateGroceryItemFn, deleteGroceryItemFn, householdSignalFn, getCategoriesFn, getStoresFn } from '../services/grocery.api'
 import type { GroceryItem } from '../lib/schemas'
-import styles from '../styles/clay.module.css'
+import clay from '../styles/clay.module.css'
+import utils from '../styles/utils.module.css'
 import { CheckCircle2, Circle, Trash2, Tag, Store as StoreIcon } from 'lucide-react'
 import { useRef, useState, useEffect } from 'react'
 import { useWindowVirtualizer } from '@tanstack/react-virtual'
@@ -25,9 +26,7 @@ function useHouseholdSignals() {
           if (done) break
           
           const chunk = decoder.decode(value)
-          console.log(`[SSE] Received chunk:`, chunk)
           if (chunk.includes('data:')) {
-            console.log(`[SSE] Invalidating queries...`)
             queryClient.invalidateQueries({ queryKey: ['grocery-items'] })
             queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'] })
             queryClient.invalidateQueries({ queryKey: ['household-logs'] })
@@ -130,13 +129,13 @@ export default function GroceryList({ session }: { session: Session | null }) {
     },
   })
 
-  if (isLoadingItems) return <div className="text-center py-10 text-[var(--sea-ink-soft)]">Loading list...</div>
-  if (itemsError) return <div className="text-center py-10 text-red-400">Error loading list.</div>
+  if (isLoadingItems) return <div className={`${utils.textCenter} ${utils.py10}`} style={{ color: 'var(--sea-ink-soft)' }}>Loading list...</div>
+  if (itemsError) return <div className={`${utils.textCenter} ${utils.py10} ${utils.textRed400}`}>Error loading list.</div>
 
   if (!items || items.length === 0) {
     return (
-      <div className={`${styles.card} text-center py-12 !p-8`}>
-        <p className="text-[var(--sea-ink-soft)]">Your list is empty. Add something yummy!</p>
+      <div className={`${clay.card} ${utils.textCenter} ${utils.py12} ${utils.p8}`}>
+        <p style={{ color: 'var(--sea-ink-soft)' }}>Your list is empty. Add something yummy!</p>
       </div>
     )
   }
@@ -144,7 +143,7 @@ export default function GroceryList({ session }: { session: Session | null }) {
   return (
     <div
       ref={parentRef}
-      className="relative w-full"
+      className={`${utils.relative} ${utils.wFull}`}
     >
       <div
         style={{
@@ -174,40 +173,42 @@ export default function GroceryList({ session }: { session: Session | null }) {
               }}
             >
               <div 
-                className={`${styles.card} flex items-center justify-between !p-4 sm:!p-5 transition-all hover:translate-y-[-2px] h-[calc(100%-12px)]`}
+                className={`${clay.card} ${utils.flex} ${utils.itemsCenter} ${utils.justifyBetween} ${utils.p4} ${utils.smP5} ${utils.transition} ${utils.hoverTranslateY0_5}`}
+                style={{ height: 'calc(100% - 12px)' }}
               >
-                <div className="flex items-center gap-4 flex-1">
+                <div className={`${utils.flex} ${utils.itemsCenter} ${utils.gap4} ${utils.flex1}`}>
                   <button
                     onClick={() => updateMutation.mutate({ id: item.id, checked: item.checked === 'true' ? 'false' : 'true' })}
-                    className="focus:outline-none transition-transform active:scale-90 cursor-pointer"
+                    className={`${utils.outlineNone} ${utils.transitionTransform} ${utils.activeScale90} ${utils.cursorPointer}`}
                     aria-label={item.checked === 'true' ? 'Uncheck item' : 'Check item'}
+                    style={{ background: 'none', border: 'none', padding: 0 }}
                   >
                     {item.checked === 'true' ? (
-                      <CheckCircle2 className="h-7 w-7 text-[#84fab0] drop-shadow-sm" />
+                      <CheckCircle2 className={`${utils.iconXl} ${utils.dropShadowSm}`} style={{ color: '#84fab0' }} />
                     ) : (
-                      <Circle className="h-7 w-7 text-[var(--sea-ink-soft)] opacity-60 hover:opacity-100 transition-opacity" />
+                      <Circle className={`${utils.iconXl} ${utils.opacity60} ${utils.hoverOpacity100} ${utils.transitionOpacity}`} style={{ color: 'var(--sea-ink-soft)' }} />
                     )}
                   </button>
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-lg font-bold transition-all ${item.checked === 'true' ? 'line-through opacity-40' : 'text-[var(--sea-ink)]'}`}>
+                  <div className={utils.flexCol}>
+                    <div className={`${utils.flex} ${utils.itemsCenter} ${utils.gap2}`}>
+                      <span className={`${utils.textLg} ${utils.fontBold} ${utils.transition} ${item.checked === 'true' ? `${utils.lineThrough} ${utils.opacity40}` : ''}`} style={{ color: 'var(--sea-ink)' }}>
                         {item.name}
                       </span>
                       {item.quantity !== '1' && (
-                        <span className="text-[10px] font-bold bg-[#a18cd1]/10 px-2 py-0.5 rounded-full text-[#a18cd1] uppercase tracking-wider">
+                        <span className={`${utils.text10px} ${utils.fontBold} ${utils.px2} ${utils.py0_5} ${utils.roundedFull} ${utils.uppercase} ${utils.trackingWider}`} style={{ backgroundColor: 'rgba(161, 140, 209, 0.1)', color: '#a18cd1' }}>
                           x{item.quantity}
                         </span>
                       )}
                     </div>
-                    <div className="flex flex-wrap gap-2 mt-1">
+                    <div className={`${utils.flex} ${utils.flexWrap} ${utils.gap2} ${utils.mt1}`}>
                       {category && (
-                        <span className="text-[10px] font-bold flex items-center gap-1 text-[var(--sea-ink-soft)] opacity-60 uppercase tracking-wider bg-[var(--page-bg)] px-2 py-0.5 rounded border border-[var(--line)]">
-                          <Tag className="h-2.5 w-2.5" /> {category.name}
+                        <span className={`${utils.text10px} ${utils.fontBold} ${utils.flex} ${utils.itemsCenter} ${utils.gap1} ${utils.opacity60} ${utils.uppercase} ${utils.trackingWider} ${utils.px2} ${utils.py0_5} ${utils.rounded} ${utils.border} ${utils.borderLine}`} style={{ backgroundColor: 'var(--sand)', color: 'var(--sea-ink-soft)' }}>
+                          <Tag className={utils.icon2_5} /> {category.name}
                         </span>
                       )}
                       {store && (
-                        <span className="text-[10px] font-bold flex items-center gap-1 text-[#ff9a9e] opacity-80 uppercase tracking-wider bg-[#fecfef]/30 px-2 py-0.5 rounded border border-[#ff9a9e]/20">
-                          <StoreIcon className="h-2.5 w-2.5" /> {store.name}
+                        <span className={`${utils.text10px} ${utils.fontBold} ${utils.flex} ${utils.itemsCenter} ${utils.gap1} ${utils.opacity80} ${utils.uppercase} ${utils.trackingWider} ${utils.px2} ${utils.py0_5} ${utils.rounded} ${utils.border}`} style={{ color: '#ff9a9e', backgroundColor: 'rgba(254, 207, 239, 0.3)', borderColor: 'rgba(255, 154, 158, 0.2)' }}>
+                          <StoreIcon className={utils.icon2_5} /> {store.name}
                         </span>
                       )}
                     </div>
@@ -215,10 +216,11 @@ export default function GroceryList({ session }: { session: Session | null }) {
                 </div>
                 <button
                   onClick={() => deleteMutation.mutate(item.id)}
-                  className="p-2 rounded-xl text-red-400 hover:text-red-600 transition-all active:scale-90 cursor-pointer"
+                  className={`${utils.p2} ${utils.roundedXl} ${utils.textRed400} ${utils.transition} ${utils.activeScale90} ${utils.cursorPointer}`}
                   aria-label="Delete item"
+                  style={{ background: 'none', border: 'none' }}
                 >
-                  <Trash2 className="h-5 w-5" />
+                  <Trash2 className={utils.iconLg} />
                 </button>
               </div>
             </div>

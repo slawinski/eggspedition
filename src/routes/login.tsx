@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useServerFn } from '@tanstack/react-start'
 import { loginServerFn } from '../services/auth.api'
 import clay from '../styles/clay.module.css'
+import utils from '../styles/utils.module.css'
 
 import { z } from 'zod'
 
@@ -43,30 +44,24 @@ function LoginComponent() {
   }
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      minHeight: '100vh',
-      backgroundColor: 'var(--clay-bg)' 
-    }}>
+    <div className={`${utils.flex} ${utils.justifyCenter} ${utils.itemsCenter}`} style={{ minHeight: '100vh', backgroundColor: 'var(--clay-bg)' }}>
       <div className={clay.card} style={{ maxWidth: '400px', width: '90%' }}>
-        <h1 className={clay.puffyText} style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+        <h1 className={`${clay.puffyText} ${utils.textCenter} ${utils.mb4}`}>
           Welcome Home! 🥚
         </h1>
         
         {sent ? (
-          <div style={{ textAlign: 'center' }}>
+          <div className={utils.textCenter}>
             <p className={clay.puffyText}>
               We've sent a squishy magic link to <strong>{email}</strong>.
             </p>
-            <p style={{ fontSize: '0.9rem', marginTop: '1rem', color: '#888' }}>
+            <p className={`${utils.textSm} ${utils.mt4}`} style={{ color: '#888' }}>
               (Check your console in dev mode!)
             </p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <label className={clay.puffyText} style={{ fontSize: '0.9rem', marginLeft: '0.5rem' }}>
+          <form onSubmit={handleSubmit} className={`${utils.flex} ${utils.flexCol} ${utils.gap4}`}>
+            <label className={`${clay.puffyText} ${utils.textSm} ${utils.ml2}`}>
               Your Email
             </label>
             <input
@@ -77,8 +72,8 @@ function LoginComponent() {
               onChange={(e) => setEmail(e.target.value)}
               required
             />
-            {error && <p style={{ color: 'red', fontSize: '0.8rem', marginLeft: '0.5rem' }}>{error}</p>}
-            <button type="submit" className={clay.button} style={{ marginTop: '1rem' }}>
+            {error && <p className={`${utils.textXs} ${utils.ml2}`} style={{ color: 'red' }}>{error}</p>}
+            <button type="submit" className={`${clay.button} ${utils.mt4}`}>
               Send Magic Link
             </button>
           </form>

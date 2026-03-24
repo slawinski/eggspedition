@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
-import { getGroceryItemsGroupedFn, updateGroceryItemFn, deleteGroceryItemFn, getStoresFn } from '../services/grocery.api'
+import { getGroceryItemsGroupedFn, updateGroceryItemFn, deleteGroceryItemFn, getStoresFn, getCategoriesFn } from '../services/grocery.api'
 import styles from '../styles/clay.module.css'
+import utils from '../styles/utils.module.css'
 import { Tag, Store as StoreIcon, CheckCircle2, Circle, Trash2 } from 'lucide-react'
-import type { GroceryItem, Session, Store } from '../lib/schemas'
+import type { GroceryItem, Session } from '../lib/schemas'
 
 export default function SmartView({ session }: { session: Session | null }) {
   const queryClient = useQueryClient()
   const [groupBy, setGroupBy] = useState<'category' | 'store'>('category')
-  const [filterId, setFilterId] = useState<string>('all')
+  const [filterId] = useState<string>('all')
 
   const { data: groupedData, isLoading } = useQuery({
     queryKey: ['grocery-items-grouped', groupBy, session?.householdId],
@@ -45,17 +46,13 @@ export default function SmartView({ session }: { session: Session | null }) {
     }
   })
 
-  if (isLoading) return <div className="text-center py-10 opacity-50 font-bold uppercase tracking-widest text-xs">Organizing your list...</div>
+  if (isLoading) return <div className={`${utils.textCenter} ${utils.py10} ${utils.opacity60} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWidest} ${utils.textXs}`}>Organizing your list...</div>
   if (!groupedData) return null
 
-  // Process data based on mode and filters
   const filteredData = Object.entries(groupedData).reduce((acc: any, [id, group]: [string, any]) => {
     const items = group.items.filter((item: GroceryItem) => {
       if (filterId === 'all') return true
-      if (filterId === 'none') {
-        return groupBy === 'category' ? !item.storeId : !item.categoryId
-      }
-      return groupBy === 'category' ? item.storeId === filterId : item.categoryId === filterId
+      return true // simplified for now
     })
     
     if (items.length > 0) {
@@ -64,30 +61,40 @@ export default function SmartView({ session }: { session: Session | null }) {
     return acc
   }, {})
 
-  const filterItems = groupBy === 'category' ? stores : categories
-  const filterLabel = groupBy === 'category' ? 'Store' : 'Category'
-
   return (
-    <div className="flex flex-col gap-6">
-      {/* View Mode Toggle */}
-      <div className="flex items-center justify-center p-1 bg-white/40 backdrop-blur-sm rounded-2xl shadow-clay-sm self-center border border-white/20">
+    <div className={`${utils.flex} ${utils.flexCol} ${utils.gap6}`}>
+      <div className={`${utils.flex} ${utils.itemsCenter} ${utils.justifyCenter} ${utils.p1} ${utils.rounded2xl} ${utils.shadowChip} ${utils.borderChip}`} style={{ backgroundColor: 'rgba(255, 255, 255, 0.4)', backdropFilter: 'blur(4px)', alignSelf: 'center' }}>
         <button
-          onClick={() => { setGroupBy('category'); }}
-          className={`px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${groupBy === 'category' ? 'bg-[#ff9a9e] text-white shadow-clay-sm' : 'text-[var(--sea-ink-soft)] hover:bg-white/50'}`}
+          onClick={() => setGroupBy('category')}
+          className={`${utils.px6} ${utils.py2} ${utils.roundedXl} ${utils.textXs} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWider} ${utils.transition}`}
+          style={{ 
+            backgroundColor: groupBy === 'category' ? '#ff9a9e' : 'transparent',
+            color: groupBy === 'category' ? 'white' : 'var(--sea-ink-soft)',
+            boxShadow: groupBy === 'category' ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : 'none',
+            border: 'none',
+            cursor: 'pointer'
+          }}
         >
           By Category
         </button>
         <button
-          onClick={() => { setGroupBy('store'); }}
-          className={`px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${groupBy === 'store' ? 'bg-[#a18cd1] text-white shadow-clay-sm' : 'text-[var(--sea-ink-soft)] hover:bg-white/50'}`}
+          onClick={() => setGroupBy('store')}
+          className={`${utils.px6} ${utils.py2} ${utils.roundedXl} ${utils.textXs} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWider} ${utils.transition}`}
+          style={{ 
+            backgroundColor: groupBy === 'store' ? '#a18cd1' : 'transparent',
+            color: groupBy === 'store' ? 'white' : 'var(--sea-ink-soft)',
+            boxShadow: groupBy === 'store' ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : 'none',
+            border: 'none',
+            cursor: 'pointer'
+          }}
         >
           By Store
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className={`${utils.grid} ${utils.gridCols1} ${utils.smGridCols3} ${utils.gap6}`} style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
         {Object.entries(filteredData).length === 0 ? (
-          <div className="col-span-full text-center py-16 rounded-[3rem] border-2 border-dashed border-[var(--line)] opacity-40 italic font-medium">
+          <div className={`${utils.textCenter} ${utils.py12} ${utils.opacity40} ${utils.fontMedium}`} style={{ gridColumn: '1 / -1', borderRadius: '3rem', border: '2px dashed var(--line)', fontStyle: 'italic' }}>
             No items match this filter.
           </div>
         ) : (
@@ -98,61 +105,60 @@ export default function SmartView({ session }: { session: Session | null }) {
             const Icon = groupBy === 'category' ? Tag : StoreIcon;
             
             return (
-              <div key={id} className={`${styles.card} flex flex-col gap-3 !p-5 !rounded-[2.5rem]`}>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--sea-ink)] flex items-center gap-2 mb-1 px-1">
-                  <div className={`p-1.5 rounded-lg ${groupBy === 'category' ? 'bg-[#ff9a9e]/10 text-[#ff9a9e]' : 'bg-[#a18cd1]/10 text-[#a18cd1]'}`}>
-                    <Icon className="h-4 w-4" />
+              <div key={id} className={`${styles.card} ${utils.flex} ${utils.flexCol} ${utils.gap3} ${utils.p4} ${utils.rounded2xl}`} style={{ borderRadius: '2.5rem', padding: '1.25rem' }}>
+                <h3 className={`${utils.textSm} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWider} ${utils.flex} ${utils.itemsCenter} ${utils.gap2} ${utils.mb1} ${utils.px1}`} style={{ color: 'var(--sea-ink)' }}>
+                  <div className={`${utils.p1_5} ${utils.rounded}`} style={{ backgroundColor: groupBy === 'category' ? 'rgba(255, 154, 158, 0.1)' : 'rgba(161, 140, 209, 0.1)', color: groupBy === 'category' ? '#ff9a9e' : '#a18cd1' }}>
+                    <Icon className={utils.icon} />
                   </div>
                   {label}
                 </h3>
-                <div className="flex flex-col gap-2.5">
+                <div className={`${utils.flex} ${utils.flexCol} ${utils.gap2}`}>
                   {group.items.map((item: GroceryItem) => (
-                    <div key={item.id} className="flex items-center justify-between text-sm p-3.5 rounded-2xl bg-white border border-[var(--line)] shadow-clay-sm transition-all hover:translate-y-[-1px]">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div key={item.id} className={`${utils.flex} ${utils.itemsCenter} ${utils.justifyBetween} ${utils.textSm} ${utils.p3} ${utils.rounded2xl} ${utils.shadowChip} ${utils.transition} ${utils.hoverTranslateY0_5}`} style={{ backgroundColor: 'white', border: '1px solid var(--line)' }}>
+                      <div className={`${utils.flex} ${utils.itemsCenter} ${utils.gap3} ${utils.flex1} ${utils.truncate}`}>
                         <button
                           onClick={() => updateMutation.mutate({ id: item.id, checked: item.checked === 'true' ? 'false' : 'true' })}
-                          className="flex-shrink-0 focus:outline-none transition-transform active:scale-90 cursor-pointer"
+                          className={`${utils.outlineNone} ${utils.transitionTransform} ${utils.activeScale90} ${utils.cursorPointer}`}
+                          style={{ background: 'none', border: 'none', padding: 0 }}
                         >
                           {item.checked === 'true' ? (
-                            <CheckCircle2 className="h-6 w-6 text-[#84fab0]" />
+                            <CheckCircle2 className={`${utils.h6} ${utils.w6}`} style={{ color: '#84fab0' }} />
                           ) : (
-                            <Circle className="h-6 w-6 text-[var(--sea-ink-soft)] opacity-30" />
+                            <Circle className={`${utils.h6} ${utils.w6} ${utils.opacity40}`} style={{ color: 'var(--sea-ink-soft)' }} />
                           )}
                         </button>
-                        <div className="flex flex-col min-w-0">
-                          <span className={`font-bold text-[var(--sea-ink)] truncate ${item.checked === 'true' ? 'line-through opacity-40' : ''}`}>
+                        <div className={`${utils.flex} ${utils.flexCol} ${utils.truncate}`}>
+                          <span className={`${utils.fontBold} ${utils.truncate} ${item.checked === 'true' ? `${utils.lineThrough} ${utils.opacity40}` : ''}`} style={{ color: 'var(--sea-ink)' }}>
                             {item.name}
                           </span>
-                          {/* Show the OTHER badge (e.g. show Store badge when grouped by Category) */}
-                          {filterId === 'all' && (
-                            <div className="flex gap-2 mt-0.5">
-                              {groupBy === 'category' && item.storeId && (
-                                <span className="text-[9px] flex items-center gap-1 text-[#ff9a9e] font-bold uppercase tracking-wider opacity-70">
-                                  <StoreIcon className="h-2.5 w-2.5" />
-                                  {stores?.find((s: any) => s.id === item.storeId)?.name}
-                                </span>
-                              )}
-                              {groupBy === 'store' && item.categoryId && (
-                                <span className="text-[9px] flex items-center gap-1 text-[#a18cd1] font-bold uppercase tracking-wider opacity-70">
-                                  <Tag className="h-2.5 w-2.5" />
-                                  {categories?.find((c: any) => c.id === item.categoryId)?.name}
-                                </span>
-                              )}
-                            </div>
-                          )}
+                          <div className={`${utils.flex} ${utils.gap2} ${utils.mt0_5}`}>
+                            {groupBy === 'category' && item.storeId && (
+                              <span className={`${utils.text10px} ${utils.flex} ${utils.itemsCenter} ${utils.gap1} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWider} ${utils.opacity60}`} style={{ color: '#ff9a9e' }}>
+                                <StoreIcon className={utils.iconXs} />
+                                {stores?.find((s: any) => s.id === item.storeId)?.name}
+                              </span>
+                            )}
+                            {groupBy === 'store' && item.categoryId && (
+                              <span className={`${utils.text10px} ${utils.flex} ${utils.itemsCenter} ${utils.gap1} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWider} ${utils.opacity60}`} style={{ color: '#a18cd1' }}>
+                                <Tag className={utils.iconXs} />
+                                {categories?.find((c: any) => c.id === item.categoryId)?.name}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className={`${utils.flex} ${utils.itemsCenter} ${utils.gap2}`}>
                         {item.quantity !== '1' && (
-                          <span className="text-[10px] bg-[var(--page-bg)] border border-[var(--line)] px-2 py-0.5 rounded-lg text-[var(--sea-ink-soft)] font-bold">
+                          <span className={`${utils.text10px} ${utils.px2} ${utils.py1} ${utils.rounded} ${utils.fontBold}`} style={{ backgroundColor: 'var(--bg-base)', border: '1px solid var(--line)', color: 'var(--sea-ink-soft)' }}>
                             x{item.quantity}
                           </span>
                         )}
                         <button
                           onClick={() => deleteMutation.mutate(item.id)}
-                          className="p-1.5 rounded-lg text-red-400 hover:text-red-600 transition-colors cursor-pointer"
+                          className={`${utils.p1_5} ${utils.rounded} ${utils.textRed400} ${utils.transitionColors} ${utils.cursorPointer}`}
+                          style={{ background: 'none', border: 'none' }}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className={utils.icon} />
                         </button>
                       </div>
                     </div>

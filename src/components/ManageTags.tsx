@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { addCategoryFn, addStoreFn } from '../services/grocery.api'
-import styles from '../styles/clay.module.css'
-import { Plus, Tag, Store as StoreIcon } from 'lucide-react'
+import clay from '../styles/clay.module.css'
+import utils from '../styles/utils.module.css'
+import { Plus, Tag as TagIcon, Store as StoreIcon } from 'lucide-react'
 
 interface Tag {
   id: string
@@ -29,9 +30,6 @@ export default function ManageTags({ type, tags, onClose }: ManageTagsProps) {
     }
   })
 
-  // Note: We don't have delete API exposed yet for categories/stores, so just Add for now.
-  // The user asked to "add and use".
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!newName.trim()) return
@@ -39,46 +37,49 @@ export default function ManageTags({ type, tags, onClose }: ManageTagsProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <form onSubmit={handleSubmit} className="flex gap-2">
+    <div className={`${utils.flex} ${utils.flexCol} ${utils.gap4}`}>
+      <form onSubmit={handleSubmit} className={`${utils.flex} ${utils.gap2}`}>
         <input
           type="text"
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           placeholder={`Add new ${type}...`}
-          className={styles.input}
+          className={clay.input}
           autoFocus
         />
         <button
           type="submit"
           disabled={!newName.trim() || addMutation.isPending}
-          className={`${styles.button} !p-3 flex items-center justify-center`}
+          className={`${clay.button} ${utils.flex} ${utils.itemsCenter} ${utils.justifyCenter}`}
+          style={{ padding: '0.75rem' }}
         >
-          <Plus className="h-5 w-5" />
+          <Plus className={`${utils.h5} ${utils.w5}`} />
         </button>
       </form>
 
-      <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto p-1">
+      <div className={`${utils.flex} ${utils.gap2} ${utils.p1}`} style={{ flexWrap: 'wrap', maxHeight: '15rem', overflowY: 'auto' }}>
         {tags.map((tag) => (
           <span
             key={tag.id}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/50 border border-[var(--line)] text-sm font-medium text-[var(--sea-ink)] animate-in zoom-in-95 duration-200"
+            className={`${utils.inlineFlex} ${utils.itemsCenter} ${utils.gap1_5} ${utils.px3} ${utils.py1_5} ${utils.roundedXl} ${utils.textSm} ${utils.fontMedium} ${utils.animateIn}`}
+            style={{ backgroundColor: 'rgba(255, 255, 255, 0.5)', border: '1px solid var(--line)', color: 'var(--sea-ink)' }}
           >
-            {type === 'category' ? <Tag className="h-3 w-3 text-[#ff9a9e]" /> : <StoreIcon className="h-3 w-3 text-[#a18cd1]" />}
+            {type === 'category' ? <TagIcon className={`${utils.iconXs}`} style={{ color: '#ff9a9e' }} /> : <StoreIcon className={`${utils.iconXs}`} style={{ color: '#a18cd1' }} />}
             {tag.name}
           </span>
         ))}
         {tags.length === 0 && (
-          <p className="text-sm text-[var(--sea-ink-soft)] opacity-50 italic w-full text-center py-4">
+          <p className={`${utils.textSm} ${utils.wFull} ${utils.textCenter} ${utils.py3}`} style={{ color: 'var(--sea-ink-soft)', opacity: 0.5, fontStyle: 'italic' }}>
             No {type === 'category' ? 'categories' : 'stores'} added yet.
           </p>
         )}
       </div>
       
-      <div className="flex justify-end pt-2 border-t border-[var(--line)]">
+      <div className={`${utils.flex} ${utils.justifyEnd} ${utils.mt1}`} style={{ paddingTop: '0.5rem', borderTop: '1px solid var(--line)' }}>
         <button 
           onClick={onClose}
-          className="text-sm text-[var(--sea-ink-soft)] font-semibold hover:text-[var(--sea-ink)]"
+          className={`${utils.textSm} ${utils.fontSemibold}`}
+          style={{ color: 'var(--sea-ink-soft)', background: 'none', border: 'none', cursor: 'pointer' }}
         >
           Done
         </button>
