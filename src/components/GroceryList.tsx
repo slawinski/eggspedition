@@ -4,7 +4,7 @@ import type { GroceryItem } from '../lib/schemas'
 import styles from '../styles/clay.module.css'
 import { CheckCircle2, Circle, Trash2, Tag, Store as StoreIcon } from 'lucide-react'
 import { useRef, useState, useEffect } from 'react'
-import { useVirtualizer } from '@tanstack/react-virtual'
+import { useWindowVirtualizer } from '@tanstack/react-virtual'
 import type { Session } from '../lib/schemas'
 
 function useHouseholdSignals() {
@@ -84,11 +84,11 @@ export default function GroceryList({ session }: { session: Session | null }) {
     enabled: !!session?.householdId,
   })
 
-  const rowVirtualizer = useVirtualizer({
+  const rowVirtualizer = useWindowVirtualizer({
     count: items?.length || 0,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 110, // Slightly larger estimate for safety
+    estimateSize: () => 110,
     overscan: 10,
+    scrollMargin: parentRef.current?.offsetTop || 0,
   })
 
   const updateMutation = useMutation({
@@ -144,10 +144,7 @@ export default function GroceryList({ session }: { session: Session | null }) {
   return (
     <div
       ref={parentRef}
-      className={`max-h-[60vh] overflow-auto pr-2 custom-scrollbar ${isScrolling ? styles.scrolling : ''}`}
-      style={{
-        position: 'relative',
-      }}
+      className="relative w-full"
     >
       <div
         style={{
@@ -172,8 +169,8 @@ export default function GroceryList({ session }: { session: Session | null }) {
                 left: 0,
                 width: '100%',
                 height: `${virtualRow.size}px`,
-                transform: `translateY(${virtualRow.start}px)`,
-                paddingBottom: '12px', // Space between cards
+                transform: `translateY(${virtualRow.start - rowVirtualizer.options.scrollMargin}px)`,
+                paddingBottom: '12px',
               }}
             >
               <div 
