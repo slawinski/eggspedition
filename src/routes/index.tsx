@@ -1,13 +1,12 @@
 import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import GroceryList from '../components/GroceryList'
 import AddItemForm from '../components/AddItemForm'
 import QuickAdd from '../components/QuickAdd'
 import HouseholdActivityFeed from '../components/HouseholdActivityFeed'
 import SmartView from '../components/SmartView'
 import ShareHousehold from '../components/ShareHousehold'
 import Modal from '../components/Modal'
-import { List, Sparkles, History } from 'lucide-react'
+import { History } from 'lucide-react'
 import styles from './index.module.css'
 
 export const Route = createFileRoute('/')({
@@ -16,7 +15,6 @@ export const Route = createFileRoute('/')({
 
 function Home() {
   const { session } = Route.useRouteContext()
-  const [view, setView] = useState<'list' | 'smart'>('list')
   const [isActivityOpen, setIsActivityOpen] = useState(false)
 
   if (!session) {
@@ -54,21 +52,6 @@ function Home() {
             <h2 className={styles.headerTitle}>My List</h2>
             <div className={styles.viewToggle}>
               <button
-                onClick={() => setView('list')}
-                title="List View"
-                className={`${styles.toggleButton} ${view === 'list' ? styles.toggleButtonActiveList : ''}`}
-              >
-                <List className={styles.toggleIcon} />
-              </button>
-              <button
-                onClick={() => setView('smart')}
-                title="Smart View"
-                className={`${styles.toggleButton} ${view === 'smart' ? styles.toggleButtonActiveSmart : ''}`}
-              >
-                <Sparkles className={styles.toggleIcon} />
-              </button>
-              <div className={styles.divider} />
-              <button
                 onClick={() => setIsActivityOpen(true)}
                 title="Activity Log"
                 className={styles.activityButton}
@@ -84,7 +67,7 @@ function Home() {
         
         <QuickAdd />
         
-        {view === 'list' ? <GroceryList session={session} /> : <SmartView session={session} />}
+        <SmartView session={session} />
         
         <Modal 
           isOpen={isActivityOpen} 
