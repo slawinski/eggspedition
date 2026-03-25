@@ -1,25 +1,24 @@
 import styles from './Footer.module.css'
-import utils from '../styles/utils.module.css'
 
 export default function Footer() {
   const year = new Date().getFullYear()
 
   return (
     <footer className={styles.footer}>
-      <div className={`${utils.pageWrap} ${utils.flex} ${utils.flexCol} ${utils.itemsCenter} ${utils.justifyBetween} ${utils.gap4} ${utils.textCenter} ${utils.smFlexRow} ${utils.smTextLeft}`}>
-        <p className={utils.m0} style={{ fontSize: '0.875rem' }}>
+      <div className={styles.container}>
+        <p className={styles.copyright}>
           &copy; {year} Your name here. All rights reserved.
         </p>
-        <p className={`${utils.islandKicker} ${utils.m0}`}>Built with TanStack Start</p>
+        <p className={styles.kicker}>Built with TanStack Start</p>
       </div>
-      <div className={`${utils.mt4} ${utils.flex} ${utils.justifyCenter} ${utils.gap4}`}>
+      <div className={styles.socials}>
         <a
           href="https://x.com/tan_stack"
           target="_blank"
           rel="noreferrer"
           className={styles.socialLink}
         >
-          <span className={utils.srOnly}>Follow TanStack on X</span>
+          <span className={styles.srOnly}>Follow TanStack on X</span>
           <svg viewBox="0 0 16 16" aria-hidden="true" width="32" height="32">
             <path
               fill="currentColor"
@@ -33,7 +32,7 @@ export default function Footer() {
           rel="noreferrer"
           className={styles.socialLink}
         >
-          <span className={utils.srOnly}>Go to TanStack GitHub</span>
+          <span className={styles.srOnly}>Go to TanStack GitHub</span>
           <svg viewBox="0 0 16 16" aria-hidden="true" width="32" height="32">
             <path
               fill="currentColor"

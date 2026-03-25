@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { addGroceryItemFn, getCategoriesFn, getStoresFn } from '../services/grocery.api'
-import clay from '../styles/clay.module.css'
-import utils from '../styles/utils.module.css'
+import styles from './AddItemForm.module.css'
 import { Plus, Tag, Store as StoreIcon, Hash } from 'lucide-react'
 import { z } from 'zod'
 import type { Category, Store } from '../lib/schemas'
@@ -79,52 +78,52 @@ export default function AddItemForm() {
   }
 
   return (
-    <div className={`${utils.flex} ${utils.flexCol} ${utils.gap3}`}>
-      <form onSubmit={handleSubmit} className={`${utils.flex} ${utils.gap3}`}>
-        <div className={`${utils.relative} ${utils.flex1}`}>
+    <div className={styles.container}>
+      <form onSubmit={handleSubmit} className={styles.mainForm}>
+        <div className={styles.inputWrapper}>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Add milk, eggs, flour..."
-            className={clay.input}
+            className={styles.textInput}
             disabled={mutation.isPending}
           />
           <button
             type="button"
             onClick={() => setShowExtras(!showExtras)}
-            className={`${utils.absolute} ${utils.right3} ${utils.top1_2} ${utils.translateY1_2} ${utils.textSeaInkSoft} ${utils.opacity40} ${utils.hoverOpacity100} ${utils.transitionOpacity}`}
+            className={styles.extrasToggle}
           >
-            <Hash className={`${utils.icon} ${showExtras ? 'text-[#a18cd1]' : ''}`} />
+            <Hash className={`${styles.extraFieldIcon} ${showExtras ? styles.activeHashIcon : ''}`} />
           </button>
         </div>
         <button
           type="submit"
           disabled={mutation.isPending || !name.trim()}
-          className={`${clay.button} ${utils.flex} ${utils.itemsCenter} ${utils.justifyCenter} ${utils.p3}`}
+          className={styles.submitButton}
         >
-          <Plus className={utils.iconLg} />
+          <Plus className={styles.iconLg} />
         </button>
       </form>
 
       {showExtras && (
-        <div className={`${clay.card} ${utils.p4} ${utils.grid} ${utils.gridCols1} ${utils.smGridCols3} ${utils.gap3} ${utils.animateIn} ${utils.fadeIn} ${utils.slideInFromTop2} ${utils.rounded2xl}`}>
-          <div className={`${utils.flex} ${utils.itemsCenter} ${utils.gap2}`}>
-            <Hash className={`${utils.icon} ${utils.textSeaInkSoft}`} />
+        <div className={styles.extrasPanel}>
+          <div className={styles.extraField}>
+            <Hash className={styles.extraFieldIcon} />
             <input
               type="text"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
               placeholder="Qty"
-              className={`${clay.input} ${utils.py1} ${utils.textSm}`}
+              className={styles.extraInput}
             />
           </div>
-          <div className={`${utils.flex} ${utils.itemsCenter} ${utils.gap2} ${utils.relative}`}>
-            <Tag className={`${utils.icon} ${utils.textSeaInkSoft}`} />
+          <div className={styles.extraField}>
+            <Tag className={styles.extraFieldIcon} />
             <select
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
-              className={`${clay.input} ${utils.py1} ${utils.textSm} ${utils.appearanceNone} ${utils.pr8}`}
+              className={styles.selectField}
             >
               <option value="">Category...</option>
               {categories?.map((c: Category) => (
@@ -134,18 +133,18 @@ export default function AddItemForm() {
             <button
               type="button"
               onClick={() => setManagingType('category')}
-              className={`${utils.absolute} ${utils.right1} ${utils.p1} ${utils.roundedFull} ${utils.textSeaInkSoft} ${utils.hoverBgLine}`}
+              className={styles.addTagButton}
               title="Add Category"
             >
-              <Plus className={utils.iconXs} />
+              <Plus className={styles.iconXs} />
             </button>
           </div>
-          <div className={`${utils.flex} ${utils.itemsCenter} ${utils.gap2} ${utils.relative}`}>
-            <StoreIcon className={`${utils.icon} ${utils.textSeaInkSoft}`} />
+          <div className={styles.extraField}>
+            <StoreIcon className={styles.extraFieldIcon} />
             <select
               value={storeId}
               onChange={(e) => setStoreId(e.target.value)}
-              className={`${clay.input} ${utils.py1} ${utils.textSm} ${utils.appearanceNone} ${utils.pr8}`}
+              className={styles.selectField}
             >
               <option value="">Store...</option>
               {stores?.map((s: Store) => (
@@ -155,16 +154,16 @@ export default function AddItemForm() {
             <button
               type="button"
               onClick={() => setManagingType('store')}
-              className={`${utils.absolute} ${utils.right1} ${utils.p1} ${utils.roundedFull} ${utils.textSeaInkSoft} ${utils.hoverBgLine}`}
+              className={styles.addTagButton}
               title="Add Store"
             >
-              <Plus className={utils.iconXs} />
+              <Plus className={styles.iconXs} />
             </button>
           </div>
         </div>
       )}
       
-      {error && <p className={`${utils.textXs} ${utils.textRed400} ${utils.ml2}`}>{error}</p>}
+      {error && <p className={styles.errorMessage}>{error}</p>}
 
       <Modal 
         isOpen={!!managingType} 

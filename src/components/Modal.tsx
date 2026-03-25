@@ -1,7 +1,6 @@
 import { X } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import styles from './Modal.module.css'
-import utils from '../styles/utils.module.css'
 
 interface ModalProps {
   isOpen: boolean
@@ -48,11 +47,11 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
             onClick={onClose}
             className={styles.closeButton}
           >
-            <X className={`${utils.h5} ${utils.w5}`} />
+            <X className={styles.closeIcon} />
           </button>
         </div>
         
-        <div className={utils.relative}>
+        <div className={styles.body}>
           {children}
         </div>
       </div>

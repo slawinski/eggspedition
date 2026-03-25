@@ -7,7 +7,7 @@ import { getSessionServerFn } from '../services/auth.api'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import Signals from '../components/Signals'
-import utils from '../styles/utils.module.css'
+import styles from './__root.module.css'
 
 import appCss from '../styles.css?url'
 
@@ -49,10 +49,10 @@ function RootComponent() {
   const { session } = Route.useRouteContext()
 
   return (
-    <div className={`${utils.flex} ${utils.flexCol}`} style={{ minHeight: '100vh' }}>
+    <div className={styles.layout}>
       {session && <Signals />}
       <Header />
-      <div className={utils.flex1}>
+      <div className={styles.main}>
         <Outlet />
       </div>
       <Footer />
@@ -67,7 +67,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
-      <body className={utils.fontSans} style={{ antialiased: 'true', overflowWrap: 'anywhere' }}>
+      <body className={styles.body}>
         {children}
         <TanStackDevtools
           config={{

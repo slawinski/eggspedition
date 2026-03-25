@@ -1,10 +1,9 @@
 import { useIsFetching, useIsMutating } from '@tanstack/react-query'
 import { Cloud, CloudOff, RefreshCw } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import type { Session } from '../lib/schemas'
-import utils from '../styles/utils.module.css'
+import styles from './SyncIndicator.module.css'
 
-export default function SyncIndicator({ session }: { session: Session | null }) {
+export default function SyncIndicator() {
   const isFetching = useIsFetching()
   const isMutating = useIsMutating()
   const [isOnline, setIsOnline] = useState(true)
@@ -27,24 +26,24 @@ export default function SyncIndicator({ session }: { session: Session | null }) 
 
   if (!isOnline) {
     return (
-      <div className={`${utils.flex} ${utils.itemsCenter} ${utils.gap1_5} ${utils.textGray400} ${utils.text10px} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWider}`}>
-        <CloudOff className={utils.iconSm} />
-        <span className={`${utils.hidden} ${utils.smInline}`}>Offline</span>
+      <div className={`${styles.container} ${styles.offline}`}>
+        <CloudOff className={styles.icon} />
+        <span className={styles.label}>Offline</span>
       </div>
     )
   }
 
   return (
-    <div className={`${utils.flex} ${utils.itemsCenter} ${utils.gap1_5} ${utils.text10px} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWider}`} style={{ color: 'var(--sea-ink-soft)' }}>
+    <div className={`${styles.container} ${isSyncing ? styles.syncing : styles.synced}`}>
       {isSyncing ? (
         <>
-          <RefreshCw className={`${utils.iconSm} ${utils.animateSpin}`} style={{ color: '#a18cd1' }} />
-          <span className={`${utils.hidden} ${utils.smInline}`}>Syncing...</span>
+          <RefreshCw className={`${styles.icon} ${styles.spin}`} style={{ color: '#a18cd1' }} />
+          <span className={styles.label}>Syncing...</span>
         </>
       ) : (
         <>
-          <Cloud className={utils.iconSm} style={{ color: '#84fab0' }} />
-          <span className={`${utils.hidden} ${utils.smInline}`}>Synced</span>
+          <Cloud className={styles.icon} style={{ color: '#84fab0' }} />
+          <span className={styles.label}>Synced</span>
         </>
       )}
     </div>

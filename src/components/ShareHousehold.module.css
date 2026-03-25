@@ -1,0 +1,90 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.actionsWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  transition: color 0.15s ease;
+  color: var(--sea-ink-soft);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.actionButton:hover {
+  color: var(--sea-ink);
+}
+
+.actionIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.successIcon {
+  width: 1rem;
+  height: 1rem;
+  color: #84fab0;
+}
+
+.divider {
+  height: 1rem;
+  width: 1px;
+  background-color: var(--line);
+}
+
+.joinForm {
+  padding: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  border-radius: 1rem;
+  animation: animateIn 0.15s ease-out;
+}
+
+@keyframes animateIn {
+  from { opacity: 0; transform: translateY(-0.5rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.joinInput {
+  flex: 1;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.joinButton {
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  background-color: #ff9a9e;
+  transition: opacity 0.15s ease;
+}
+
+.joinButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.joinIcon {
+  width: 1rem;
+  height: 1rem;
+  color: white;
+}

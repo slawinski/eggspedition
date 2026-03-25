@@ -4,7 +4,7 @@ import { getQuickAddItemsFn, addQuickAddItemFn, updateQuickAddItemFn, deleteQuic
 import { useState } from 'react'
 import { Plus, Trash2, Edit2, Check, Settings, Zap } from 'lucide-react'
 import Signals from '../components/Signals'
-import utils from '../styles/utils.module.css'
+import styles from './admin.module.css'
 
 export const Route = createFileRoute('/admin')({
   beforeLoad: ({ context }) => {
@@ -115,17 +115,17 @@ function AdminPage() {
   const error = addMutation.error || updateMutation.error || deleteMutation.error
 
   return (
-    <main className={`${utils.pb14} ${utils.pt10}`} style={{ minHeight: '100vh', backgroundColor: 'var(--page-bg)' }}>
+    <main className={styles.container}>
       <Signals />
-      <div className={`${utils.pageWrap} ${utils.px4}`}>
-        <header className={`${utils.mb4} ${utils.flex} ${utils.itemsCenter} ${utils.justifyBetween}`}>
-          <div className={`${utils.flex} ${utils.itemsCenter} ${utils.gap3}`}>
-            <div className={`${utils.flex} ${utils.itemsCenter} ${utils.justifyCenter} ${utils.rounded2xl} ${utils.shadowChip}`} style={{ width: '3rem', height: '3rem', backgroundColor: 'white' }}>
-              <Settings className={`${utils.h6} ${utils.w6}`} style={{ color: '#a18cd1' }} />
+      <div className={styles.content}>
+        <header className={styles.header}>
+          <div className={styles.headerInfo}>
+            <div className={styles.iconWrapper}>
+              <Settings className={styles.headerIcon} />
             </div>
             <div>
-              <h2 className={`${utils.m0} ${utils.textLg} ${utils.fontBold} ${utils.trackingTight}`} style={{ color: 'var(--sea-ink)' }}>Admin Dashboard</h2>
-              <p className={`${utils.m0} ${utils.textSm} ${utils.fontMedium}`} style={{ color: 'var(--sea-ink-soft)' }}>Manage templates</p>
+              <h2 className={styles.dashboardTitle}>Admin Dashboard</h2>
+              <p className={styles.dashboardSubtitle}>Manage templates</p>
             </div>
           </div>
           <button
@@ -135,23 +135,22 @@ function AdminPage() {
               resetForm()
               window.scrollTo({ top: 0, behavior: 'smooth' })
             }}
-            className={`${utils.flex} ${utils.itemsCenter} ${utils.gap2} ${utils.roundedXl} ${utils.px4} ${utils.py2_5} ${utils.textSm} ${utils.fontBold} ${utils.shadowChip} ${utils.transition} ${utils.activeScale95}`}
-            style={{ backgroundColor: 'white', color: '#ff9a9e', border: 'none', cursor: 'pointer' }}
+            className={styles.addBtn}
           >
-            <Plus className={utils.icon} />
+            <Plus className={styles.btnIcon} />
             Add Template
           </button>
         </header>
 
         {(isAdding || editingId) && (
-          <div className={`${utils.mb4} ${utils.rounded3xl} ${utils.p6} ${utils.shadowChip} ${utils.animateIn}`} style={{ backgroundColor: 'white', border: '1px solid var(--line)' }}>
-            <h3 className={`${utils.mb4} ${utils.textLg} ${utils.fontBold} ${utils.flex} ${utils.itemsCenter} ${utils.gap2}`} style={{ color: 'var(--sea-ink)' }}>
-              {editingId ? <Edit2 className={utils.icon} style={{ color: '#a18cd1' }} /> : <Plus className={utils.icon} style={{ color: '#ff9a9e' }} />}
+          <div className={styles.formCard}>
+            <h3 className={styles.formTitle}>
+              {editingId ? <Edit2 className={styles.formTitleIconEdit} /> : <Plus className={styles.formTitleIconAdd} />}
               {editingId ? 'Edit Template' : 'Add New Template'}
             </h3>
-            <div className={`${utils.grid} ${utils.gap4} ${utils.smGridCols3}`}>
-              <div className={`${utils.flex} ${utils.flexCol} ${utils.gap1}`}>
-                <label className={`${utils.textXs} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWider} ${utils.px1}`} style={{ color: 'var(--sea-ink-soft)' }}>Item Name</label>
+            <div className={styles.formGrid}>
+              <div className={styles.formField}>
+                <label className={styles.inputLabel}>Item Name</label>
                 <input
                   type="text"
                   autoFocus
@@ -159,12 +158,11 @@ function AdminPage() {
                   onChange={(e) => setName(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="e.g. Oat Milk"
-                  className={`${utils.wFull} ${utils.rounded2xl} ${utils.px4} ${utils.py3} ${utils.textSm} ${utils.fontMedium} ${utils.outlineNone}`}
-                  style={{ border: '1px solid var(--line)', backgroundColor: 'var(--bg-base)' }}
+                  className={styles.input}
                 />
               </div>
-              <div className={`${utils.flex} ${utils.flexCol} ${utils.gap1}`}>
-                <label className={`${utils.textXs} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWider} ${utils.px1}`} style={{ color: 'var(--sea-ink-soft)' }}>Category</label>
+              <div className={styles.formField}>
+                <label className={styles.inputLabel}>Category</label>
                 <input
                   type="text"
                   list="category-list"
@@ -172,8 +170,7 @@ function AdminPage() {
                   onChange={(e) => setCategoryName(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="e.g. Dairy"
-                  className={`${utils.wFull} ${utils.rounded2xl} ${utils.px4} ${utils.py3} ${utils.textSm} ${utils.fontMedium} ${utils.outlineNone}`}
-                  style={{ border: '1px solid var(--line)', backgroundColor: 'var(--bg-base)' }}
+                  className={styles.input}
                 />
                 <datalist id="category-list">
                   {categories.map((c) => (
@@ -181,8 +178,8 @@ function AdminPage() {
                   ))}
                 </datalist>
               </div>
-              <div className={`${utils.flex} ${utils.flexCol} ${utils.gap1}`}>
-                <label className={`${utils.textXs} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWider} ${utils.px1}`} style={{ color: 'var(--sea-ink-soft)' }}>Preferred Store</label>
+              <div className={styles.formField}>
+                <label className={styles.inputLabel}>Preferred Store</label>
                 <input
                   type="text"
                   list="store-list"
@@ -190,8 +187,7 @@ function AdminPage() {
                   onChange={(e) => setStoreName(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="e.g. Trader Joe's"
-                  className={`${utils.wFull} ${utils.rounded2xl} ${utils.px4} ${utils.py3} ${utils.textSm} ${utils.fontMedium} ${utils.outlineNone}`}
-                  style={{ border: '1px solid var(--line)', backgroundColor: 'var(--bg-base)' }}
+                  className={styles.input}
                 />
                 <datalist id="store-list">
                   {stores.map((s) => (
@@ -200,40 +196,32 @@ function AdminPage() {
                 </datalist>
               </div>
             </div>
-            <div className={`${utils.mt3} ${utils.flex} ${utils.flexCol} ${utils.gap3}`}>
+            <div className={styles.formActions}>
               {error && (
-                <p className={`${utils.roundedXl} ${utils.p3} ${utils.textXs} ${utils.fontMedium} ${utils.animateIn}`} style={{ backgroundColor: '#fef2f2', color: '#ef4444', border: '1px solid #fee2e2' }}>
+                <p className={styles.formError}>
                   {error instanceof Error ? error.message : 'Something went wrong.'}
                 </p>
               )}
-              <div className={`${utils.flex} ${utils.justifyEnd} ${utils.gap3}`}>
+              <div className={styles.actionButtons}>
                 <button
                   onClick={() => {
                     setIsAdding(false)
                     setEditingId(null)
                   }}
                   disabled={isPending}
-                  className={`${utils.roundedXl} ${utils.px4} ${utils.py2} ${utils.textSm} ${utils.fontBold} ${utils.transition}`}
-                  style={{ border: '1px solid var(--line)', color: 'var(--sea-ink-soft)', background: 'none', cursor: 'pointer' }}
+                  className={styles.cancelBtn}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={!name || isPending}
-                  className={`${utils.flex} ${utils.itemsCenter} ${utils.gap2} ${utils.roundedXl} ${utils.px6} ${utils.py2} ${utils.textSm} ${utils.fontBold} ${utils.transition} ${utils.activeScale95}`}
-                  style={{ 
-                    background: 'linear-gradient(to right, #ff9a9e, #fecfef)', 
-                    color: 'white', 
-                    border: 'none', 
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                  }}
+                  className={styles.saveBtn}
                 >
                   {isPending ? (
-                    <div className={`${utils.animateSpin}`} style={{ height: '1rem', width: '1rem', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white' }} />
+                    <div className={styles.loadingSpinner} />
                   ) : (
-                    <Check className={utils.icon} />
+                    <Check className={styles.btnIcon} />
                   )}
                   {editingId ? 'Update' : 'Create'}
                 </button>
@@ -242,13 +230,13 @@ function AdminPage() {
           </div>
         )}
 
-        <div className={`${utils.grid} ${utils.gap4} ${utils.smGridCols3}`} style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+        <div className={styles.grid}>
           {isLoadingItems ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className={`${utils.rounded3xl} ${utils.animateSpin}`} style={{ height: '6rem', backgroundColor: 'white', border: '1px solid var(--line)', opacity: 0.1 }} />
+              <div key={i} className={styles.skeletonCard} />
             ))
           ) : isErrorItems ? (
-            <div className={`${utils.textCenter} ${utils.py12} ${utils.fontMedium}`} style={{ gridColumn: '1 / -1', color: '#f87171' }}>
+            <div className={styles.errorState}>
               Failed to load templates.
             </div>
           ) : (
@@ -260,48 +248,47 @@ function AdminPage() {
               return (
                 <div
                   key={item.id}
-                  className={`${utils.relative} ${utils.rounded3xl} ${utils.shadowChip} ${utils.transition}`}
+                  className={styles.itemCard}
                   style={{ 
                     backgroundColor: isEditingThis ? 'rgba(161, 140, 209, 0.05)' : 'white', 
                     border: isEditingThis ? '1px solid rgba(161, 140, 209, 0.3)' : '1px solid transparent',
-                    overflow: 'hidden'
                   }}
                 >
-                  <div className={`${utils.flex} ${utils.flexCol} ${utils.p4}`}>
+                  <div className={styles.itemInfo}>
                     <div 
                       onClick={() => handleEdit(item)}
                       style={{ cursor: 'pointer', flex: 1 }}
                     >
-                      <h4 className={`${utils.m0} ${utils.textSm} ${utils.fontBold}`} style={{ color: isEditingThis ? '#a18cd1' : 'var(--sea-ink)' }}>{item.name}</h4>
-                      <div className={`${utils.mt3} ${utils.flex} ${utils.flexWrap} ${utils.gap2}`}>
+                      <h4 className={styles.itemName} style={{ color: isEditingThis ? '#a18cd1' : 'var(--sea-ink)' }}>{item.name}</h4>
+                      <div className={styles.tagList}>
                         {category ? (
-                          <span className={`${utils.roundedFull} ${utils.px2} ${utils.py0_5} ${utils.text10px} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWider}`} style={{ backgroundColor: 'var(--bg-base)', color: 'var(--sea-ink-soft)', border: '1px solid var(--line)' }}>
+                          <span className={styles.tag}>
                             {category.name}
                           </span>
                         ) : (
-                          <span className={`${utils.roundedFull} ${utils.px2} ${utils.py0_5} ${utils.text10px} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWider}`} style={{ backgroundColor: 'var(--bg-base)', color: '#9ca3af', border: '1px dashed var(--line)' }}>
+                          <span className={styles.noTag}>
                             No Category
                           </span>
                         )}
                         {store ? (
-                          <span className={`${utils.roundedFull} ${utils.px2} ${utils.py0_5} ${utils.text10px} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWider}`} style={{ backgroundColor: 'rgba(254, 207, 239, 0.3)', color: '#ff9a9e', border: '1px solid rgba(255, 154, 158, 0.2)' }}>
+                          <span className={styles.storeTag}>
                             {store.name}
                           </span>
                         ) : (
-                          <span className={`${utils.roundedFull} ${utils.px2} ${utils.py0_5} ${utils.text10px} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWider}`} style={{ backgroundColor: 'var(--bg-base)', color: '#9ca3af', border: '1px dashed var(--line)' }}>
+                          <span className={styles.noTag}>
                             Any Store
                           </span>
                         )}
                       </div>
                     </div>
-                    <div className={`${utils.flex} ${utils.justifyEnd} ${utils.gap1} ${utils.mt3}`}>
+                    <div className={styles.cardActions}>
                       <button
                         onClick={() => handleEdit(item)}
-                        className={`${utils.p1} ${utils.rounded}`}
-                        style={{ color: isEditingThis ? '#a18cd1' : '#9ca3af', background: 'none', border: 'none', cursor: 'pointer' }}
+                        className={styles.actionBtn}
+                        style={{ color: isEditingThis ? '#a18cd1' : '#9ca3af' }}
                         title="Edit Template"
                       >
-                        <Edit2 className={utils.iconSm} />
+                        <Edit2 className={styles.actionIcon} />
                       </button>
                       <button
                         onClick={() => {
@@ -309,16 +296,15 @@ function AdminPage() {
                             deleteMutation.mutate(item.id)
                           }
                         }}
-                        className={`${utils.p1} ${utils.rounded}`}
-                        style={{ color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer' }}
+                        className={styles.actionBtn}
                         title="Delete Template"
                       >
-                        <Trash2 className={utils.iconSm} />
+                        <Trash2 className={styles.actionIcon} />
                       </button>
                     </div>
                   </div>
-                  <div className={`${utils.absolute}`} style={{ right: '-10px', bottom: '-10px', transform: 'rotate(-15deg)', opacity: 0.03, pointerEvents: 'none' }}>
-                    <Zap style={{ width: '5rem', height: '5rem', color: '#a18cd1' }} />
+                  <div className={styles.backgroundIcon}>
+                    <Zap className={styles.bgIcon} />
                   </div>
                 </div>
               )
@@ -326,12 +312,12 @@ function AdminPage() {
           )}
           
           {items.length === 0 && !isAdding && !isLoadingItems && !isErrorItems && (
-            <div className={`${utils.flex} ${utils.flexCol} ${utils.itemsCenter} ${utils.justifyCenter} ${utils.py12} ${utils.textCenter}`} style={{ gridColumn: '1 / -1', borderRadius: '3rem', border: '2px dashed var(--line)' }}>
-              <div className={`${utils.mb4} ${utils.flex} ${utils.itemsCenter} ${utils.justifyCenter} ${utils.rounded2xl} ${utils.shadowChip}`} style={{ width: '4rem', height: '4rem', backgroundColor: 'white' }}>
-                <Zap className={`${utils.h8} ${utils.w8}`} style={{ color: '#d1d5db' }} />
+            <div className={styles.emptyState}>
+              <div className={styles.emptyIconWrapper}>
+                <Zap className={styles.emptyIcon} />
               </div>
-              <h3 className={`${utils.textLg} ${utils.fontBold}`} style={{ color: 'var(--sea-ink)' }}>No templates yet</h3>
-              <p className={`${utils.textSm} ${utils.fontMedium}`} style={{ color: 'var(--sea-ink-soft)', maxWidth: '20rem' }}>
+              <h3 className={styles.emptyTitle}>No templates yet</h3>
+              <p className={styles.emptySubtitle}>
                 Create templates to quickly add items.
               </p>
             </div>

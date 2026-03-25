@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { verifyMagicLinkServerFn } from '../../../services/auth.api'
-import utils from '../../../styles/utils.module.css'
+import styles from './verify.module.css'
 
 export const Route = createFileRoute('/api/auth/verify')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -35,11 +35,11 @@ function VerifyComponent() {
   const { error } = Route.useLoaderData()
 
   return (
-    <div className={`${utils.flex} ${utils.justifyCenter} ${utils.itemsCenter}`} style={{ height: '100vh', backgroundColor: '#fdf6f0' }}>
-      <div className={`${utils.p8} ${utils.rounded2xl}`} style={{ backgroundColor: 'white', boxShadow: '8px 8px 16px rgba(174, 174, 192, 0.4)' }}>
-        <h2 className={`${utils.mb4}`} style={{ color: '#ff9a9e' }}>Oops! 🥚</h2>
-        <p className={`${utils.mb4}`}>{error}</p>
-        <a href="/login" className={`${utils.fontBold}`} style={{ color: '#a18cd1', textDecoration: 'none' }}>Try logging in again</a>
+    <div className={styles.page}>
+      <div className={styles.card}>
+        <h2 className={styles.title}>Oops! 🥚</h2>
+        <p className={styles.message}>{error}</p>
+        <a href="/login" className={styles.link}>Try logging in again</a>
       </div>
     </div>
   )

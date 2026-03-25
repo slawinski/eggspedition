@@ -65,6 +65,15 @@
   background-color: var(--line);
 }
 
+.closeIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.body {
+  position: relative;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }

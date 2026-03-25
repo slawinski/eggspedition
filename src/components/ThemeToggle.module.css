@@ -1,0 +1,20 @@
+.toggleButton {
+  border-radius: 9999px;
+  border: 1px solid var(--chip-line);
+  background-color: var(--chip-bg);
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  padding-top: 0.375rem;
+  padding-bottom: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: 0 8px 22px rgba(30,90,72,0.08);
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--sea-ink);
+  border: none;
+  cursor: pointer;
+}
+
+.toggleButton:hover {
+  transform: translateY(-0.125rem);
+}

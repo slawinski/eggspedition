@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { addGroceryItemFn } from '../services/grocery.api'
 import { z } from 'zod'
-import utils from '../styles/utils.module.css'
+import styles from './add.module.css'
 
 export const Route = createFileRoute('/add')({
   validateSearch: z.object({
@@ -43,19 +43,13 @@ function AddDeepLinkComponent() {
   const { error } = Route.useLoaderData() as any
 
   return (
-    <div className={`${utils.flex} ${utils.itemsCenter} ${utils.justifyCenter} ${utils.p4}`} style={{ minHeight: '100vh' }}>
-      <div className={`island-shell ${utils.p8} ${utils.textCenter}`} style={{ borderRadius: '2rem', maxWidth: '24rem' }}>
-        <h2 className={`${utils.textLg} ${utils.fontBold} ${utils.mb1}`} style={{ color: '#ff9a9e' }}>Deep Link Error</h2>
-        <p className={`${utils.mb4}`} style={{ color: 'var(--sea-ink-soft)' }}>{error || 'Adding item...'}</p>
+    <div className={styles.page}>
+      <div className={`island-shell ${styles.card}`}>
+        <h2 className={styles.title}>Deep Link Error</h2>
+        <p className={styles.message}>{error || 'Adding item...'}</p>
         <a
           href="/"
-          className={`${utils.roundedFull} ${utils.px6} ${utils.py2} ${utils.fontBold}`}
-          style={{ 
-            background: 'linear-gradient(to right, #ff9a9e, #a18cd1)',
-            color: 'white',
-            textDecoration: 'none',
-            display: 'inline-block'
-          }}
+          className={styles.link}
         >
           Go Home
         </a>

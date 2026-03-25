@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useServerFn } from '@tanstack/react-start'
 import { loginServerFn } from '../services/auth.api'
 import clay from '../styles/clay.module.css'
-import utils from '../styles/utils.module.css'
+import styles from './login.module.css'
 
 import { z } from 'zod'
 
@@ -44,24 +44,24 @@ function LoginComponent() {
   }
 
   return (
-    <div className={`${utils.flex} ${utils.justifyCenter} ${utils.itemsCenter}`} style={{ minHeight: '100vh', backgroundColor: 'var(--clay-bg)' }}>
-      <div className={clay.card} style={{ maxWidth: '400px', width: '90%' }}>
-        <h1 className={`${clay.puffyText} ${utils.textCenter} ${utils.mb4}`}>
+    <div className={styles.page}>
+      <div className={`${clay.card} ${styles.cardContent}`}>
+        <h1 className={`${clay.puffyText} ${styles.title}`}>
           Welcome Home! 🥚
         </h1>
         
         {sent ? (
-          <div className={utils.textCenter}>
+          <div className={styles.successMessage}>
             <p className={clay.puffyText}>
               We've sent a squishy magic link to <strong>{email}</strong>.
             </p>
-            <p className={`${utils.textSm} ${utils.mt4}`} style={{ color: '#888' }}>
+            <p className={styles.hint}>
               (Check your console in dev mode!)
             </p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className={`${utils.flex} ${utils.flexCol} ${utils.gap4}`}>
-            <label className={`${clay.puffyText} ${utils.textSm} ${utils.ml2}`}>
+          <form onSubmit={handleSubmit} className={styles.form}>
+            <label className={`${clay.puffyText} ${styles.label}`}>
               Your Email
             </label>
             <input
@@ -72,8 +72,8 @@ function LoginComponent() {
               onChange={(e) => setEmail(e.target.value)}
               required
             />
-            {error && <p className={`${utils.textXs} ${utils.ml2}`} style={{ color: 'red' }}>{error}</p>}
-            <button type="submit" className={`${clay.button} ${utils.mt4}`}>
+            {error && <p className={styles.error}>{error}</p>}
+            <button type="submit" className={`${clay.button} ${styles.hint}`} style={{ marginTop: '1rem' }}>
               Send Magic Link
             </button>
           </form>

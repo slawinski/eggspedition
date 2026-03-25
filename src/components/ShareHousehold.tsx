@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { joinHouseholdFn } from '../services/grocery.api'
-import styles from '../styles/clay.module.css'
-import utils from '../styles/utils.module.css'
+import clay from '../styles/clay.module.css'
+import styles from './ShareHousehold.module.css'
 import { Share2, UserPlus, Check, LogIn } from 'lucide-react'
 import { useRouter } from '@tanstack/react-router'
 
@@ -35,44 +35,42 @@ export default function ShareHousehold({ householdId }: ShareHouseholdProps) {
   }
 
   return (
-    <div className={`${utils.flex} ${utils.flexCol} ${utils.gap4} ${utils.mt4}`}>
-      <div className={`${utils.flex} ${utils.itemsCenter} ${utils.gap2}`}>
+    <div className={styles.container}>
+      <div className={styles.actionsWrapper}>
         <button
           onClick={() => setShowJoin(!showJoin)}
-          className={`${utils.flex} ${utils.itemsCenter} ${utils.gap2} ${utils.textXs} ${utils.fontBold} ${utils.transitionColors}`}
-          style={{ color: 'var(--sea-ink-soft)', background: 'none', border: 'none', cursor: 'pointer' }}
+          className={styles.actionButton}
         >
-          <UserPlus className={utils.icon} />
+          <UserPlus className={styles.actionIcon} />
           <span>{showJoin ? 'Cancel' : 'Join Household'}</span>
         </button>
         
-        <div style={{ height: '1rem', width: '1px', backgroundColor: 'var(--line)' }} />
+        <div className={styles.divider} />
 
         <button
           onClick={handleCopy}
-          className={`${utils.flex} ${utils.itemsCenter} ${utils.gap2} ${utils.textXs} ${utils.fontBold} ${utils.transitionColors}`}
-          style={{ color: 'var(--sea-ink-soft)', background: 'none', border: 'none', cursor: 'pointer' }}
+          className={styles.actionButton}
         >
-          {copied ? <Check className={utils.icon} style={{ color: '#84fab0' }} /> : <Share2 className={utils.icon} />}
+          {copied ? <Check className={styles.successIcon} /> : <Share2 className={styles.actionIcon} />}
           <span>{copied ? 'Copied ID!' : 'Share Household ID'}</span>
         </button>
       </div>
 
       {showJoin && (
-        <div className={`${styles.card} ${utils.p4} ${utils.flex} ${utils.gap2} ${utils.animateIn} ${utils.rounded2xl}`}>
+        <div className={`${clay.card} ${styles.joinForm}`}>
           <input
             type="text"
             value={joinId}
             onChange={(e) => setJoinId(e.target.value)}
             placeholder="Paste Household ID..."
-            className={`${styles.input} ${utils.py1} ${utils.textSm}`}
+            className={`${clay.input} ${styles.joinInput}`}
           />
           <button
             onClick={() => joinMutation.mutate(joinId)}
             disabled={joinMutation.isPending || !joinId.trim()}
-            className={`${styles.button} ${utils.p2} ${utils.flex} ${utils.itemsCenter} ${utils.justifyCenter}`}
+            className={`${clay.button} ${styles.joinButton}`}
           >
-            <LogIn className={`${utils.icon} ${utils.icon}`} style={{ color: 'white' }} />
+            <LogIn className={styles.joinIcon} />
           </button>
         </div>
       )}

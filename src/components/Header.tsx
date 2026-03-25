@@ -7,7 +7,6 @@ import { logoutServerFn } from '../services/auth.api'
 import { Route as rootRoute } from '../routes/__root'
 import { useState, useRef, useEffect } from 'react'
 import styles from './Header.module.css'
-import utils from '../styles/utils.module.css'
 
 export default function Header() {
   const { session } = rootRoute.useRouteContext()
@@ -35,42 +34,42 @@ export default function Header() {
 
   return (
     <header className={styles.header}>
-      <nav className={`${utils.flex} ${utils.itemsCenter} ${utils.justifyBetween} ${utils.py3} ${utils.smPy4} page-wrap`}>
-        <h1 className={`${utils.m0} ${utils.textSm} ${utils.fontSemibold} ${utils.trackingTight}`}>
+      <nav className={styles.nav}>
+        <h1 className={styles.title}>
           <Link
             to="/"
             className={styles.logoLink}
           >
-            <ShoppingBasket className={`${utils.h5} ${utils.w5}`} style={{ color: '#ff9a9e' }} />
+            <ShoppingBasket className={styles.logoIcon} />
             <span className={styles.logoText}>
               Eggspedition
             </span>
           </Link>
         </h1>
 
-        <div className={`${utils.flex} ${utils.itemsCenter} ${utils.gap2} ${utils.smGap4}`}>
-          <SyncIndicator session={session} />
+        <div className={styles.actions}>
+          <SyncIndicator />
           <ThemeToggle />
           
           {session ? (
-            <div className={utils.relative} ref={dropdownRef}>
+            <div className={styles.userMenu} ref={dropdownRef}>
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 className={`${styles.userButton} ${isProfileOpen ? styles.userButtonActive : styles.userButtonInactive}`}
               >
                 <div className={styles.userAvatar}>
-                  <User className={`${utils.h5} ${utils.w5}`} />
+                  <User className={styles.avatarIcon} />
                 </div>
-                <ChevronDown className={`${utils.h4} ${utils.w4} ${utils.transitionTransform} ${utils.duration300} ${isProfileOpen ? utils.rotate180 : ''}`} style={{ color: 'var(--sea-ink-soft)' }} />
+                <ChevronDown className={`${styles.chevronIcon} ${isProfileOpen ? styles.chevronIconRotated : ''}`} />
               </button>
 
               {isProfileOpen && (
-                <div className={`${styles.dropdown} ${utils.animateIn}`}>
-                  <div className={`${utils.px4} ${utils.py3} ${utils.mb1}`} style={{ borderBottom: '1px solid var(--line)' }}>
-                    <p className={`${utils.m0} ${utils.textXs} ${utils.fontBold} ${utils.uppercase} ${utils.trackingWidest} ${utils.opacity60}`} style={{ color: 'var(--sea-ink-soft)' }}>Account</p>
-                    <p className={`${utils.m0} ${utils.mt1} ${utils.truncate} ${utils.textSm} ${utils.fontBold}`} style={{ color: 'var(--sea-ink)' }}>{session.email}</p>
+                <div className={styles.dropdown}>
+                  <div className={styles.accountInfo}>
+                    <p className={styles.accountLabel}>Account</p>
+                    <p className={styles.accountEmail}>{session.email}</p>
                     {session.householdId && (
-                      <p className={`${utils.m0} ${utils.mt0_5} ${utils.truncate} ${utils.text10px} ${utils.fontMedium}`} style={{ color: 'var(--sea-ink-soft)' }}>
+                      <p className={styles.accountID}>
                         ID: {session.householdId}
                       </p>
                     )}
@@ -81,7 +80,7 @@ export default function Header() {
                     onClick={() => setIsProfileOpen(false)}
                     className={styles.dropdownItem}
                   >
-                    <Settings className={`${utils.h4} ${utils.w4}`} />
+                    <Settings className={styles.dropdownIcon} />
                     Manage Household
                   </Link>
 
@@ -92,7 +91,7 @@ export default function Header() {
                     }}
                     className={`${styles.dropdownItem} ${styles.logoutItem}`}
                   >
-                    <LogOut className={`${utils.h4} ${utils.w4}`} />
+                    <LogOut className={styles.dropdownIcon} />
                     Logout
                   </button>
                 </div>

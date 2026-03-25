@@ -1,0 +1,265 @@
+.loading {
+  text-align: center;
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+  opacity: 0.6;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.75rem;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.toggleWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border-radius: 1rem;
+  box-shadow: 0 8px 22px rgba(30, 90, 72, 0.08);
+  border: 1px solid var(--chip-line);
+  background-color: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(4px);
+  align-self: center;
+}
+
+.toggleButton {
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.15s ease;
+  border: none;
+  cursor: pointer;
+  background-color: transparent;
+  color: var(--sea-ink-soft);
+}
+
+.toggleButtonCategoryActive {
+  background-color: #ff9a9e;
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.toggleButtonStoreActive {
+  background-color: #a18cd1;
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.emptyState {
+  text-align: center;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+  opacity: 0.4;
+  font-weight: 500;
+  grid-column: 1 / -1;
+  border-radius: 3rem;
+  border: 2px dashed var(--line);
+  font-style: italic;
+}
+
+.groupCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  border-radius: 2.5rem;
+}
+
+.groupHeader {
+  margin: 0;
+  margin-bottom: 0.25rem;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--sea-ink);
+}
+
+.groupIconWrapper {
+  padding: 0.375rem;
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.groupIconWrapperCategory {
+  background-color: rgba(255, 154, 158, 0.1);
+  color: #ff9a9e;
+}
+
+.groupIconWrapperStore {
+  background-color: rgba(161, 140, 209, 0.1);
+  color: #a18cd1;
+}
+
+.groupIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.itemList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.itemRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  padding: 0.75rem;
+  border-radius: 1rem;
+  box-shadow: 0 8px 22px rgba(30, 90, 72, 0.08);
+  transition: all 0.15s ease;
+  background-color: white;
+  border: 1px solid var(--line);
+}
+
+.itemRow:hover {
+  transform: translateY(-0.125rem);
+}
+
+.itemMain {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1 1 0%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checkButton {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition: transform 0.15s ease;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkButton:active {
+  transform: scale(0.9);
+}
+
+.checkIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #84fab0;
+}
+
+.uncheckIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  opacity: 0.4;
+  color: var(--sea-ink-soft);
+}
+
+.itemInfo {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemName {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--sea-ink);
+  transition: all 0.15s ease;
+}
+
+.itemNameChecked {
+  text-decoration-line: line-through;
+  opacity: 0.4;
+}
+
+.itemSubInfo {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.125rem;
+}
+
+.subInfoTag {
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+}
+
+.subInfoTagStore {
+  color: #ff9a9e;
+}
+
+.subInfoTagCategory {
+  color: #a18cd1;
+}
+
+.subInfoIcon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.itemActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quantityBadge {
+  font-size: 10px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-weight: 700;
+  background-color: var(--bg-base);
+  border: 1px solid var(--line);
+  color: var(--sea-ink-soft);
+}
+
+.deleteButton {
+  padding: 0.375rem;
+  border-radius: 0.25rem;
+  color: #f87171;
+  transition: color 0.15s ease;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.deleteIcon {
+  width: 1rem;
+  height: 1rem;
+}

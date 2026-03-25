@@ -1,7 +1,7 @@
 import { db } from '../db'
 import { users, groceryItems, categories, stores, householdLogs, households, memberships, quickAddItems } from '../db/schema'
 import { eq, desc, and, count } from 'drizzle-orm'
-import type { GroceryItem, Category, Store, QuickAddItem } from '../lib/schemas'
+import type { GroceryItem, Category, Store } from '../lib/schemas'
 import { insertGroceryItemSchema, insertCategorySchema, insertStoreSchema, insertQuickAddItemSchema } from '../lib/schemas'
 import { notifyHousehold } from '../lib/signals'
 

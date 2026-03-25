@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { addCategoryFn, addStoreFn } from '../services/grocery.api'
 import clay from '../styles/clay.module.css'
-import utils from '../styles/utils.module.css'
+import styles from './ManageTags.module.css'
 import { Plus, Tag as TagIcon, Store as StoreIcon } from 'lucide-react'
 
 interface Tag {
@@ -37,8 +37,8 @@ export default function ManageTags({ type, tags, onClose }: ManageTagsProps) {
   }
 
   return (
-    <div className={`${utils.flex} ${utils.flexCol} ${utils.gap4}`}>
-      <form onSubmit={handleSubmit} className={`${utils.flex} ${utils.gap2}`}>
+    <div className={styles.container}>
+      <form onSubmit={handleSubmit} className={styles.form}>
         <input
           type="text"
           value={newName}
@@ -50,36 +50,37 @@ export default function ManageTags({ type, tags, onClose }: ManageTagsProps) {
         <button
           type="submit"
           disabled={!newName.trim() || addMutation.isPending}
-          className={`${clay.button} ${utils.flex} ${utils.itemsCenter} ${utils.justifyCenter}`}
-          style={{ padding: '0.75rem' }}
+          className={`${clay.button} ${styles.submitButton}`}
         >
-          <Plus className={`${utils.h5} ${utils.w5}`} />
+          <Plus className={styles.plusIcon} />
         </button>
       </form>
 
-      <div className={`${utils.flex} ${utils.gap2} ${utils.p1}`} style={{ flexWrap: 'wrap', maxHeight: '15rem', overflowY: 'auto' }}>
+      <div className={styles.tagList}>
         {tags.map((tag) => (
           <span
             key={tag.id}
-            className={`${utils.inlineFlex} ${utils.itemsCenter} ${utils.gap1_5} ${utils.px3} ${utils.py1_5} ${utils.roundedXl} ${utils.textSm} ${utils.fontMedium} ${utils.animateIn}`}
-            style={{ backgroundColor: 'rgba(255, 255, 255, 0.5)', border: '1px solid var(--line)', color: 'var(--sea-ink)' }}
+            className={styles.tagChip}
           >
-            {type === 'category' ? <TagIcon className={`${utils.iconXs}`} style={{ color: '#ff9a9e' }} /> : <StoreIcon className={`${utils.iconXs}`} style={{ color: '#a18cd1' }} />}
+            {type === 'category' ? (
+              <TagIcon className={`${styles.tagIcon} ${styles.categoryIcon}`} />
+            ) : (
+              <StoreIcon className={`${styles.tagIcon} ${styles.storeIcon}`} />
+            )}
             {tag.name}
           </span>
         ))}
         {tags.length === 0 && (
-          <p className={`${utils.textSm} ${utils.wFull} ${utils.textCenter} ${utils.py3}`} style={{ color: 'var(--sea-ink-soft)', opacity: 0.5, fontStyle: 'italic' }}>
+          <p className={styles.emptyState}>
             No {type === 'category' ? 'categories' : 'stores'} added yet.
           </p>
         )}
       </div>
       
-      <div className={`${utils.flex} ${utils.justifyEnd} ${utils.mt1}`} style={{ paddingTop: '0.5rem', borderTop: '1px solid var(--line)' }}>
+      <div className={styles.footer}>
         <button 
           onClick={onClose}
-          className={`${utils.textSm} ${utils.fontSemibold}`}
-          style={{ color: 'var(--sea-ink-soft)', background: 'none', border: 'none', cursor: 'pointer' }}
+          className={styles.doneButton}
         >
           Done
         </button>

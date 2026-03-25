@@ -1,0 +1,178 @@
+.loading {
+  text-align: center;
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+  color: var(--sea-ink-soft);
+}
+
+.error {
+  text-align: center;
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+  color: #f87171;
+}
+
+.empty {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--sea-ink-soft);
+}
+
+.listContainer {
+  position: relative;
+  width: 100%;
+}
+
+.itemCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  transition: all 0.15s ease;
+  height: calc(100% - 12px);
+}
+
+@media (min-width: 640px) {
+  .itemCard {
+    padding: 1.25rem;
+  }
+}
+
+.itemCard:hover {
+  transform: translateY(-0.125rem);
+}
+
+.itemContent {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1 1 0%;
+}
+
+.checkButton {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkButton:active {
+  transform: scale(0.9);
+}
+
+.checkIcon {
+  width: 1.75rem;
+  height: 1.75rem;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.05));
+  color: #84fab0;
+}
+
+.uncheckIcon {
+  width: 1.75rem;
+  height: 1.75rem;
+  opacity: 0.6;
+  color: var(--sea-ink-soft);
+  transition: opacity 0.15s ease;
+}
+
+.checkButton:hover .uncheckIcon {
+  opacity: 1;
+}
+
+.itemInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.itemNameWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.itemName {
+  font-size: 1.125rem;
+  font-weight: 700;
+  transition: all 0.15s ease;
+  color: var(--sea-ink);
+}
+
+.itemNameChecked {
+  text-decoration-line: line-through;
+  opacity: 0.4;
+}
+
+.quantityBadge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background-color: rgba(161, 140, 209, 0.1);
+  color: #a18cd1;
+}
+
+.tagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.tagBase {
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid transparent;
+}
+
+.categoryTag {
+  opacity: 0.6;
+  border-color: var(--line);
+  background-color: var(--sand);
+  color: var(--sea-ink-soft);
+}
+
+.storeTag {
+  opacity: 0.8;
+  color: #ff9a9e;
+  background-color: rgba(254, 207, 239, 0.3);
+  border-color: rgba(255, 154, 158, 0.2);
+}
+
+.tagIcon {
+  width: 0.625rem;
+  height: 0.625rem;
+}
+
+.deleteButton {
+  padding: 0.5rem;
+  border-radius: 1rem;
+  color: #f87171;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.deleteButton:active {
+  transform: scale(0.9);
+}
+
+.deleteIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+}

@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getFrequentItemsFn, addGroceryItemFn, getQuickAddItemsFn } from '../services/grocery.api'
 import { Zap, Plus } from 'lucide-react'
 import { Route as rootRoute } from '../routes/__root'
-import utils from '../styles/utils.module.css'
+import styles from './QuickAdd.module.css'
 
 export default function QuickAdd() {
   const { session } = rootRoute.useRouteContext()
@@ -47,26 +47,20 @@ export default function QuickAdd() {
   if (displayItems.length === 0) return null
 
   return (
-    <div className={`${utils.flex} ${utils.flexCol} ${utils.gap3}`} style={{ marginBottom: '2rem' }}>
-      <h3 className={`${utils.textXs} ${utils.fontBold} ${utils.flex} ${utils.itemsCenter} ${utils.gap1_5} ${utils.uppercase} ${utils.trackingWider} ${utils.opacity60} ${utils.px1}`} style={{ color: 'var(--sea-ink-soft)' }}>
-        <Zap className={utils.iconXs} style={{ color: '#ff9a9e' }} /> 
+    <div className={styles.container}>
+      <h3 className={styles.title}>
+        <Zap className={styles.titleIcon} /> 
         {hasTemplates ? 'Your Templates' : 'Frequently Added'}
       </h3>
-      <div className={`${utils.flex} ${utils.flexWrap} ${utils.gap2}`}>
+      <div className={styles.buttonList}>
         {displayItems.map((item) => (
           <button
             key={`${item.type}-${item.id}`}
             onClick={() => mutation.mutate(item)}
             disabled={mutation.isPending}
-            className={`${utils.flex} ${utils.itemsCenter} ${utils.gap2} ${utils.px4} ${utils.py2_5} ${utils.rounded2xl} ${utils.shadowChip} ${utils.textSm} ${utils.fontBold} ${utils.transition} ${utils.activeScale95} ${utils.hoverTranslateY0_5}`}
-            style={{ 
-              backgroundColor: 'white', 
-              border: '1px solid var(--line)', 
-              color: 'var(--sea-ink)',
-              cursor: 'pointer'
-            }}
+            className={styles.addButton}
           >
-            <Plus className={utils.iconSm} style={{ color: '#ff9a9e' }} />
+            <Plus className={styles.plusIcon} />
             {item.name}
           </button>
         ))}

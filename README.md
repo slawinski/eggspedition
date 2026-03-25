@@ -30,9 +30,8 @@ bun --bun run test
 This project uses **CSS Modules** for styling, with a custom "Claymorphism" design system.
 
 - `src/styles.css`: Global styles and CSS Reset.
-- `src/styles/utils.module.css`: Common utility classes (flexbox, grid, spacing).
 - `src/styles/clay.module.css`: Design system components (cards, buttons, inputs).
-- `*.module.css`: Component-specific styles.
+- `*.module.css`: Component-specific styles for layout and functionality.
 
 We strictly avoid utility-first frameworks like Tailwind to maintain a highly custom, performant, and maintainable aesthetic.
 

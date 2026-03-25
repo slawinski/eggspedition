@@ -1,0 +1,29 @@
+.page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #fdf6f0;
+}
+
+.card {
+  padding: 2rem;
+  border-radius: 1rem;
+  background-color: white;
+  box-shadow: 8px 8px 16px rgba(174, 174, 192, 0.4);
+}
+
+.title {
+  margin-bottom: 1rem;
+  color: #ff9a9e;
+}
+
+.message {
+  margin-bottom: 1rem;
+}
+
+.link {
+  font-weight: 700;
+  color: #a18cd1;
+  text-decoration: none;
+}
