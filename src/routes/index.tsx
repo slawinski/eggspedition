@@ -50,15 +50,13 @@ function Home() {
         <header className={styles.dashboardHeader}>
           <div className={styles.headerTop}>
             <h2 className={styles.headerTitle}>My List</h2>
-            <div className={styles.viewToggle}>
-              <button
-                onClick={() => setIsActivityOpen(true)}
-                title="Activity Log"
-                className={styles.activityButton}
-              >
-                <History className={styles.toggleIcon} />
-              </button>
-            </div>
+            <button
+              onClick={() => setIsActivityOpen(true)}
+              title="Activity Log"
+              className={styles.activityButton}
+            >
+              <History className={styles.toggleIcon} />
+            </button>
           </div>
           {session.householdId && <ShareHousehold householdId={session.householdId} />}
         </header>
