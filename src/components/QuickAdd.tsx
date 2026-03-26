@@ -122,7 +122,6 @@ export default function QuickAdd() {
           const settleState = settling[item.name]
           const isSettling = !!settleState
           const quantity = inList ? parseInt(inList.quantity) : 0
-          const isCritical = isSettling && settleState.progress < 0.25 // Final 500ms
 
           return (
             <button
@@ -132,7 +131,7 @@ export default function QuickAdd() {
                 mutation.mutate(item)
               }}
               disabled={mutation.isPending}
-              className={`${styles.addButton} ${isSettling ? styles.settling : ''} ${isCritical ? styles.critical : ''}`}
+              className={`${styles.addButton} ${isSettling ? styles.settling : ''}`}
             >
               {isSettling && (
                 <div 
