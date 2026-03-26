@@ -78,8 +78,12 @@ export async function getGroceryItemsGrouped(householdId: string, groupBy: 'cate
 export async function addGroceryItem(
   householdId: string,
   userId: string,
-  input: { name: string; quantity?: string; categoryId?: string; storeId?: string }
+  input: { name: string; quantity?: string; categoryId?: string; storeId?: string; categoryName?: string | null; storeName?: string | null }
 ) {
+  // Resolve names to IDs if provided
+  const resolvedCategoryId = input.categoryId || (input.categoryName ? await resolveCategoryId(householdId, input.categoryName) : undefined)
+  const resolvedStoreId = input.storeId || (input.storeName ? await resolveStoreId(householdId, input.storeName) : undefined)
+
   // Check if an unchecked item with the same name already exists in this household
   const [existing] = await db
     .select()
@@ -102,6 +106,8 @@ export async function addGroceryItem(
       .update(groceryItems)
       .set({ 
         quantity: newQty,
+        ...(resolvedCategoryId && { categoryId: resolvedCategoryId }),
+        ...(resolvedStoreId && { storeId: resolvedStoreId }),
         updatedAt: new Date()
       })
       .where(eq(groceryItems.id, existing.id))
@@ -121,7 +127,10 @@ export async function addGroceryItem(
 
   // Otherwise, create new item
   const data = insertGroceryItemSchema.parse({
-    ...input,
+    name: input.name,
+    quantity: input.quantity,
+    categoryId: resolvedCategoryId,
+    storeId: resolvedStoreId,
     householdId,
     userId,
   })
@@ -143,8 +152,8 @@ export async function addGroceryItem(
   if (!existingTemplate) {
     await db.insert(quickAddItems).values({
       name: input.name,
-      categoryId: input.categoryId,
-      storeId: input.storeId,
+      categoryId: resolvedCategoryId,
+      storeId: resolvedStoreId,
       householdId: householdId,
     })
     console.log(`[Service] Auto-created template for: ${input.name}`)

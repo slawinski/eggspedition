@@ -47,6 +47,8 @@ export const addGroceryItemFn = createServerFn({ method: 'POST' })
         quantity: z.string().optional(),
         categoryId: z.string().uuid().optional(),
         storeId: z.string().uuid().optional(),
+        categoryName: z.string().optional().nullable(),
+        storeName: z.string().optional().nullable(),
       })
     )
   )

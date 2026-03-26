@@ -1,58 +1,154 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
-import { addGroceryItemFn, getCategoriesFn, getStoresFn } from '../services/grocery.api'
+import { addGroceryItemFn, getCategoriesFn, getStoresFn, getQuickAddItemsFn } from '../services/grocery.api'
 import styles from './AddItemForm.module.css'
-import { Plus, Tag, Store as StoreIcon, Hash } from 'lucide-react'
+import { Plus, Tag, Store as StoreIcon, Hash, CornerDownLeft, Sparkles } from 'lucide-react'
 import { z } from 'zod'
-import type { Category, Store } from '../lib/schemas'
 import Modal from './Modal'
 import ManageTags from './ManageTags'
 
 const addItemSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   quantity: z.string().optional(),
-  categoryId: z.string().uuid().optional().or(z.literal('')),
-  storeId: z.string().uuid().optional().or(z.literal('')),
+  categoryName: z.string().optional().nullable(),
+  storeName: z.string().optional().nullable(),
 })
 
 export default function AddItemForm() {
-  const [name, setName] = useState('')
-  const [quantity, setQuantity] = useState('1')
-  const [categoryId, setCategoryId] = useState('')
-  const [storeId, setStoreId] = useState('')
-  const [showExtras, setShowExtras] = useState(false)
+  const [inputValue, setInputValue] = useState('')
+  const [cursorPosition, setCursorPosition] = useState(0)
   const [error, setError] = useState<string | null>(null)
-  
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [selectedIndex, setSelectedIndex] = useState(-1)
   const [managingType, setManagingType] = useState<'category' | 'store' | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const queryClient = useQueryClient()
 
-  const { data: categories } = useQuery({
+  const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: () => getCategoriesFn(),
   })
 
-  const { data: stores } = useQuery({
+  const { data: stores = [] } = useQuery({
     queryKey: ['stores'],
     queryFn: () => getStoresFn(),
   })
 
+  const { data: quickAddItems = [] } = useQuery({
+    queryKey: ['quick-add-items'],
+    queryFn: () => getQuickAddItemsFn(),
+  })
+
+  // DSL Parser
+  const parseDSL = (input: string) => {
+    const categoryMatch = input.match(/#([^\s#@]+)/)
+    const storeMatch = input.match(/@([^\s#@]+)/)
+    const quantityMatch = input.match(/\s[x\*](\d+)/) || input.match(/^(\d+)\s/)
+    
+    const categoryName = categoryMatch ? categoryMatch[1] : null
+    const storeName = storeMatch ? storeMatch[1] : null
+    const quantity = quantityMatch ? quantityMatch[1] : '1'
+    
+    let name = input
+      .replace(/#[^\s#@]+/, '')
+      .replace(/@[^\s#@]+/, '')
+      .replace(/\s[x\*](\d+)/, '')
+      .replace(/^(\d+)\s/, '')
+      .trim()
+      
+    return { name, categoryName, storeName, quantity }
+  }
+
+  const parsed = parseDSL(inputValue)
+
+  // Determine what type of suggestions to show
+  const getActiveProperty = () => {
+    // If there is a space right before the cursor, we are not in a tag
+    if (cursorPosition > 0 && inputValue[cursorPosition - 1] === ' ') {
+      return null;
+    }
+
+    const textBeforeCursor = inputValue.substring(0, cursorPosition);
+    const words = textBeforeCursor.split(/\s+/);
+    const currentWord = words[words.length - 1];
+
+    if (currentWord.startsWith('#')) {
+      return { type: 'category' as const, query: currentWord.substring(1) };
+    }
+    if (currentWord.startsWith('@')) {
+      return { type: 'store' as const, query: currentWord.substring(1) };
+    }
+    return null;
+  };
+
+  const activeProperty = getActiveProperty();
+
+  const getSuggestions = () => {
+    if (activeProperty) {
+      const { type, query } = activeProperty;
+      const list = type === 'category' ? categories : stores;
+      const matches = list
+        .filter(i => i.name.toLowerCase().includes(query.toLowerCase()))
+        .map(i => ({ name: i.name, type: type }));
+      
+      const hasExactMatch = matches.some(m => m.name.toLowerCase() === query.toLowerCase());
+      if (query && !hasExactMatch) {
+        matches.push({ name: query, type: type, isNew: true });
+      }
+      return matches.slice(0, 5);
+    }
+
+    if (parsed.name.length > 0) {
+      const quickMatches = quickAddItems
+        .filter(i => i.name.toLowerCase().includes(parsed.name.toLowerCase()))
+        .map(i => ({ ...i, type: 'Quick Add' as const }));
+
+      const hasExactMatch = quickMatches.some(
+        m => m.name.toLowerCase() === parsed.name.toLowerCase()
+      );
+
+      return [
+        ...quickMatches,
+        ...(!hasExactMatch ? [{ 
+          name: parsed.name, 
+          type: 'New Item' as const, 
+          isNew: true, 
+          categoryName: parsed.categoryName, 
+          storeName: parsed.storeName, 
+          quantity: parsed.quantity 
+        }] : [])
+      ].slice(0, 6);
+    }
+
+    return [];
+  };
+
+  const suggestions = getSuggestions();
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    setSelectedIndex(-1)
+  }, [inputValue])
+
   const mutation = useMutation({
     mutationFn: (data: z.infer<typeof addItemSchema>) => 
-      addGroceryItemFn({ 
-        data: {
-          ...data,
-          categoryId: data.categoryId || undefined,
-          storeId: data.storeId || undefined,
-        } 
-      }),
+      addGroceryItemFn({ data }),
     onSuccess: () => {
-      console.log('[AddItemForm] Item added successfully, invalidating...')
-      setName('')
-      setQuantity('1')
-      setCategoryId('')
-      setStoreId('')
-      setShowExtras(false)
+      setInputValue('')
+      setCursorPosition(0)
+      setShowSuggestions(false)
+      setSelectedIndex(-1)
       setError(null)
       queryClient.invalidateQueries({ queryKey: ['grocery-items'] })
       queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'] })
@@ -64,104 +160,202 @@ export default function AddItemForm() {
     }
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
+  const handlePropertyClick = (propName: string) => {
+    if (!activeProperty) return;
+    const symbol = activeProperty.type === 'category' ? '#' : '@';
+    const textBeforeCursor = inputValue.substring(0, cursorPosition);
+    const textAfterCursor = inputValue.substring(cursorPosition);
+    
+    // Replace the current partial tag with the selected one
+    const replacement = `${symbol}${propName} `;
+    const newTextBefore = textBeforeCursor.replace(new RegExp(`${symbol}[^\\s#@]*$`), replacement);
+    const newText = newTextBefore + textAfterCursor;
+    const newPos = newTextBefore.length;
 
-    const result = addItemSchema.safeParse({ name, quantity, categoryId, storeId })
-    if (!result.success) {
-      setError(result.error.issues[0].message)
+    setInputValue(newText);
+    setCursorPosition(newPos);
+    setShowSuggestions(true);
+    setSelectedIndex(-1);
+    
+    // Set DOM selection manually to be safe
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.selectionStart = newPos;
+        inputRef.current.selectionEnd = newPos;
+        inputRef.current.focus();
+      }
+    }, 0);
+  };
+
+  const handleSuggestionClick = (suggestion: any) => {
+    if (activeProperty) {
+      handlePropertyClick(suggestion.name);
+      return;
+    }
+
+    if (suggestion.isNew) {
+      handleSubmit()
       return
     }
 
-    mutation.mutate(result.data)
+    const { categoryName, storeName, quantity } = parsed
+    mutation.mutate({
+      name: suggestion.name,
+      quantity,
+      categoryName: categoryName || (suggestion.categoryId ? categories.find(c => c.id === suggestion.categoryId)?.name : null),
+      storeName: storeName || (suggestion.storeId ? stores.find(s => s.id === suggestion.storeId)?.name : null),
+    })
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Update cursor position state on every key stroke
+    setTimeout(() => {
+      if (inputRef.current) setCursorPosition(inputRef.current.selectionStart || 0);
+    }, 0);
+
+    if (!showSuggestions || suggestions.length === 0) {
+      if (e.key === 'Enter' && inputValue.trim()) {
+        handleSubmit(e)
+      }
+      return
+    }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setSelectedIndex(prev => (prev < suggestions.length - 1 ? prev + 1 : prev))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setSelectedIndex(prev => (prev > 0 ? prev - 1 : -1))
+    } else if (e.key === 'Enter') {
+      e.preventDefault()
+      if (selectedIndex >= 0) {
+        handleSuggestionClick(suggestions[selectedIndex])
+      } else if (suggestions.length === 1) {
+        handleSuggestionClick(suggestions[0])
+      } else {
+        handleSubmit()
+      }
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false)
+    }
+  }
+
+  const handleSubmit = (e?: React.FormEvent | React.KeyboardEvent) => {
+    e?.preventDefault()
+    if (!parsed.name) return
+    setError(null)
+
+    mutation.mutate({
+      name: parsed.name,
+      quantity: parsed.quantity,
+      categoryName: parsed.categoryName,
+      storeName: parsed.storeName,
+    })
   }
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} ref={containerRef}>
       <form onSubmit={handleSubmit} className={styles.mainForm}>
         <div className={styles.inputWrapper}>
           <input
+            ref={inputRef}
             type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Add milk, eggs, flour..."
+            value={inputValue}
+            onChange={(e) => {
+              setInputValue(e.target.value)
+              setCursorPosition(e.target.selectionStart || 0)
+              setShowSuggestions(true)
+            }}
+            onMouseUp={() => setCursorPosition(inputRef.current?.selectionStart || 0)}
+            onFocus={() => {
+              setCursorPosition(inputRef.current?.selectionStart || 0)
+              setShowSuggestions(true)
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder="Add milk #Dairy @Costco..."
             className={styles.textInput}
             disabled={mutation.isPending}
           />
-          <button
-            type="button"
-            onClick={() => setShowExtras(!showExtras)}
-            className={styles.extrasToggle}
-          >
-            <Hash className={`${styles.extraFieldIcon} ${showExtras ? styles.activeHashIcon : ''}`} />
-          </button>
-        </div>
-        <button
-          type="submit"
-          disabled={mutation.isPending || !name.trim()}
-          className={styles.submitButton}
-        >
-          <Plus className={styles.iconLg} />
-        </button>
-      </form>
 
-      {showExtras && (
-        <div className={styles.extrasPanel}>
-          <div className={styles.extraField}>
-            <Hash className={styles.extraFieldIcon} />
-            <input
-              type="text"
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-              placeholder="Qty"
-              className={styles.extraInput}
-            />
-          </div>
-          <div className={styles.extraField}>
-            <Tag className={styles.extraFieldIcon} />
-            <select
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-              className={styles.selectField}
-            >
-              <option value="">Category...</option>
-              {categories?.map((c: Category) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={() => setManagingType('category')}
-              className={styles.addTagButton}
-              title="Add Category"
-            >
-              <Plus className={styles.iconXs} />
-            </button>
-          </div>
-          <div className={styles.extraField}>
-            <StoreIcon className={styles.extraFieldIcon} />
-            <select
-              value={storeId}
-              onChange={(e) => setStoreId(e.target.value)}
-              className={styles.selectField}
-            >
-              <option value="">Store...</option>
-              {stores?.map((s: Store) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={() => setManagingType('store')}
-              className={styles.addTagButton}
-              title="Add Store"
-            >
-              <Plus className={styles.iconXs} />
-            </button>
-          </div>
+          {showSuggestions && suggestions.length > 0 && (
+            <div className={styles.suggestionsList}>
+              {suggestions.map((s, idx) => {
+                const isSelected = idx === selectedIndex;
+                const isOnlyOne = suggestions.length === 1 && selectedIndex === -1;
+                const isHighlighted = isSelected || isOnlyOne;
+                
+                if (activeProperty) {
+                  const Icon = activeProperty.type === 'category' ? Tag : StoreIcon;
+                  return (
+                    <button
+                      key={`${s.name}-${idx}`}
+                      type="button"
+                      className={`${styles.suggestionItem} ${isHighlighted ? styles.highlighted : ''}`}
+                      onClick={() => handleSuggestionClick(s)}
+                      onMouseEnter={() => setSelectedIndex(idx)}
+                    >
+                      <div className={styles.suggestionMain}>
+                        <Icon className={styles.iconXs} style={{ color: activeProperty.type === 'category' ? '#ff9a9e' : '#a18cd1' }} />
+                        <span className={styles.suggestionName}>{s.name}</span>
+                        {s.isNew && <span className={styles.miniTag}>New {activeProperty.type}</span>}
+                      </div>
+                      <div className={styles.suggestionHint}>
+                        {isHighlighted && <CornerDownLeft className={styles.enterIcon} />}
+                      </div>
+                    </button>
+                  );
+                }
+
+                const displayCategory = s.isNew 
+                  ? s.categoryName 
+                  : (s.categoryId ? categories.find(c => c.id === s.categoryId)?.name : null);
+                const displayStore = s.isNew 
+                  ? s.storeName 
+                  : (s.storeId ? stores.find(st => st.id === s.storeId)?.name : null);
+                const displayQuantity = s.isNew ? s.quantity : null;
+
+                return (
+                  <button
+                    key={`${s.name}-${idx}`}
+                    type="button"
+                    className={`${styles.suggestionItem} ${isHighlighted ? styles.highlighted : ''}`}
+                    onClick={() => handleSuggestionClick(s)}
+                    onMouseEnter={() => setSelectedIndex(idx)}
+                  >
+                    <div className={styles.suggestionMain}>
+                      {s.isNew && <Sparkles className={styles.iconXs} style={{ color: '#ff9a9e' }} />}
+                      <span className={styles.suggestionName}>{s.name}</span>
+                      
+                      <div className={styles.suggestionDetails}>
+                        {displayQuantity && displayQuantity !== '1' && (
+                          <span className={`${styles.miniTag} ${styles.miniTagQuantity}`}>
+                            <Hash className={styles.miniTagIcon} /> {displayQuantity}
+                          </span>
+                        )}
+                        {displayCategory && (
+                          <span className={`${styles.miniTag} ${styles.miniTagCategory}`}>
+                            <Tag className={styles.miniTagIcon} /> {displayCategory}
+                          </span>
+                        )}
+                        {displayStore && (
+                          <span className={`${styles.miniTag} ${styles.miniTagStore}`}>
+                            <StoreIcon className={styles.miniTagIcon} /> {displayStore}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className={styles.suggestionHint}>
+                      <span className={styles.suggestionType}>{s.type}</span>
+                      {isHighlighted && <CornerDownLeft className={styles.enterIcon} />}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </div>
-      )}
+      </form>
       
       {error && <p className={styles.errorMessage}>{error}</p>}
 
