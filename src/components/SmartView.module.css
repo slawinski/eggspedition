@@ -21,9 +21,9 @@
   justify-content: center;
   padding: 0.25rem;
   border-radius: 1rem;
-  box-shadow: 0 8px 22px rgba(30, 90, 72, 0.08);
+  box-shadow: 0 8px 22px var(--shadow-color);
   border: 1px solid var(--chip-line);
-  background-color: rgba(255, 255, 255, 0.4);
+  background-color: var(--chip-bg);
   backdrop-filter: blur(4px);
   align-self: center;
 }
@@ -135,9 +135,9 @@
   font-size: 0.875rem;
   padding: 0.75rem;
   border-radius: 1rem;
-  box-shadow: 0 8px 22px rgba(30, 90, 72, 0.08);
+  box-shadow: 0 8px 22px var(--shadow-color);
   transition: all 0.15s ease;
-  background-color: white;
+  background-color: var(--surface-card);
   border: 1px solid var(--line);
 }
 

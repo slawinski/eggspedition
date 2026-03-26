@@ -29,9 +29,10 @@
   overflow: hidden;
   border-radius: 2rem;
   padding: 1.5rem;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 25px 50px -12px var(--shadow-color-strong);
   animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
-  background-color: white;
+  background-color: var(--surface-card);
+  border: 1px solid var(--line);
 }
 
 .header {

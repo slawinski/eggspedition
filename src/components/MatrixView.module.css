@@ -98,9 +98,9 @@
   font-size: 0.875rem;
   padding: 0.75rem;
   border-radius: 0.75rem;
-  box-shadow: 0 8px 22px rgba(30, 90, 72, 0.08);
-  background-color: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 22px var(--shadow-color);
+  background-color: var(--chip-bg);
+  border: 1px solid var(--line);
 }
 
 .itemMain {

@@ -38,11 +38,11 @@
   gap: 0.5rem;
   padding: 0.625rem 1rem;
   border-radius: 1rem;
-  box-shadow: 0 8px 22px rgba(30, 90, 72, 0.08);
+  box-shadow: 0 8px 22px var(--shadow-color);
   font-size: 0.875rem;
   font-weight: 700;
   transition: all 0.15s ease;
-  background-color: white;
+  background-color: var(--surface-card);
   border: 1px solid var(--line);
   color: var(--sea-ink);
   cursor: pointer;
