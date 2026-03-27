@@ -8,9 +8,48 @@ import ShareHousehold from '../components/ShareHousehold'
 import Modal from '../components/Modal'
 import AdminDashboard from '../components/AdminDashboard'
 import { History, Settings } from 'lucide-react'
+import { getGroceryItemsFn, getFrequentItemsFn, getQuickAddItemsFn, getGroceryItemsGroupedFn, getCategoriesFn, getStoresFn, getHouseholdLogsFn } from '../services/grocery.api'
 import styles from './index.module.css'
 
 export const Route = createFileRoute('/')({
+  loader: async ({ context }) => {
+    if (!context.session?.householdId) return
+
+    const { queryClient, session } = context
+    const householdId = session.householdId
+
+    // Prefetch all data needed for Home sub-components
+    await Promise.all([
+      queryClient.ensureQueryData({
+        queryKey: ['grocery-items', householdId],
+        queryFn: () => getGroceryItemsFn(),
+      }),
+      queryClient.ensureQueryData({
+        queryKey: ['frequent-items', householdId],
+        queryFn: () => getFrequentItemsFn(),
+      }),
+      queryClient.ensureQueryData({
+        queryKey: ['quick-add-items', householdId],
+        queryFn: () => getQuickAddItemsFn(),
+      }),
+      queryClient.ensureQueryData({
+        queryKey: ['grocery-items-grouped', 'category', householdId],
+        queryFn: () => getGroceryItemsGroupedFn({ data: 'category' }),
+      }),
+      queryClient.ensureQueryData({
+        queryKey: ['categories', householdId],
+        queryFn: () => getCategoriesFn(),
+      }),
+      queryClient.ensureQueryData({
+        queryKey: ['stores', householdId],
+        queryFn: () => getStoresFn(),
+      }),
+      queryClient.ensureQueryData({
+        queryKey: ['household-logs', householdId],
+        queryFn: () => getHouseholdLogsFn(),
+      }),
+    ])
+  },
   component: Home,
 })
 

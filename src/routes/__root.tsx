@@ -5,7 +5,6 @@ import type { QueryClient } from '@tanstack/react-query'
 import type { Session } from '../lib/schemas'
 import { getSessionServerFn } from '../services/auth.api'
 import Header from '../components/Header'
-import Footer from '../components/Footer'
 import Signals from '../components/Signals'
 import styles from './__root.module.css'
 
@@ -55,7 +54,6 @@ function RootComponent() {
       <div className={styles.main}>
         <Outlet />
       </div>
-      <Footer />
     </div>
   )
 }

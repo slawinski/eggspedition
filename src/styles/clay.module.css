@@ -1,59 +1,96 @@
 /* Claymorphism Design System: "Puffy & Squishy" */
 
 .card {
-  background: var(--surface);
-  border-radius: 2rem;
+  background: var(--surface-card);
+  border-radius: 2.5rem;
   padding: 2rem;
+  /* Multi-layered shadows for realistic clay look */
   box-shadow: 
-    8px 8px 16px var(--clay-shadow-outer), 
-    inset 8px 8px 12px var(--clay-shadow-inner-light),
-    inset -8px -8px 12px var(--clay-shadow-inner-dark);
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    35px 35px 70px var(--clay-shadow-outer), 
+    inset 10px 10px 15px var(--clay-shadow-inner-light),
+    inset -10px -10px 15px var(--clay-shadow-inner-dark);
+  border: 1px solid var(--line);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
   will-change: transform, box-shadow;
 }
 
 /* LOD (Layer of Detail) Shadows: Simplify during scroll */
 .scrolling .card {
-  box-shadow: 4px 4px 8px var(--clay-shadow-outer);
+  box-shadow: 10px 10px 20px var(--clay-shadow-outer);
 }
 
 .button {
   background: var(--lagoon);
   border-radius: 1.5rem;
   padding: 0.75rem 1.5rem;
-  border: none;
-  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 700;
   color: white;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   box-shadow: 
-    4px 4px 8px var(--clay-shadow-outer), 
-    inset 4px 4px 8px var(--clay-shadow-inner-light),
-    inset -4px -4px 8px var(--clay-shadow-inner-dark);
-  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
+    12px 12px 24px var(--clay-shadow-outer), 
+    inset 6px 6px 10px var(--clay-shadow-inner-light),
+    inset -6px -6px 10px var(--clay-shadow-inner-dark);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  user-select: none;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
 }
 
 .button:active {
-  transform: scale(0.92);
+  transform: scale(0.94);
   box-shadow: 
-    2px 2px 4px var(--clay-shadow-outer), 
+    4px 4px 8px var(--clay-shadow-outer), 
     inset 2px 2px 4px var(--clay-shadow-inner-light),
     inset -2px -2px 4px var(--clay-shadow-inner-dark);
 }
 
+.button:disabled {
+  opacity: 0.6;
+  filter: grayscale(0.5);
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Inset style for inputs and search bars */
+.inset {
+  background: var(--bg-base);
+  border-radius: 1.5rem;
+  border: 1px solid var(--line);
+  box-shadow: 
+    inset 6px 6px 12px var(--clay-shadow-outer), 
+    inset -6px -6px 12px var(--clay-shadow-inner-light);
+  transition: all 0.2s ease;
+}
+
 .input {
-  background: var(--sand);
-  border-radius: 1.2rem;
-  padding: 0.75rem 1rem;
+  background: transparent;
   border: none;
   width: 100%;
+  padding: 0.75rem 1.25rem;
   color: var(--sea-ink);
-  box-shadow: 
-    inset 4px 4px 8px var(--clay-shadow-outer), 
-    inset -4px -4px 8px var(--clay-shadow-inner-light);
   outline: none;
+  font-weight: 500;
+}
+
+.input::placeholder {
+  color: var(--sea-ink-soft);
+  opacity: 0.5;
 }
 
 .puffyText {
   color: var(--sea-ink-soft);
   text-shadow: 1px 1px 2px var(--inset-glint);
 }
+
+/* Color variations for buttons */
+.buttonCoral { background: #ff9a9e; }
+.buttonLavender { background: #a18cd1; }
+.buttonMint { background: #84fab0; }

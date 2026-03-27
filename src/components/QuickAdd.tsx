@@ -1,22 +1,24 @@
 import { useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getFrequentItemsFn, addGroceryItemFn, getQuickAddItemsFn, getGroceryItemsFn } from '../services/grocery.api'
-import { Zap, Plus } from 'lucide-react'
+import { Zap, Plus, Check } from 'lucide-react'
 import { Route as rootRoute } from '../routes/__root'
 import styles from './QuickAdd.module.css'
 
-const SETTLE_DURATION = 2000 // 2 seconds
-const TICK_RATE = 50 // ms
+const SETTLE_DURATION = 1000 // 1 second
+const DISAPPEAR_DURATION = 400 // ms for exit animation
 
 interface SettleState {
   progress: number; // 0 to 1
   lastUpdated: number;
+  isDone?: boolean;
 }
 
 export default function QuickAdd() {
   const { session } = rootRoute.useRouteContext()
   const queryClient = useQueryClient()
   const [settling, setSettling] = useState<Record<string, SettleState>>({})
+  const [disappearing, setDisappearing] = useState<Record<string, boolean>>({})
   const rafRef = useRef<number | null>(null)
 
   const { data: groceryItems = [] } = useQuery({
@@ -47,13 +49,32 @@ export default function QuickAdd() {
 
         Object.keys(next).forEach(name => {
           const state = next[name]
+          if (state.isDone) return;
+
           const elapsed = now - state.lastUpdated
           const newProgress = Math.max(0, 1 - (elapsed / SETTLE_DURATION))
           
           if (newProgress <= 0) {
-            delete next[name]
+            // Trigger Disappear Sequence
+            next[name] = { ...state, progress: 0, isDone: true }
+            setDisappearing(d => ({ ...d, [name]: true }))
+            
+            // Cleanup after animation
+            setTimeout(() => {
+              setSettling(current => {
+                const updated = { ...current }
+                delete updated[name]
+                return updated
+              })
+              setDisappearing(current => {
+                const updated = { ...current }
+                delete updated[name]
+                return updated
+              })
+            }, DISAPPEAR_DURATION)
+            
             changed = true
-          } else if (Math.abs(newProgress - state.progress) > 0.01) {
+          } else if (Math.abs(newProgress - state.progress) > 0.005) {
             next[name] = { ...state, progress: newProgress }
             changed = true
           }
@@ -75,8 +96,13 @@ export default function QuickAdd() {
       // Start/Reset timer
       setSettling(prev => ({ 
         ...prev, 
-        [item.name]: { progress: 1, lastUpdated: Date.now() } 
+        [item.name]: { progress: 1, lastUpdated: Date.now(), isDone: false } 
       }))
+      setDisappearing(prev => {
+        const next = { ...prev }
+        delete next[item.name]
+        return next
+      })
 
       return addGroceryItemFn({ 
         data: { 
@@ -105,7 +131,7 @@ export default function QuickAdd() {
     : frequentItems.map(i => ({ id: i.name, name: i.name, categoryId: null, storeId: null, type: 'frequent' }))
 
   const displayItems = allPossibleItems.filter(item => {
-    return !uncheckedNames.has(item.name) || settling[item.name]
+    return !uncheckedNames.has(item.name) || settling[item.name] || disappearing[item.name]
   })
 
   if (displayItems.length === 0) return null
@@ -121,6 +147,8 @@ export default function QuickAdd() {
           const inList = uncheckedItems.find(i => i.name === item.name)
           const settleState = settling[item.name]
           const isSettling = !!settleState
+          const isDone = settleState?.isDone
+          const isDisappearing = disappearing[item.name]
           const quantity = inList ? parseInt(inList.quantity) : 0
 
           return (
@@ -130,18 +158,27 @@ export default function QuickAdd() {
                 e.stopPropagation()
                 mutation.mutate(item)
               }}
-              disabled={mutation.isPending}
-              className={`${styles.addButton} ${isSettling ? styles.settling : ''}`}
+              disabled={mutation.isPending || isDone}
+              className={`
+                ${styles.addButton} 
+                ${isSettling ? styles.settling : ''} 
+                ${isDone ? styles.settled : ''} 
+                ${isDisappearing ? styles.disappearing : ''}
+              `}
             >
-              {isSettling && (
+              {isSettling && !isDone && (
                 <div 
                   className={styles.timerProgress} 
                   style={{ transform: `scaleX(${settleState.progress})` }} 
                 />
               )}
-              <Plus className={styles.plusIcon} />
+              {isDone ? (
+                <Check className={styles.checkIcon} />
+              ) : (
+                <Plus className={styles.plusIcon} />
+              )}
               {item.name}
-              {quantity > 1 && <span className={styles.quantityBadge}>{quantity}</span>}
+              {quantity > 1 && !isDone && <span className={styles.quantityBadge}>{quantity}</span>}
             </button>
           )
         })}

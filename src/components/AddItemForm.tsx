@@ -1,3 +1,4 @@
+import { Route } from '../routes/index'
 import { useState, useEffect, useRef } from 'react'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { addGroceryItemFn, getCategoriesFn, getStoresFn, getQuickAddItemsFn } from '../services/grocery.api'
@@ -15,6 +16,7 @@ const addItemSchema = z.object({
 })
 
 export default function AddItemForm() {
+  const { session } = Route.useRouteContext()
   const [inputValue, setInputValue] = useState('')
   const [cursorPosition, setCursorPosition] = useState(0)
   const [error, setError] = useState<string | null>(null)
@@ -27,18 +29,21 @@ export default function AddItemForm() {
   const queryClient = useQueryClient()
 
   const { data: categories = [] } = useQuery({
-    queryKey: ['categories'],
+    queryKey: ['categories', session?.householdId],
     queryFn: () => getCategoriesFn(),
+    enabled: !!session?.householdId,
   })
 
   const { data: stores = [] } = useQuery({
-    queryKey: ['stores'],
+    queryKey: ['stores', session?.householdId],
     queryFn: () => getStoresFn(),
+    enabled: !!session?.householdId,
   })
 
   const { data: quickAddItems = [] } = useQuery({
-    queryKey: ['quick-add-items'],
+    queryKey: ['quick-add-items', session?.householdId],
     queryFn: () => getQuickAddItemsFn(),
+    enabled: !!session?.householdId,
   })
 
   // DSL Parser
