@@ -6,7 +6,8 @@ import HouseholdActivityFeed from '../components/HouseholdActivityFeed'
 import SmartView from '../components/SmartView'
 import ShareHousehold from '../components/ShareHousehold'
 import Modal from '../components/Modal'
-import { History } from 'lucide-react'
+import AdminDashboard from '../components/AdminDashboard'
+import { History, Settings } from 'lucide-react'
 import styles from './index.module.css'
 
 export const Route = createFileRoute('/')({
@@ -16,6 +17,7 @@ export const Route = createFileRoute('/')({
 function Home() {
   const { session } = Route.useRouteContext()
   const [isActivityOpen, setIsActivityOpen] = useState(false)
+  const [isAdminOpen, setIsAdminOpen] = useState(false)
 
   if (!session) {
     return (
@@ -50,13 +52,22 @@ function Home() {
         <header className={styles.dashboardHeader}>
           <div className={styles.headerTop}>
             <h2 className={styles.headerTitle}>My List</h2>
-            <button
-              onClick={() => setIsActivityOpen(true)}
-              title="Activity Log"
-              className={styles.activityButton}
-            >
-              <History className={styles.toggleIcon} />
-            </button>
+            <div className={styles.headerActions}>
+              <button
+                onClick={() => setIsActivityOpen(true)}
+                title="Activity Log"
+                className={styles.iconButton}
+              >
+                <History className={styles.toggleIcon} />
+              </button>
+              <button
+                onClick={() => setIsAdminOpen(true)}
+                title="Manage Templates"
+                className={styles.iconButton}
+              >
+                <Settings className={styles.toggleIcon} />
+              </button>
+            </div>
           </div>
           {session.householdId && <ShareHousehold householdId={session.householdId} />}
         </header>
@@ -73,6 +84,14 @@ function Home() {
           title="Household Activity"
         >
           <HouseholdActivityFeed />
+        </Modal>
+
+        <Modal
+          isOpen={isAdminOpen}
+          onClose={() => setIsAdminOpen(false)}
+          title="Manage Templates"
+        >
+          <AdminDashboard householdId={session.householdId} />
         </Modal>
       </div>
     </main>

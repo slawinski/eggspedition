@@ -75,15 +75,6 @@ export default function Header() {
                     )}
                   </div>
                   
-                  <Link
-                    to="/admin"
-                    onClick={() => setIsProfileOpen(false)}
-                    className={styles.dropdownItem}
-                  >
-                    <Settings className={styles.dropdownIcon} />
-                    Manage Household
-                  </Link>
-
                   <button
                     onClick={() => {
                       setIsProfileOpen(false)

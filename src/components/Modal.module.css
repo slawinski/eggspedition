@@ -26,6 +26,9 @@
   position: relative;
   width: 100%;
   max-width: 32rem;
+  max-height: calc(100vh - 4rem);
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   border-radius: 2rem;
   padding: 1.5rem;
@@ -36,6 +39,7 @@
 }
 
 .header {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -73,6 +77,10 @@
 
 .body {
   position: relative;
+  flex: 1;
+  overflow-y: auto;
+  margin: -0.5rem;
+  padding: 0.5rem;
 }
 
 @keyframes fadeIn {

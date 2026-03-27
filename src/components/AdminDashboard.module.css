@@ -1,0 +1,230 @@
+.container {
+  width: 100%;
+}
+
+.itemList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.itemRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-radius: 1.25rem;
+  background-color: var(--surface-card);
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 12px var(--shadow-color);
+  transition: all 0.2s ease;
+}
+
+.itemRow:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px var(--shadow-color);
+  border-color: var(--lagoon-deep);
+}
+
+.itemRowEditing {
+  border-color: var(--lagoon);
+  box-shadow: 0 0 0 2px var(--lagoon) inset, 0 12px 24px var(--shadow-color);
+  transform: scale(1.01);
+}
+
+.itemMain {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.itemInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  width: 100%;
+}
+
+.itemName {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--sea-ink);
+}
+
+.editNameInput {
+  background: transparent;
+  border: none;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--sea-ink);
+  padding: 0;
+  outline: none;
+  width: 100%;
+  border-bottom: 1px dashed var(--line);
+}
+
+.editNameInput:focus {
+  border-bottom-style: solid;
+  border-bottom-color: var(--lagoon);
+}
+
+.itemTags {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  min-height: 1.5rem;
+  align-items: center;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.625rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tagCategory {
+  background-color: rgba(255, 154, 158, 0.1);
+  color: #ff9a9e;
+  border: 1px solid rgba(255, 154, 158, 0.2);
+}
+
+.tagStore {
+  background-color: rgba(161, 140, 209, 0.1);
+  color: #a18cd1;
+  border: 1px solid rgba(161, 140, 209, 0.2);
+}
+
+.tagEditWrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: var(--bg-base);
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid var(--line);
+}
+
+.tagInput {
+  background: transparent;
+  border: none;
+  font-size: 0.625rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sea-ink);
+  outline: none;
+  width: 80px;
+}
+
+.noTags {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--sea-ink-soft);
+  font-style: italic;
+  opacity: 0.6;
+}
+
+.subInfoIcon {
+  width: 0.75rem;
+  height: 0.75rem;
+  opacity: 0.7;
+}
+
+.itemActions {
+  display: flex;
+  gap: 0.25rem;
+  margin-left: 1rem;
+}
+
+.actionBtn, .deleteBtn, .saveBtn, .cancelBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.75rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.actionBtn {
+  color: var(--sea-ink-soft);
+}
+
+.actionBtn:hover {
+  background-color: var(--bg-base);
+  color: var(--lagoon);
+}
+
+.deleteBtn {
+  color: #f87171;
+  opacity: 0.6;
+}
+
+.deleteBtn:hover {
+  background-color: #fef2f2;
+  opacity: 1;
+}
+
+.saveBtn {
+  background-color: var(--lagoon);
+  color: white;
+}
+
+.saveBtn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(79, 211, 196, 0.3);
+}
+
+.cancelBtn {
+  color: var(--sea-ink-soft);
+}
+
+.cancelBtn:hover {
+  background-color: var(--line);
+}
+
+.actionIcon {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.skeletonRow {
+  height: 4.5rem;
+  border-radius: 1.25rem;
+  background-color: var(--surface-card);
+  opacity: 0.5;
+  border: 1px solid var(--line);
+}
+
+.errorState, .emptyState {
+  text-align: center;
+  padding: 4rem 2rem;
+  font-weight: 600;
+  color: var(--sea-ink-soft);
+  background-color: var(--surface-card);
+  border-radius: 2rem;
+  border: 2px dashed var(--line);
+}

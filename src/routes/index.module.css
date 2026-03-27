@@ -120,12 +120,27 @@
   color: var(--sea-ink);
 }
 
-.activityButton {
+.headerActions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.iconButton {
   background: none;
   border: none;
   cursor: pointer;
   padding: 0.5rem;
-  border-radius: 0.25rem;
+  border-radius: 0.75rem;
   transition: all 0.15s ease;
   color: var(--sea-ink-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconButton:hover {
+  background-color: var(--chip-bg);
+  color: var(--sea-ink);
+  transform: translateY(-1px);
 }
