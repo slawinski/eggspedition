@@ -137,7 +137,7 @@ function TemplateRowView({ item, categories, stores, onEdit, onDelete }: any) {
         <button onClick={onEdit} className={styles.actionBtn} title="Edit">
           <Edit2 className={styles.actionIcon} />
         </button>
-        <button onClick={onDelete} className={styles.deleteBtn} title="Delete">
+        <button onClick={onDelete} className={styles.deleteBtn} title="Delete" aria-label="Delete">
           <Trash2 className={styles.actionIcon} />
         </button>
       </div>

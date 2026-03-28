@@ -67,7 +67,7 @@ export default function ManageTags({ type, tags, onClose }: ManageTagsProps) {
             ) : (
               <StoreIcon className={`${styles.tagIcon} ${styles.storeIcon}`} />
             )}
-            {tag.name}
+            <span className={styles.tagName}>{tag.name}</span>
           </span>
         ))}
         {tags.length === 0 && (

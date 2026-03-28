@@ -10,8 +10,8 @@ import type { GroceryItem, Session } from '../lib/schemas'
 export default function SmartView({ session }: { session: Session | null }) {
   const queryClient = useQueryClient()
   const [groupBy, setGroupBy] = useState<'category' | 'store'>('category')
-  const [disappearing, setDisappearing] = useState<Record<string, boolean>>({})
-  const [displayData, setDisplayData] = useState<any>(null)
+  const [finishing, setFinishing] = useState<Record<string, boolean>>({})
+  const [deleting, setDeleting] = useState<Record<string, boolean>>({})
 
   const { data: groupedData, isLoading } = useQuery({
     queryKey: ['grocery-items-grouped', groupBy, session?.householdId],
@@ -30,38 +30,6 @@ export default function SmartView({ session }: { session: Session | null }) {
     queryFn: () => getStoresFn(),
     enabled: !!session?.householdId,
   })
-
-  // Sync displayData with query data using View Transitions for smooth grid morphing
-  useEffect(() => {
-    if (!groupedData) return
-
-    const update = () => {
-      setDisplayData(groupedData)
-      
-      // Clean up disappearing state
-      setDisappearing(prev => {
-        const next = { ...prev }
-        let changed = false
-        const allItems = Object.values(groupedData).flatMap((g: any) => g.items)
-        Object.keys(next).forEach(id => {
-          const item = allItems.find((i: any) => i.id === id)
-          if (!item || item.checked === 'true') {
-            delete next[id]
-            changed = true
-          }
-        })
-        return changed ? next : prev
-      })
-    }
-
-    if ((document as any).startViewTransition && displayData) {
-      (document as any).startViewTransition(() => {
-        flushSync(update)
-      })
-    } else {
-      update()
-    }
-  }, [groupedData])
 
   const updateMutation = useMutation({
     mutationFn: (vars: { id: string; checked: 'true' | 'false' }) =>
@@ -84,56 +52,42 @@ export default function SmartView({ session }: { session: Session | null }) {
     }
   })
 
-  const handleAction = (id: string, action: () => void) => {
-    const update = () => {
-      setDisappearing(prev => ({ ...prev, [id]: true }))
-    }
-
-    if ((document as any).startViewTransition) {
-      (document as any).startViewTransition(() => {
-        flushSync(update)
-      })
-    } else {
-      update()
-    }
-
-    // Wait for the visual transition to complete before triggering the data change
-    setTimeout(() => {
-      action()
-    }, 400)
-  }
-
   const handleToggle = (newGroupBy: 'category' | 'store') => {
     if (newGroupBy === groupBy) return
-    if ((document as any).startViewTransition) {
-      (document as any).startViewTransition(() => {
-        flushSync(() => {
-          setGroupBy(newGroupBy)
-        })
-      })
-    } else {
-      setGroupBy(newGroupBy)
-    }
+    setGroupBy(newGroupBy)
   }
 
-  if (isLoading && !displayData) return <div className={styles.loading}>Organizing your list...</div>
-  if (!displayData) return null
+  // Responsive column count logic
+  const [columnCount, setColumnCount] = useState(3)
+  useEffect(() => {
+    const updateCount = () => {
+      const width = window.innerWidth
+      if (width < 768) setColumnCount(1)
+      else if (width < 1100) setColumnCount(2)
+      else setColumnCount(3)
+    }
+    updateCount()
+    window.addEventListener('resize', updateCount)
+    return () => window.removeEventListener('resize', updateCount)
+  }, [])
 
-  const filteredData = Object.entries(displayData).reduce((acc: any, [id, group]: [string, any]) => {
-    const visibleItems = group.items.filter((item: GroceryItem) => {
-      // Keep item visible if it's not checked OR if it's currently in its "poof" animation
-      if (item.checked === 'true' && !disappearing[item.id]) return false
-      return true
-    })
+  if (isLoading && !groupedData) return <div className={styles.loading}>Organizing your list...</div>
+  if (!groupedData) return null
+
+  const filteredData = Object.entries(groupedData).reduce((acc: any, [id, group]: [string, any]) => {
+    const visibleItems = group.items.filter((item: GroceryItem) => (item.checked === 'false' || finishing[item.id]) && !deleting[item.id])
     
-    // Check if the whole group is in the process of vanishing
-    const isGroupDisappearing = visibleItems.length > 0 && visibleItems.every((item: GroceryItem) => disappearing[item.id])
-
     if (visibleItems.length > 0) {
-      acc[id] = { ...group, items: visibleItems, isDisappearing: isGroupDisappearing }
+      acc[id] = { ...group, items: visibleItems }
     }
     return acc
   }, {})
+
+  // Distribute items into stable columns for masonry effect
+  const columnData: any[][] = Array.from({ length: columnCount }, () => [])
+  Object.entries(filteredData).forEach((entry, index) => {
+    columnData[index % columnCount].push(entry)
+  })
 
   return (
     <div className={styles.container}>
@@ -156,99 +110,100 @@ export default function SmartView({ session }: { session: Session | null }) {
         </button>
       </div>
 
-      <div className={styles.grid}>
+      <div className={styles.masonryGrid}>
         {Object.entries(filteredData).length === 0 ? (
           <div className={styles.emptyState}>
             Your list is clear!
           </div>
         ) : (
-          Object.entries(filteredData).map(([id, group]: [string, any]) => {
-            const label = groupBy === 'category' 
-              ? (group.category?.name || 'Uncategorized')
-              : (group.store?.name || 'Any Store');
-            const Icon = groupBy === 'category' ? Tag : StoreIcon;
-            
-            return (
-              <div 
-                key={id} 
-                className={`
-                  ${clay.card} 
-                  ${styles.groupCard} 
-                  ${group.isDisappearing ? styles.groupDisappearing : ''}
-                `}
-                style={{ viewTransitionName: `group-${id.replace(/[^a-zA-Z0-9]/g, '_')}` } as any}
-              >
-                <h3 className={styles.groupHeader}>
-                  <div className={`${styles.groupIconWrapper} ${groupBy === 'category' ? styles.groupIconWrapperCategory : styles.groupIconWrapperStore}`}>
-                    <Icon className={styles.groupIcon} />
-                  </div>
-                  {label}
-                </h3>
-                <div className={styles.itemList}>
-                  {group.items.map((item: GroceryItem) => (
-                    <div 
-                      key={item.id} 
-                      className={`${styles.itemRow} ${disappearing[item.id] ? styles.disappearing : ''}`}
-                      style={{ viewTransitionName: `item-${item.id.replace(/[^a-zA-Z0-9]/g, '_')}` } as any}
-                    >
-                      <div className={styles.itemMain}>
-                        <button
-                          onClick={() => {
-                            const newChecked = item.checked === 'true' ? 'false' : 'true';
-                            if (newChecked === 'true') {
-                              handleAction(item.id, () => updateMutation.mutate({ id: item.id, checked: 'true' }));
-                            } else {
-                              updateMutation.mutate({ id: item.id, checked: 'false' });
-                            }
-                          }}
-                          className={styles.checkButton}
+          columnData.map((columnEntries, colIdx) => (
+            <div key={`col-${colIdx}`} className={styles.masonryColumn}>
+              {columnEntries.map(([id, group]: [string, any]) => {
+                const label = groupBy === 'category' 
+                  ? (group.category?.name || 'Uncategorized')
+                  : (group.store?.name || 'Any Store');
+                const Icon = groupBy === 'category' ? Tag : StoreIcon;
+                
+                return (
+                  <div 
+                    key={id} 
+                    className={`${clay.card} ${styles.groupCard}`}
+                  >
+                    <h3 className={styles.groupHeader}>
+                      <div className={`${styles.groupIconWrapper} ${groupBy === 'category' ? styles.groupIconWrapperCategory : styles.groupIconWrapperStore}`}>
+                        <Icon className={styles.groupIcon} />
+                      </div>
+                      <span className={styles.groupHeaderLabel}>{label}</span>
+                    </h3>                    <div className={styles.itemList}>
+                      {group.items.map((item: GroceryItem) => (
+                        <div 
+                          key={item.id} 
+                          className={styles.itemRow}
                         >
-                          {item.checked === 'true' ? (
-                            <CheckCircle2 className={styles.checkIcon} />
-                          ) : (
-                            <Circle className={styles.uncheckIcon} />
-                          )}
-                        </button>
-                        <div className={styles.itemInfo}>
-                          <span className={`${styles.itemName} ${item.checked === 'true' ? styles.itemNameChecked : ''}`}>
-                            {item.name}
-                          </span>
-                          <div className={styles.itemSubInfo}>
-                            {groupBy === 'category' && item.storeId && (
-                              <span className={`${styles.subInfoTag} ${styles.subInfoTagStore}`}>
-                                <StoreIcon className={styles.subInfoIcon} />
-                                {stores?.find((s: any) => s.id === item.storeId)?.name}
+                          <div className={styles.itemMain}>
+                            <button
+                              onClick={() => {
+                                setFinishing(prev => ({ ...prev, [item.id]: true }))
+                                setTimeout(() => {
+                                  updateMutation.mutate({ id: item.id, checked: 'true' })
+                                  setFinishing(prev => {
+                                    const next = { ...prev }
+                                    delete next[item.id]
+                                    return next
+                                  })
+                                }, 300)
+                              }}
+                              className={styles.checkButton}
+                            >
+                              {finishing[item.id] ? (
+                                <CheckCircle2 className={styles.checkIcon} />
+                              ) : (
+                                <Circle className={styles.uncheckIcon} />
+                              )}
+                            </button>
+                            <div className={styles.itemInfo}>
+                              <span className={styles.itemName}>
+                                {item.name}
+                              </span>
+                              <div className={styles.itemSubInfo}>
+                                {groupBy === 'category' && item.storeId && (
+                                  <span className={`${styles.subInfoTag} ${styles.subInfoTagStore}`}>
+                                    <StoreIcon className={styles.subInfoIcon} />
+                                    {stores?.find((s: any) => s.id === item.storeId)?.name}
+                                  </span>
+                                )}
+                                {groupBy === 'store' && item.categoryId && (
+                                  <span className={`${styles.subInfoTag} ${styles.subInfoTagCategory}`}>
+                                    <Tag className={styles.subInfoIcon} />
+                                    {categories?.find((c: any) => c.id === item.categoryId)?.name}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className={styles.itemActions}>
+                            {item.quantity !== '1' && (
+                              <span className={styles.quantityBadge}>
+                                x{item.quantity}
                               </span>
                             )}
-                            {groupBy === 'store' && item.categoryId && (
-                              <span className={`${styles.subInfoTag} ${styles.subInfoTagCategory}`}>
-                                <Tag className={styles.subInfoIcon} />
-                                {categories?.find((c: any) => c.id === item.categoryId)?.name}
-                              </span>
-                            )}
+                            <button
+                              onClick={() => deleteMutation.mutate(item.id)}
+                              className={styles.deleteButton}
+                              title="Delete item"
+                              aria-label="Delete item"
+                            >
+                              <Trash2 className={styles.deleteIcon} />
+                            </button>
                           </div>
                         </div>
-                      </div>
-                      <div className={styles.itemActions}>
-                        {item.quantity !== '1' && (
-                          <span className={styles.quantityBadge}>
-                            x{item.quantity}
-                          </span>
-                        )}
-                        <button
-                          onClick={() => handleAction(item.id, () => deleteMutation.mutate(item.id))}
-                          className={styles.deleteButton}
-                          title="Delete item"
-                        >
-                          <Trash2 className={styles.deleteIcon} />
-                        </button>
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })
+                  </div>
+                );
+              })}
+            </div>
+          ))
         )}
       </div>
     </div>

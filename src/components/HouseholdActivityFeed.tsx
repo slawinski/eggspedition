@@ -53,7 +53,7 @@ export default function HouseholdActivityFeed() {
         <div key={log.id} className={styles.logItem}>
           <div className={styles.logContent}>
             {getActionIcon(log.action)}
-            <span style={{ color: 'var(--sea-ink)' }}>
+            <span className={styles.logText}>
               <span className={styles.userName}>
                 {log.userName || log.userEmail?.split('@')[0] || 'Member'}
               </span>{' '}

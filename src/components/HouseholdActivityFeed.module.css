@@ -50,12 +50,24 @@
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
   border-bottom: 1px solid var(--line);
+  min-width: 0;
+  gap: 1rem;
 }
 
 .logContent {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.logText {
+  color: var(--sea-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
 }
 
 .userName {
@@ -70,6 +82,7 @@
 .timestamp {
   opacity: 0.6;
   color: var(--sea-ink-soft);
+  flex-shrink: 0;
 }
 
 .actionIcon {

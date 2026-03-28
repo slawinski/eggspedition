@@ -21,7 +21,7 @@
   justify-content: center;
   padding: 0.375rem;
   border-radius: 1.25rem;
-  box-shadow: 
+  box-shadow:
     inset 4px 4px 8px var(--clay-shadow-outer),
     inset -4px -4px 8px var(--clay-shadow-inner-light);
   border: 1px solid var(--line);
@@ -38,14 +38,13 @@
   width: calc(50% - 0.375rem);
   height: calc(100% - 0.75rem);
   border-radius: 1rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 0;
 }
 
 .toggleSliderCategory {
   background-color: #ff9a9e;
   transform: translateX(0);
-  box-shadow: 
+  box-shadow:
     8px 8px 16px rgba(255, 154, 158, 0.3),
     inset 4px 4px 8px rgba(255, 255, 255, 0.3);
 }
@@ -53,7 +52,7 @@
 .toggleSliderStore {
   background-color: #a18cd1;
   transform: translateX(100%);
-  box-shadow: 
+  box-shadow:
     8px 8px 16px rgba(161, 140, 209, 0.3),
     inset 4px 4px 8px rgba(255, 255, 255, 0.3);
 }
@@ -65,7 +64,6 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  transition: color 0.3s ease;
   border: none;
   cursor: pointer;
   background-color: transparent;
@@ -79,12 +77,18 @@
   color: white;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+.masonryGrid {
+  display: flex;
   gap: 1.5rem;
-  align-items: start;
   width: 100%;
+}
+
+.masonryColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0; /* Prevent flex items from overflowing */
 }
 
 .emptyState {
@@ -106,13 +110,6 @@
   padding: 1.5rem;
   border-radius: 2.5rem;
   width: 100%;
-  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
-}
-
-.groupCard.groupDisappearing {
-  pointer-events: none;
-  overflow: hidden;
-  animation: poof 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 .groupHeader {
@@ -126,6 +123,14 @@
   align-items: center;
   gap: 0.75rem;
   color: var(--sea-ink);
+  min-width: 0;
+}
+
+.groupHeaderLabel {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
 }
 
 .groupIconWrapper {
@@ -134,9 +139,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 
-    inset 2px 2px 4px rgba(0,0,0,0.05),
+  box-shadow:
+    inset 2px 2px 4px rgba(0, 0, 0, 0.05),
     0 4px 8px var(--shadow-color);
+  flex-shrink: 0;
 }
 
 .groupIconWrapperCategory {
@@ -170,40 +176,9 @@
   border-radius: 1.25rem;
   background-color: var(--surface-card);
   border: 1px solid var(--line);
-  box-shadow: 
+  box-shadow:
     8px 8px 16px var(--shadow-color),
     inset 4px 4px 8px var(--clay-shadow-inner-light);
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
-}
-
-@keyframes popIn {
-  0% {
-    transform: scale(0.8) translateY(10px);
-    opacity: 0;
-    filter: blur(4px);
-  }
-  70% {
-    transform: scale(1.02) translateY(-2px);
-    opacity: 1;
-    filter: blur(0);
-  }
-  100% {
-    transform: scale(1) translateY(0);
-    opacity: 1;
-  }
-}
-
-.itemRow.disappearing {
-  pointer-events: none;
-  overflow: hidden;
-  animation: poof 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-@keyframes poof {
-  0% { transform: scale(1); opacity: 1; filter: blur(0); }
-  30% { transform: scale(1.05); opacity: 1; filter: blur(0); }
-  100% { transform: scale(0.5); opacity: 0; filter: blur(12px); }
 }
 
 .itemMain {
@@ -211,7 +186,7 @@
   align-items: center;
   gap: 1rem;
   flex: 1;
-  overflow: hidden;
+  min-width: 0;
 }
 
 .checkButton {
@@ -222,19 +197,28 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   flex-shrink: 0;
-}
-
-.checkButton:active {
-  transform: scale(0.8);
 }
 
 .checkIcon {
   width: 1.75rem;
   height: 1.75rem;
   color: #84fab0;
-  filter: drop-shadow(0 2px 4px rgba(132, 250, 176, 0.4));
+  animation: checkPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+@keyframes checkPop {
+  0% {
+    transform: scale(0) rotate(-45deg);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.2) rotate(5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
 }
 
 .uncheckIcon {
@@ -248,13 +232,13 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 0;
 }
 
 .itemName {
   font-weight: 700;
   color: var(--sea-ink);
   font-size: 1rem;
-  transition: all 0.2s ease;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -282,8 +266,12 @@
   opacity: 0.7;
 }
 
-.subInfoTagStore { color: #ff9a9e; }
-.subInfoTagCategory { color: #a18cd1; }
+.subInfoTagStore {
+  color: #ff9a9e;
+}
+.subInfoTagCategory {
+  color: #a18cd1;
+}
 
 .subInfoIcon {
   width: 0.75rem;
@@ -305,27 +293,38 @@
   background-color: var(--bg-base);
   border: 1px solid var(--line);
   color: var(--sea-ink-soft);
-  box-shadow: inset 1px 1px 2px rgba(0,0,0,0.05);
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .deleteButton {
   padding: 0.5rem;
   border-radius: 0.75rem;
-  color: #f87171;
-  opacity: 0.4;
-  transition: all 0.2s ease;
+  color: #ff4d4d;
+  opacity: 0.7;
   cursor: pointer;
   background: none;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.15s ease, opacity 0.15s ease, background-color 0.15s ease;
 }
 
-.deleteButton:hover {
+.deleteButton:active {
   opacity: 1;
-  background-color: #fff1f2;
-  transform: scale(1.1);
+  transform: scale(0.9);
+}
+
+.deleteButton:active .deleteIcon {
+  animation: trash-jiggle 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes trash-jiggle {
+  0% { transform: rotate(0); }
+  25% { transform: rotate(-12deg); }
+  50% { transform: rotate(12deg); }
+  75% { transform: rotate(-8deg); }
+  100% { transform: rotate(0); }
 }
 
 .deleteIcon {
