@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "varlock run -- vite dev --port 3000",
     "build": "varlock run -- vite build",
+    "db:migrate": "drizzle-kit push",
     "preview": "varlock run -- vite preview",
     "test": "varlock run -- vitest run"
   },

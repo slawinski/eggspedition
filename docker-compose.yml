@@ -1,0 +1,38 @@
+services:
+  app:
+    build: .
+    container_name: eggspedition-app
+    restart: always
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - AUTH_SECRET=${AUTH_SECRET}
+      - BASE_URL=${BASE_URL:-https://eggspedition.yourdomain.com}
+      - NODE_ENV=production
+    networks:
+      - traefik-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.eggspedition.rule=Host(`eggspedition.yourdomain.com`)"
+      - "traefik.http.routers.eggspedition.entrypoints=websecure"
+      - "traefik.http.routers.eggspedition.tls.certresolver=myresolver"
+      - "traefik.http.services.eggspedition.loadbalancer.server.port=3000"
+
+  db:
+    image: postgres:16-alpine
+    container_name: eggspedition-db
+    restart: always
+    environment:
+      - POSTGRES_DB=eggspedition
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - traefik-net
+
+networks:
+  traefik-net:
+    external: true
+
+volumes:
+  db-data:
