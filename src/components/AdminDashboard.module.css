@@ -175,23 +175,6 @@
   opacity: 0.8;
 }
 
-.deleteBtn:active {
-  transform: scale(0.9);
-  opacity: 1;
-}
-
-.deleteBtn:active .actionIcon {
-  animation: trash-jiggle 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-}
-
-@keyframes trash-jiggle {
-  0% { transform: rotate(0); }
-  25% { transform: rotate(-12deg); }
-  50% { transform: rotate(12deg); }
-  75% { transform: rotate(-8deg); }
-  100% { transform: rotate(0); }
-}
-
 .saveBtn {
   background-color: var(--lagoon);
   color: white;

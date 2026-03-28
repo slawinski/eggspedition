@@ -62,11 +62,7 @@ export default function AdminDashboard({ householdId }: AdminDashboardProps) {
               item={item} 
               categories={categories} 
               stores={stores}
-              onDelete={() => {
-                if (confirm(`Delete "${item.name}" template?`)) {
-                  deleteMutation.mutate(item.id)
-                }
-              }}
+              onDelete={() => deleteMutation.mutate(item.id)}
             />
           ))
         )}
@@ -137,7 +133,12 @@ function TemplateRowView({ item, categories, stores, onEdit, onDelete }: any) {
         <button onClick={onEdit} className={styles.actionBtn} title="Edit">
           <Edit2 className={styles.actionIcon} />
         </button>
-        <button onClick={onDelete} className={styles.deleteBtn} title="Delete" aria-label="Delete">
+        <button 
+          onClick={onDelete} 
+          className={styles.deleteBtn} 
+          title="Delete" 
+          aria-label="Delete"
+        >
           <Trash2 className={styles.actionIcon} />
         </button>
       </div>

@@ -75,7 +75,7 @@ export default function SmartView({ session }: { session: Session | null }) {
   if (!groupedData) return null
 
   const filteredData = Object.entries(groupedData).reduce((acc: any, [id, group]: [string, any]) => {
-    const visibleItems = group.items.filter((item: GroceryItem) => (item.checked === 'false' || finishing[item.id]) && !deleting[item.id])
+    const visibleItems = group.items.filter((item: GroceryItem) => (item.checked === 'false' || finishing[item.id]))
     
     if (visibleItems.length > 0) {
       acc[id] = { ...group, items: visibleItems }
@@ -188,12 +188,22 @@ export default function SmartView({ session }: { session: Session | null }) {
                               </span>
                             )}
                             <button
-                              onClick={() => deleteMutation.mutate(item.id)}
+                              onClick={() => {
+                                setDeleting(prev => ({ ...prev, [item.id]: true }))
+                                setTimeout(() => {
+                                  deleteMutation.mutate(item.id)
+                                  setDeleting(prev => {
+                                    const next = { ...prev }
+                                    delete next[item.id]
+                                    return next
+                                  })
+                                }, 300)
+                              }}
                               className={styles.deleteButton}
                               title="Delete item"
                               aria-label="Delete item"
                             >
-                              <Trash2 className={styles.deleteIcon} />
+                              <Trash2 className={`${styles.deleteIcon} ${deleting[item.id] ? styles.deleteIconActive : ''}`} />
                             </button>
                           </div>
                         </div>

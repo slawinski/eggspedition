@@ -308,27 +308,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.15s ease, opacity 0.15s ease, background-color 0.15s ease;
-}
-
-.deleteButton:active {
-  opacity: 1;
-  transform: scale(0.9);
-}
-
-.deleteButton:active .deleteIcon {
-  animation: trash-jiggle 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-}
-
-@keyframes trash-jiggle {
-  0% { transform: rotate(0); }
-  25% { transform: rotate(-12deg); }
-  50% { transform: rotate(12deg); }
-  75% { transform: rotate(-8deg); }
-  100% { transform: rotate(0); }
 }
 
 .deleteIcon {
   width: 1.125rem;
   height: 1.125rem;
+}
+
+.deleteIconActive {
+  animation: deletePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  color: #ff4d4d;
+}
+
+@keyframes deletePop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.4) rotate(15deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
 }
