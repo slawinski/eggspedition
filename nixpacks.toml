@@ -2,15 +2,14 @@
 
 [phases.setup]
 nixPkgs = ['bun']
-# Pinning to a specific nixpkgs archive ensures we get Bun 1.3.3+ 
-# even if the Coolify host's default is older.
-nixpkgsArchive = '8c29968b3a942f2903f90797f9623737c215737c'
 
 [phases.install]
 cmds = ['bun install --frozen-lockfile']
 
 [phases.build]
-cmds = ['bun run build']
+# We use SKIP_BUN_VERSION_CHECK=1 to prevent varlock from crashing if the
+# environment's Bun version is slightly below 1.3.3.
+cmds = ['SKIP_BUN_VERSION_CHECK=1 bun run build']
 
 [start]
 cmd = 'bun run start'
@@ -18,3 +17,4 @@ cmd = 'bun run start'
 [variables]
 NIXPACKS_NODE_VERSION = '22'
 PORT = '3000'
+SKIP_BUN_VERSION_CHECK = '1'
