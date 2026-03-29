@@ -1,8 +1,6 @@
 # nixpacks.toml
 
 [phases.setup]
-# We install the base bun from Nix, but then upgrade it immediately 
-# to ensure we have 1.3.3+ for Varlock.
 nixPkgs = ['bun', 'curl', 'unzip']
 
 [phases.install]
@@ -12,13 +10,13 @@ cmds = [
 ]
 
 [phases.build]
-# Ensure we use the upgraded Bun path
 cmds = ['export PATH="$HOME/.bun/bin:$PATH" && bun run build']
 
 [start]
-# Ensure we use the upgraded Bun path
 cmd = 'export PATH="$HOME/.bun/bin:$PATH" && bun run start'
 
 [variables]
 NIXPACKS_NODE_VERSION = '22'
 PORT = '3000'
+# This is the key to making Nixpacks use our manual Bun install
+PATH = '/root/.bun/bin:$PATH'
