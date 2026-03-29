@@ -9,7 +9,7 @@
     "dev": "varlock run -- vite dev --port 3000",
     "build": "varlock run -- vite build",
     "db:migrate": "drizzle-kit push",
-    "start": "varlock run -- bun .output/server/index.mjs",
+    "start": "varlock run -- bun run db:migrate && varlock run -- bun .output/server/index.mjs",
     "preview": "varlock run -- vite preview",
     "test": "varlock run -- vitest run"
   },
