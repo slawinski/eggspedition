@@ -2,6 +2,7 @@
 
 [phases.setup]
 nixPkgs = ['bun']
+nixpkgsArchive = '8c29968b3a942f2903f90797f9623737c215737c'
 
 [phases.install]
 cmds = ['bun install --frozen-lockfile']
