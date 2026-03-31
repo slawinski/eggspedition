@@ -1,7 +1,7 @@
 import { Link, useRouter } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import ThemeToggle from './ThemeToggle'
-import { ShoppingBasket, LogOut, Settings, User, ChevronDown } from 'lucide-react'
+import { ShoppingBasket, LogOut, User, ChevronDown } from 'lucide-react'
 import SyncIndicator from './SyncIndicator'
 import { logoutServerFn } from '../services/auth.api'
 import { Route as rootRoute } from '../routes/__root'

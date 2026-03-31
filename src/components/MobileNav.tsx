@@ -2,47 +2,55 @@ import { Home, History, Settings, Plus, Zap } from 'lucide-react'
 import { Link, useRouterState } from '@tanstack/react-router'
 import styles from './MobileNav.module.css'
 
-interface MobileNavProps {
-  onOpenActivity: () => void
-  onOpenAdmin: () => void
-  onOpenAdd: () => void
-  onOpenQuickAdd: () => void
-}
-
-export default function MobileNav({ onOpenActivity, onOpenAdmin, onOpenAdd, onOpenQuickAdd }: MobileNavProps) {
+export default function MobileNav() {
   const state = useRouterState()
-  const isHome = state.location.pathname === '/'
+  const pathname = state.location.pathname
+
+  const isActive = (path: string) => pathname === path
 
   return (
     <nav className={styles.mobileNav}>
       <Link 
         to="/" 
-        className={`${styles.navItem} ${isHome ? styles.navItemActive : ''}`}
+        className={`${styles.navItem} ${isActive('/') ? styles.navItemActive : ''}`}
       >
         <Home className={styles.navIcon} />
         <span className={styles.navLabel}>Home</span>
       </Link>
 
-      <button onClick={onOpenQuickAdd} className={styles.navItem}>
+      <Link 
+        to="/quick-add" 
+        className={`${styles.navItem} ${isActive('/quick-add') ? styles.navItemActive : ''}`}
+      >
         <Zap className={styles.navIcon} />
         <span className={styles.navLabel}>Quick Add</span>
-      </button>
+      </Link>
 
       <div className={styles.fabWrapper}>
-        <button onClick={onOpenAdd} className={styles.fab} aria-label="Add Item">
+        <Link 
+          to="/add" 
+          className={styles.fab} 
+          aria-label="Add Item"
+        >
           <Plus className={styles.fabIcon} />
-        </button>
+        </Link>
       </div>
 
-      <button onClick={onOpenActivity} className={styles.navItem}>
+      <Link 
+        to="/activity" 
+        className={`${styles.navItem} ${isActive('/activity') ? styles.navItemActive : ''}`}
+      >
         <History className={styles.navIcon} />
         <span className={styles.navLabel}>Activity</span>
-      </button>
+      </Link>
 
-      <button onClick={onOpenAdmin} className={styles.navItem}>
+      <Link 
+        to="/admin" 
+        className={`${styles.navItem} ${isActive('/admin') ? styles.navItemActive : ''}`}
+      >
         <Settings className={styles.navIcon} />
         <span className={styles.navLabel}>Admin</span>
-      </button>
+      </Link>
     </nav>
   )
 }

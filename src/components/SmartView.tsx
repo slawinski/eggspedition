@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { flushSync } from 'react-dom'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { getGroceryItemsGroupedFn, updateGroceryItemFn, deleteGroceryItemFn, getStoresFn, getCategoriesFn } from '../services/grocery.api'
 import clay from '../styles/clay.module.css'

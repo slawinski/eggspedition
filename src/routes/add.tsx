@@ -1,59 +1,29 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
-import { addGroceryItemFn } from '../services/grocery.api'
-import { z } from 'zod'
-import styles from './add.module.css'
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+import AddItemForm from '../components/AddItemForm'
+import styles from './index.module.css'
 
 export const Route = createFileRoute('/add')({
-  validateSearch: z.object({
-    name: z.string().min(1),
-    quantity: z.string().optional(),
-  }),
-  loaderDeps: ({ search }) => search,
-  loader: async ({ deps: search, context }) => {
-    const { session } = context as any
-    
-    if (!session) {
-      throw redirect({
-        to: '/login',
-        search: {
-          returnTo: '/add',
-          ...search,
-        },
-      })
-    }
-
-    try {
-      await addGroceryItemFn({
-        data: {
-          name: search.name,
-          quantity: search.quantity || '1',
-        },
-      })
-      // After adding, redirect back home
-      throw redirect({ to: '/' })
-    } catch (err) {
-      console.error('Failed to add item via deep link:', err)
-      return { error: 'Failed to add item. Please try again.' }
+  beforeLoad: ({ context }) => {
+    if (!context.session) {
+      throw redirect({ to: '/login' })
     }
   },
-  component: AddDeepLinkComponent,
+  component: AddPage,
 })
 
-function AddDeepLinkComponent() {
-  const { error } = Route.useLoaderData() as any
+function AddPage() {
+  const navigate = useNavigate()
 
   return (
-    <div className={styles.page}>
-      <div className={`island-shell ${styles.card}`}>
-        <h2 className={styles.title}>Deep Link Error</h2>
-        <p className={styles.message}>{error || 'Adding item...'}</p>
-        <a
-          href="/"
-          className={styles.link}
-        >
-          Go Home
-        </a>
+    <main className={styles.main}>
+      <div className={styles.dashboardContent} style={{ justifyContent: 'center', minHeight: '60vh' }}>
+        <header className={styles.dashboardHeader} style={{ display: 'flex' }}>
+          <h2 className={styles.headerTitle}>Add New Item</h2>
+        </header>
+        <div style={{ display: 'block' }}>
+          <AddItemForm onSuccess={() => navigate({ to: '/' })} />
+        </div>
       </div>
-    </div>
+    </main>
   )
 }

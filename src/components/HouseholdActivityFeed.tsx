@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { getHouseholdLogsFn } from '../services/grocery.api'
-import { Route } from '../routes/index'
+import { useRouteContext } from '@tanstack/react-router'
 import clay from '../styles/clay.module.css'
 import styles from './HouseholdActivityFeed.module.css'
 import { History, PlusCircle, CheckCircle, XCircle, RefreshCcw } from 'lucide-react'
 
 export default function HouseholdActivityFeed() {
-  const { session } = Route.useRouteContext()
+  const { session } = useRouteContext({ from: '__root__' })
   const { data: logs, isLoading, error } = useQuery({
     queryKey: ['household-logs', session?.householdId],
     queryFn: () => getHouseholdLogsFn(),

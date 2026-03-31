@@ -1,9 +1,9 @@
-import { Route } from '../routes/index'
+import { useRouteContext } from '@tanstack/react-router'
 import { useState, useEffect, useRef } from 'react'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { addGroceryItemFn, getCategoriesFn, getStoresFn, getQuickAddItemsFn } from '../services/grocery.api'
 import styles from './AddItemForm.module.css'
-import { Plus, Tag, Store as StoreIcon, Hash, CornerDownLeft, Sparkles } from 'lucide-react'
+import { Tag, Store as StoreIcon, Hash, CornerDownLeft, Sparkles } from 'lucide-react'
 import { z } from 'zod'
 import Modal from './Modal'
 import ManageTags from './ManageTags'
@@ -15,8 +15,20 @@ const addItemSchema = z.object({
   storeName: z.string().optional().nullable(),
 })
 
+type Suggestion = {
+  name: string
+  type: 'category' | 'store' | 'Quick Add' | 'New Item'
+  isNew?: boolean
+  categoryId?: string | null
+  storeId?: string | null
+  categoryName?: string | null
+  storeName?: string | null
+  quantity?: string | null
+  id?: string
+}
+
 export default function AddItemForm({ onSuccess }: { onSuccess?: () => void }) {
-  const { session } = Route.useRouteContext()
+  const { session } = useRouteContext({ from: '__root__' })
   const [inputValue, setInputValue] = useState('')
   const [cursorPosition, setCursorPosition] = useState(0)
   const [error, setError] = useState<string | null>(null)
@@ -90,11 +102,11 @@ export default function AddItemForm({ onSuccess }: { onSuccess?: () => void }) {
 
   const activeProperty = getActiveProperty();
 
-  const getSuggestions = () => {
+  const getSuggestions = (): Suggestion[] => {
     if (activeProperty) {
       const { type, query } = activeProperty;
       const list = type === 'category' ? categories : stores;
-      const matches = list
+      const matches: Suggestion[] = list
         .filter(i => i.name.toLowerCase().includes(query.toLowerCase()))
         .map(i => ({ name: i.name, type: type }));
       
@@ -106,7 +118,7 @@ export default function AddItemForm({ onSuccess }: { onSuccess?: () => void }) {
     }
 
     if (parsed.name.length > 0) {
-      const quickMatches = quickAddItems
+      const quickMatches: Suggestion[] = quickAddItems
         .filter(i => i.name.toLowerCase().includes(parsed.name.toLowerCase()))
         .map(i => ({ ...i, type: 'Quick Add' as const }));
 
@@ -114,17 +126,20 @@ export default function AddItemForm({ onSuccess }: { onSuccess?: () => void }) {
         m => m.name.toLowerCase() === parsed.name.toLowerCase()
       );
 
-      return [
-        ...quickMatches,
-        ...(!hasExactMatch ? [{ 
+      const suggestions: Suggestion[] = [...quickMatches];
+
+      if (!hasExactMatch) {
+        suggestions.push({ 
           name: parsed.name, 
           type: 'New Item' as const, 
           isNew: true, 
           categoryName: parsed.categoryName, 
           storeName: parsed.storeName, 
           quantity: parsed.quantity 
-        }] : [])
-      ].slice(0, 6);
+        });
+      }
+
+      return suggestions.slice(0, 6);
     }
 
     return [];
@@ -193,13 +208,13 @@ export default function AddItemForm({ onSuccess }: { onSuccess?: () => void }) {
     }, 0);
   };
 
-  const handleSuggestionClick = (suggestion: any) => {
+  const handleSuggestionClick = (suggestion: Suggestion) => {
     if (activeProperty) {
       handlePropertyClick(suggestion.name);
       return;
     }
 
-    if (suggestion.isNew) {
+    if (suggestion.type === 'New Item') {
       handleSubmit()
       return
     }
@@ -207,7 +222,7 @@ export default function AddItemForm({ onSuccess }: { onSuccess?: () => void }) {
     const { categoryName, storeName, quantity } = parsed
     mutation.mutate({
       name: suggestion.name,
-      quantity,
+      quantity: quantity || undefined,
       categoryName: categoryName || (suggestion.categoryId ? categories.find(c => c.id === suggestion.categoryId)?.name : null),
       storeName: storeName || (suggestion.storeId ? stores.find(s => s.id === suggestion.storeId)?.name : null),
     })
@@ -308,13 +323,13 @@ export default function AddItemForm({ onSuccess }: { onSuccess?: () => void }) {
                   );
                 }
 
-                const displayCategory = s.isNew 
+                const displayCategory = s.type === 'New Item' 
                   ? s.categoryName 
                   : (s.categoryId ? categories.find(c => c.id === s.categoryId)?.name : null);
-                const displayStore = s.isNew 
+                const displayStore = s.type === 'New Item' 
                   ? s.storeName 
                   : (s.storeId ? stores.find(st => st.id === s.storeId)?.name : null);
-                const displayQuantity = s.isNew ? s.quantity : null;
+                const displayQuantity = s.type === 'New Item' ? s.quantity : null;
 
                 return (
                   <button
