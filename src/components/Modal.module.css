@@ -3,13 +3,14 @@
   inset: 0;
   z-index: 100;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   padding: 1rem;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 768px) {
   .overlay {
+    align-items: center;
     padding: 1.5rem;
   }
 }
@@ -31,11 +32,20 @@
   flex-direction: column;
   overflow: hidden;
   border-radius: 2rem;
-  padding: 1.5rem;
+  padding: 1.25rem;
   box-shadow: 0 25px 50px -12px var(--shadow-color-strong);
   animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
   background-color: var(--surface-card);
   border: 1px solid var(--line);
+  margin-top: 1rem;
+}
+
+@media (min-width: 768px) {
+  .content {
+    padding: 1.5rem;
+    margin-top: 0;
+    overflow: hidden;
+  }
 }
 
 .header {
@@ -43,14 +53,26 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .header {
+    margin-bottom: 1.5rem;
+  }
 }
 
 .title {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 700;
   color: var(--sea-ink);
   margin: 0;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 1.25rem;
+  }
 }
 
 .closeButton {

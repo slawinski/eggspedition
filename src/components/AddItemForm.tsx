@@ -15,7 +15,7 @@ const addItemSchema = z.object({
   storeName: z.string().optional().nullable(),
 })
 
-export default function AddItemForm() {
+export default function AddItemForm({ onSuccess }: { onSuccess?: () => void }) {
   const { session } = Route.useRouteContext()
   const [inputValue, setInputValue] = useState('')
   const [cursorPosition, setCursorPosition] = useState(0)
@@ -159,6 +159,7 @@ export default function AddItemForm() {
       queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'] })
       queryClient.invalidateQueries({ queryKey: ['household-logs'] })
       queryClient.invalidateQueries({ queryKey: ['frequent-items'] })
+      onSuccess?.()
     },
     onError: (err: any) => {
       setError(err.message || 'Failed to add item')
@@ -235,8 +236,6 @@ export default function AddItemForm() {
       e.preventDefault()
       if (selectedIndex >= 0) {
         handleSuggestionClick(suggestions[selectedIndex])
-      } else if (suggestions.length === 1) {
-        handleSuggestionClick(suggestions[0])
       } else {
         handleSubmit()
       }
@@ -285,9 +284,7 @@ export default function AddItemForm() {
           {showSuggestions && suggestions.length > 0 && (
             <div className={styles.suggestionsList}>
               {suggestions.map((s, idx) => {
-                const isSelected = idx === selectedIndex;
-                const isOnlyOne = suggestions.length === 1 && selectedIndex === -1;
-                const isHighlighted = isSelected || isOnlyOne;
+                const isHighlighted = idx === selectedIndex;
                 
                 if (activeProperty) {
                   const Icon = activeProperty.type === 'category' ? Tag : StoreIcon;

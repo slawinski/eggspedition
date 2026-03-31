@@ -38,8 +38,9 @@
   to { transform: rotate(360deg); }
 }
 
-@media (min-width: 640px) {
-  .label {
+@media (min-width: 768px) {
+  .text {
     display: inline;
   }
 }
+

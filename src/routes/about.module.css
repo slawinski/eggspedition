@@ -12,11 +12,12 @@
   padding: 1.5rem;
 }
 
-@media (min-width: 640px) {
-  .shell {
-    padding: 1.25rem;
+@media (min-width: 768px) {
+  .about {
+    padding: 1.5rem;
   }
 }
+
 
 .kicker {
   letter-spacing: 0.16em;

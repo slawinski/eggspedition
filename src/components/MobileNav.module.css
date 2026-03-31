@@ -1,0 +1,83 @@
+.mobileNav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background-color: var(--header-bg);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid var(--line);
+  padding: 0.5rem 1rem calc(env(safe-area-inset-bottom, 0.5rem) + 0.25rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 -10px 30px var(--shadow-color);
+}
+
+@media (min-width: 768px) {
+  .mobileNav {
+    display: none;
+  }
+}
+
+.navItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  border: none;
+  background: transparent;
+  color: var(--sea-ink-soft);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 1rem;
+  min-width: 3.5rem;
+}
+
+.navItemActive {
+  color: var(--lagoon);
+}
+
+.navIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.navLabel {
+  font-size: 0.625rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.fabWrapper {
+  position: relative;
+  margin-top: -3.5rem;
+}
+
+.fab {
+  width: 3.75rem;
+  height: 3.75rem;
+  border-radius: 1.5rem;
+  background: linear-gradient(to bottom right, #ff9a9e, #a18cd1);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 12px 24px rgba(255, 154, 158, 0.4),
+    inset 4px 4px 8px rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.fab:active {
+  transform: scale(0.9) rotate(-5deg);
+}
+
+.fabIcon {
+  width: 1.75rem;
+  height: 1.75rem;
+}

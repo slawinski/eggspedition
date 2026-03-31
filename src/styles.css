@@ -27,6 +27,41 @@
   --clay-shadow-outer: rgba(174, 174, 192, 0.4);
   --clay-shadow-inner-light: rgba(255, 255, 255, 0.7);
   --clay-shadow-inner-dark: rgba(0, 0, 0, 0.05);
+
+  /* Scaling Variables - Mobile (Compact) */
+  --ui-scale: 0.88;
+  --spacing-base: 0.875rem;
+  --radius-base: 1rem;
+  --font-h1: 2.5rem;
+  --font-body: 0.9375rem;
+  --header-h: 3.5rem;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --ui-scale: 1;
+    --spacing-base: 1.125rem;
+    --radius-base: 1.25rem;
+    --font-h1: 3.25rem;
+    --font-body: 1rem;
+    --header-h: 4.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --ui-scale: 1.05;
+    --spacing-base: 1.25rem;
+    --radius-base: 1.5rem;
+    --font-h1: 4rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --ui-scale: 1.12;
+    --font-h1: 4.75rem;
+  }
 }
 
 :root[data-theme="dark"] {
@@ -108,6 +143,7 @@ body {
   min-height: 100vh;
   text-rendering: optimizeSpeed;
   line-height: 1.5;
+  font-size: var(--font-body);
 }
 
 a:not([class]) {
@@ -140,8 +176,8 @@ input, button, textarea, select {
 
 /* Global Styles */
 html,
-body,
-#app {
+body {
+  overflow-x: hidden;
   min-height: 100%;
 }
 
@@ -215,9 +251,24 @@ pre code {
   color: inherit;
 }
 
+/* 
+  Responsive Breakpoints (Mobile-First):
+  - Mobile: < 768px (Base)
+  - Tablet (sm): >= 768px
+  - Laptop (md): >= 1024px
+  - Desktop (lg): >= 1280px
+  - Wide (xl): >= 1536px
+*/
+
 .page-wrap {
-  width: min(1080px, calc(100% - 2rem));
+  width: min(1440px, calc(100% - 2rem));
   margin-inline: auto;
+}
+
+@media (min-width: 1536px) {
+  .page-wrap {
+    width: min(1600px, calc(100% - 4rem));
+  }
 }
 
 .display-title {
@@ -226,7 +277,9 @@ pre code {
 
 .island-shell {
   border: 1px solid var(--line);
+  border-radius: var(--radius-base);
   background: linear-gradient(165deg, var(--surface-strong), var(--surface));
+  padding: var(--spacing-base);
   box-shadow:
     0 1px 0 var(--inset-glint) inset,
     0 22px 44px var(--shadow-color),
@@ -235,6 +288,8 @@ pre code {
 }
 
 .feature-card {
+  border-radius: var(--radius-base);
+  padding: var(--spacing-base);
   background: linear-gradient(165deg, color-mix(in oklab, var(--surface-strong) 93%, white 7%), var(--surface));
   box-shadow:
     0 1px 0 var(--inset-glint) inset,
@@ -293,7 +348,7 @@ a {
   transform: scaleX(1);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .nav-link::after {
     bottom: -4px;
   }
