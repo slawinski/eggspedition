@@ -59,6 +59,7 @@ function Home() {
   const [isActivityOpen, setIsActivityOpen] = useState(false)
   const [isAdminOpen, setIsAdminOpen] = useState(false)
   const [isAddOpen, setIsAddOpen] = useState(false)
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false)
 
   if (!session) {
     return (
@@ -118,7 +119,9 @@ function Home() {
             <AddItemForm />
           </div>
           
-          <QuickAdd />
+          <div className={styles.quickAddWrapper}>
+            <QuickAdd />
+          </div>
           
           <SmartView session={session} />
           
@@ -145,6 +148,14 @@ function Home() {
           >
             <AddItemForm onSuccess={() => setIsAddOpen(false)} />
           </Modal>
+
+          <Modal
+            isOpen={isQuickAddOpen}
+            onClose={() => setIsQuickAddOpen(false)}
+            title="Quick Add"
+          >
+            <QuickAdd />
+          </Modal>
         </div>
       </main>
 
@@ -152,6 +163,7 @@ function Home() {
         onOpenActivity={() => setIsActivityOpen(true)}
         onOpenAdmin={() => setIsAdminOpen(true)}
         onOpenAdd={() => setIsAddOpen(true)}
+        onOpenQuickAdd={() => setIsQuickAddOpen(true)}
       />
     </>
   )

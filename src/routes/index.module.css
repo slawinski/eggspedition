@@ -62,10 +62,14 @@
   }
 }
 
-.headerTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.quickAddWrapper {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .quickAddWrapper {
+    display: block;
+  }
 }
 
 .headerTitle {
