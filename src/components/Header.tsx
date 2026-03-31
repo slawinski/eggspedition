@@ -1,7 +1,7 @@
 import { Link, useRouter } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import ThemeToggle from './ThemeToggle'
-import { ShoppingBasket, LogOut, User, ChevronDown } from 'lucide-react'
+import { ShoppingBasket, LogOut, User, ChevronDown, Settings } from 'lucide-react'
 import SyncIndicator from './SyncIndicator'
 import { logoutServerFn } from '../services/auth.api'
 import { Route as rootRoute } from '../routes/__root'
@@ -74,6 +74,15 @@ export default function Header() {
                       </p>
                     )}
                   </div>
+                  
+                  <Link
+                    to="/admin"
+                    onClick={() => setIsProfileOpen(false)}
+                    className={styles.dropdownItem}
+                  >
+                    <Settings className={styles.dropdownIcon} />
+                    Admin
+                  </Link>
                   
                   <button
                     onClick={() => {
