@@ -92,13 +92,6 @@
 
 .userMenu {
   position: relative;
-  display: none;
-}
-
-@media (min-width: 768px) {
-  .userMenu {
-    display: block;
-  }
 }
 
 .userButton {
@@ -245,7 +238,6 @@
 }
 
 .loginLink {
-  display: none;
   border-radius: 0.75rem;
   background-color: var(--surface-card);
   padding: 0.5rem 1rem;
@@ -255,12 +247,6 @@
   text-decoration: none;
   box-shadow: 0 2px 4px var(--shadow-color);
   transition: all 0.15s ease;
-}
-
-@media (min-width: 768px) {
-  .loginLink {
-    display: block;
-  }
 }
 
 .loginLink:hover {
