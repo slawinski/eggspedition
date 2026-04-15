@@ -54,11 +54,13 @@ export default function ThemeToggle() {
       title={label}
       className={styles.toggleButton}
     >
-      {mode === 'light' ? (
-        <Sun size={20} className={styles.icon} />
-      ) : (
-        <Moon size={20} className={styles.icon} />
-      )}
+      <div className={`${styles.iconContainer} ${mode === 'light' ? styles.sunContainer : styles.moonContainer}`}>
+        {mode === 'light' ? (
+          <Sun className={styles.icon} />
+        ) : (
+          <Moon className={styles.icon} />
+        )}
+      </div>
     </button>
   )
 }
