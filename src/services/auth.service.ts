@@ -30,11 +30,26 @@ function getTransporter(): Transporter {
   return _transporter
 }
 
+function isWhitelisted(email: string): boolean {
+  const raw = process.env.AUTH_WHITELIST || ''
+  const allowed = raw
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean)
+
+  return allowed.includes(email.toLowerCase())
+}
+
 export async function sendMagicLink(emailInput: string, returnTo?: string, extraParams?: Record<string, any>) {
   // 1. Validate input
   const { email } = loginSchema.parse({ email: emailInput })
 
-  // 2. Generate token and save to DB
+  // 2. Whitelist check — block non-whitelisted emails immediately
+  if (!isWhitelisted(email)) {
+    throw new Error('This email is not authorized to access Eggspedition.')
+  }
+
+  // 3. Generate token and save to DB
   const token = generateToken()
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000) // 15 minutes expiry
 

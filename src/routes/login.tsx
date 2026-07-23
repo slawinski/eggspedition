@@ -55,9 +55,7 @@ function LoginComponent() {
             <p className={clay.puffyText}>
               We've sent a squishy magic link to <strong>{email}</strong>.
             </p>
-            <p className={styles.hint}>
-              (Check your console in dev mode!)
-            </p>
+
           </div>
         ) : (
           <form onSubmit={handleSubmit} className={styles.form}>
