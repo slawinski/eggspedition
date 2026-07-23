@@ -15,7 +15,13 @@ COPY . .
 # Varlock validation happens here during 'vite build'
 # These variables must be provided in Coolify as "Build Time" variables
 ARG DATABASE_URL
-ARG RESEND_API_KEY
+ARG SMTP_HOST
+ARG SMTP_PORT
+ARG SMTP_USER
+ARG SMTP_PASS
+ARG EMAIL_FROM
+ARG AUTH_WHITELIST
+ARG AUTH_PASSPHRASE
 ARG AUTH_SECRET
 ARG BASE_URL
 ARG NODE_ENV=production
