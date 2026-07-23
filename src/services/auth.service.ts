@@ -1,4 +1,4 @@
-import { createTransport } from 'nodemailer'
+import { createTransport, type Transporter } from 'nodemailer'
 import { db } from '../db'
 import { users, magicLinks, memberships } from '../db/schema'
 import { eq, and, gt, desc } from 'drizzle-orm'
@@ -6,15 +6,29 @@ import { generateToken, signSession } from '../lib/auth-utils'
 import { loginSchema } from '../lib/schemas'
 import { getOrCreateDefaultHousehold } from './grocery.service'
 
-const transporter = createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER!,
-    pass: process.env.SMTP_PASS!,
-  },
-})
+let _transporter: Transporter | null = null
+
+function getTransporter(): Transporter {
+  if (_transporter) return _transporter
+
+  const user = process.env.SMTP_USER
+  const pass = process.env.SMTP_PASS
+
+  if (!user || !pass) {
+    throw new Error(
+      'Missing SMTP credentials. Ensure SMTP_USER and SMTP_PASS are set in your .env file.'
+    )
+  }
+
+  _transporter = createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: Number(process.env.SMTP_PORT) || 587,
+    secure: false,
+    auth: { user, pass },
+  })
+
+  return _transporter
+}
 
 export async function sendMagicLink(emailInput: string, returnTo?: string, extraParams?: Record<string, any>) {
   // 1. Validate input
@@ -43,11 +57,12 @@ export async function sendMagicLink(emailInput: string, returnTo?: string, extra
   }
 
   // 4. Send email via Gmail SMTP
+  const transporter = getTransporter()
   await transporter.sendMail({
     from: process.env.EMAIL_FROM || 'Eggspedition <noreply@example.com>',
     to: email,
     subject: 'Your Magic Link for Eggspedition',
-    html: `<p>Click the link below to sign in to your Eggspedition:</p><a href="${magicLink}">${magicLink}</a><p>This link expires in 15 minutes.</p>`,
+    html: `<p>Click the link below to sign in to your Eggspedition:</p><p><a href="${magicLink}">${magicLink}</a></p><p>This link expires in 15 minutes.</p>`,
   })
 }
 
