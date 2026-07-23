@@ -1,32 +1,12 @@
 import { createServerFn } from '@tanstack/react-start'
-import { setCookie } from '@tanstack/react-start/server'
 import { protectedMiddleware } from '../lib/middleware'
-import {
-  getGroceryItems,
-  getGroceryItemsGrouped,
-  addGroceryItem,
-  updateGroceryItem,
-  deleteGroceryItem,
-  getCategories,
-  addCategory,
-  getStores,
-  addStore,
-  getHouseholdLogs,
-  getFrequentItems,
-  joinHousehold,
-  getQuickAddItems,
-  addQuickAddItem,
-  updateQuickAddItem,
-  deleteQuickAddItem,
-} from './grocery.service'
 import { z } from 'zod'
 import { zodValidator } from '@tanstack/zod-adapter'
-import { signalEmitter } from '../lib/signals'
-import { signSession } from '../lib/auth-utils'
 
 export const getGroceryItemsFn = createServerFn({ method: 'GET' })
   .middleware([protectedMiddleware])
   .handler(async ({ context }) => {
+    const { getGroceryItems } = await import('./grocery.service')
     const items = await getGroceryItems(context.session.householdId)
     console.log(`[API] getGroceryItems for ${context.session.householdId} returned ${items.length} items`)
     return items
@@ -36,6 +16,7 @@ export const getGroceryItemsGroupedFn = createServerFn({ method: 'GET' })
   .inputValidator(zodValidator(z.enum(['category', 'store'])))
   .middleware([protectedMiddleware])
   .handler(async ({ data, context }) => {
+    const { getGroceryItemsGrouped } = await import('./grocery.service')
     return await getGroceryItemsGrouped(context.session.householdId, data)
   })
 
@@ -55,6 +36,7 @@ export const addGroceryItemFn = createServerFn({ method: 'POST' })
   .middleware([protectedMiddleware])
   .handler(async ({ data, context }) => {
     console.log(`[API] addGroceryItem: ${data.name} for household: ${context.session.householdId}`)
+    const { addGroceryItem } = await import('./grocery.service')
     return await addGroceryItem(context.session.householdId, context.session.userId, data)
   })
 
@@ -75,6 +57,7 @@ export const updateGroceryItemFn = createServerFn({ method: 'POST' })
   )
   .middleware([protectedMiddleware])
   .handler(async ({ data, context }) => {
+    const { updateGroceryItem } = await import('./grocery.service')
     return await updateGroceryItem(data.id, context.session.userId, data.data)
   })
 
@@ -82,12 +65,14 @@ export const deleteGroceryItemFn = createServerFn({ method: 'POST' })
   .inputValidator(zodValidator(z.string().uuid()))
   .middleware([protectedMiddleware])
   .handler(async ({ data: id, context }) => {
+    const { deleteGroceryItem } = await import('./grocery.service')
     return await deleteGroceryItem(id, context.session.userId)
   })
 
 export const getCategoriesFn = createServerFn({ method: 'GET' })
   .middleware([protectedMiddleware])
   .handler(async ({ context }) => {
+    const { getCategories } = await import('./grocery.service')
     return await getCategories(context.session.householdId)
   })
 
@@ -95,12 +80,14 @@ export const addCategoryFn = createServerFn({ method: 'POST' })
   .inputValidator(zodValidator(z.string().min(1)))
   .middleware([protectedMiddleware])
   .handler(async ({ data: name, context }) => {
+    const { addCategory } = await import('./grocery.service')
     return await addCategory(context.session.householdId, name)
   })
 
 export const getStoresFn = createServerFn({ method: 'GET' })
   .middleware([protectedMiddleware])
   .handler(async ({ context }) => {
+    const { getStores } = await import('./grocery.service')
     return await getStores(context.session.householdId)
   })
 
@@ -108,12 +95,14 @@ export const addStoreFn = createServerFn({ method: 'POST' })
   .inputValidator(zodValidator(z.string().min(1)))
   .middleware([protectedMiddleware])
   .handler(async ({ data: name, context }) => {
+    const { addStore } = await import('./grocery.service')
     return await addStore(context.session.householdId, name)
   })
 
 export const getHouseholdLogsFn = createServerFn({ method: 'GET' })
   .middleware([protectedMiddleware])
   .handler(async ({ context }) => {
+    const { getHouseholdLogs } = await import('./grocery.service')
     const logs = await getHouseholdLogs(context.session.householdId)
     console.log(`[API] getHouseholdLogs for ${context.session.householdId} returned ${logs.length} logs`)
     return logs
@@ -122,12 +111,14 @@ export const getHouseholdLogsFn = createServerFn({ method: 'GET' })
 export const getFrequentItemsFn = createServerFn({ method: 'GET' })
   .middleware([protectedMiddleware])
   .handler(async ({ context }) => {
+    const { getFrequentItems } = await import('./grocery.service')
     return await getFrequentItems(context.session.householdId)
   })
 
 export const getQuickAddItemsFn = createServerFn({ method: 'GET' })
   .middleware([protectedMiddleware])
   .handler(async ({ context }) => {
+    const { getQuickAddItems } = await import('./grocery.service')
     return await getQuickAddItems(context.session.householdId)
   })
 
@@ -143,6 +134,7 @@ export const addQuickAddItemFn = createServerFn({ method: 'POST' })
   )
   .middleware([protectedMiddleware])
   .handler(async ({ data, context }) => {
+    const { addQuickAddItem } = await import('./grocery.service')
     return await addQuickAddItem(context.session.householdId, data)
   })
 
@@ -161,6 +153,7 @@ export const updateQuickAddItemFn = createServerFn({ method: 'POST' })
   )
   .middleware([protectedMiddleware])
   .handler(async ({ data }) => {
+    const { updateQuickAddItem } = await import('./grocery.service')
     return await updateQuickAddItem(data.id, data.data)
   })
 
@@ -168,6 +161,7 @@ export const deleteQuickAddItemFn = createServerFn({ method: 'POST' })
   .inputValidator(zodValidator(z.string().uuid()))
   .middleware([protectedMiddleware])
   .handler(async ({ data: id }) => {
+    const { deleteQuickAddItem } = await import('./grocery.service')
     return await deleteQuickAddItem(id)
   })
 
@@ -175,6 +169,9 @@ export const joinHouseholdFn = createServerFn({ method: 'POST' })
   .inputValidator(zodValidator(z.string().uuid()))
   .middleware([protectedMiddleware])
   .handler(async ({ data: householdId, context }) => {
+    const { joinHousehold } = await import('./grocery.service')
+    const { signSession } = await import('../lib/auth-utils')
+    const { setCookie } = await import('@tanstack/react-start/server')
     const result = await joinHousehold(context.session.userId, householdId)
     
     // Update the session cookie with the new householdId
@@ -197,6 +194,7 @@ export const joinHouseholdFn = createServerFn({ method: 'POST' })
 export const householdSignalFn = createServerFn({ method: 'GET' })
   .middleware([protectedMiddleware])
   .handler(async ({ context }) => {
+    const { signalEmitter } = await import('../lib/signals')
     const householdId = context.session.householdId
 
     const stream = new ReadableStream({
@@ -227,7 +225,6 @@ export const householdSignalFn = createServerFn({ method: 'GET' })
       },
       cancel() {
         console.log(`[SSE] Stream cancelled for ${householdId}`)
-        // We can't easily reach the 'handler' here unless we define it outside
       }
     })
 
