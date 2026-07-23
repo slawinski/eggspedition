@@ -1,4 +1,4 @@
-import { Resend } from 'resend'
+import { createTransport } from 'nodemailer'
 import { db } from '../db'
 import { users, magicLinks, memberships } from '../db/schema'
 import { eq, and, gt, desc } from 'drizzle-orm'
@@ -6,7 +6,16 @@ import { generateToken, signSession } from '../lib/auth-utils'
 import { loginSchema } from '../lib/schemas'
 import { getOrCreateDefaultHousehold } from './grocery.service'
 
-const resend = new Resend(process.env.RESEND_API_KEY!)
+const transporter = createTransport({
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: Number(process.env.SMTP_PORT) || 587,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER!,
+    pass: process.env.SMTP_PASS!,
+  },
+})
+
 export async function sendMagicLink(emailInput: string, returnTo?: string, extraParams?: Record<string, any>) {
   // 1. Validate input
   const { email } = loginSchema.parse({ email: emailInput })
@@ -21,7 +30,7 @@ export async function sendMagicLink(emailInput: string, returnTo?: string, extra
     expiresAt,
   })
 
-  // 3. Send email via Resend
+  // 3. Build magic link URL
   let magicLink = `${process.env.BASE_URL}/api/auth/verify?token=${token}`
 
   if (returnTo) {
@@ -33,18 +42,12 @@ export async function sendMagicLink(emailInput: string, returnTo?: string, extra
     }
   }
 
-  if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === 're_123') {
-    console.log('--- [DEV MODE] Magic Link Generated ---')
-    console.log(`URL: ${magicLink}`)
-    console.log('---------------------------------------')
-    return
-  }
-
-  await resend.emails.send({
-    from: 'GroceryApp <onboarding@resend.dev>', // Replace with your domain later
+  // 4. Send email via Gmail SMTP
+  await transporter.sendMail({
+    from: process.env.EMAIL_FROM || 'Eggspedition <noreply@example.com>',
     to: email,
-    subject: 'Your Magic Link for GroceryApp',
-    html: `<p>Click the link below to sign in to your GroceryApp:</p><a href="${magicLink}">${magicLink}</a>`,
+    subject: 'Your Magic Link for Eggspedition',
+    html: `<p>Click the link below to sign in to your Eggspedition:</p><a href="${magicLink}">${magicLink}</a><p>This link expires in 15 minutes.</p>`,
   })
 }
 
