@@ -11,7 +11,8 @@
     "db:migrate": "drizzle-kit push",
     "start": "varlock run -- bun run db:migrate && varlock run -- bun .output/server/index.mjs",
     "preview": "varlock run -- vite preview",
-    "test": "varlock run -- vitest run"
+    "test": "varlock run -- vitest run",
+    "icons": "bun run scripts/generate-icons.ts"
   },
   "dependencies": {
     "@tanstack/query-sync-storage-persister": "^5.90.24",
@@ -50,6 +51,7 @@
     "@vitejs/plugin-react": "^5.1.4",
     "drizzle-kit": "^0.31.9",
     "jsdom": "^28.1.0",
+    "sharp": "^0.35.3",
     "typescript": "^5.7.2",
     "vite": "^7.3.1",
     "vite-tsconfig-paths": "^5.1.4",
