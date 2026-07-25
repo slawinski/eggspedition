@@ -38,7 +38,7 @@
   border-radius: 0.75rem;
   font-size: 0.875rem;
   font-weight: 500;
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: var(--chip-bg);
   border: 1px solid var(--line);
   color: var(--sea-ink);
   animation: animateIn 0.15s ease-out;
@@ -65,11 +65,11 @@
 }
 
 .categoryIcon {
-  color: #ff9a9e;
+  color: var(--accent-coral);
 }
 
 .storeIcon {
-  color: #a18cd1;
+  color: var(--accent-lavender);
 }
 
 .emptyState {

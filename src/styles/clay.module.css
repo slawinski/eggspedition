@@ -2,16 +2,15 @@
 
 .card {
   background: var(--surface-card);
-  border-radius: 2.5rem;
+  border-radius: calc(var(--radius-base) * 2);
   padding: 2rem;
+  border: 1px solid var(--line);
   /* Multi-layered shadows for realistic clay look */
   box-shadow: 
-    35px 35px 70px var(--clay-shadow-outer), 
+    16px 16px 32px var(--clay-shadow-outer), 
     inset 10px 10px 15px var(--clay-shadow-inner-light),
     inset -10px -10px 15px var(--clay-shadow-inner-dark);
-  border: 1px solid var(--line);
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
-  will-change: transform, box-shadow;
+  transition: transform 0.3s var(--ease-out-quint), box-shadow 0.3s ease;
 }
 
 /* LOD (Layer of Detail) Shadows: Simplify during scroll */
@@ -19,11 +18,15 @@
   box-shadow: 10px 10px 20px var(--clay-shadow-outer);
 }
 
+.card:hover {
+  will-change: transform, box-shadow;
+}
+
 .button {
   background: var(--lagoon);
-  border-radius: 1.5rem;
+  border-radius: calc(var(--radius-base) * 1.2);
   padding: 0.75rem 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--line);
   font-weight: 700;
   color: white;
   cursor: pointer;
@@ -35,7 +38,7 @@
     12px 12px 24px var(--clay-shadow-outer), 
     inset 6px 6px 10px var(--clay-shadow-inner-light),
     inset -6px -6px 10px var(--clay-shadow-inner-dark);
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: transform 0.2s var(--ease-out-quint), box-shadow 0.2s var(--ease-out-quint), filter 0.2s var(--ease-out-quint);
   user-select: none;
 }
 
@@ -67,7 +70,7 @@
   box-shadow: 
     inset 6px 6px 12px var(--clay-shadow-outer), 
     inset -6px -6px 12px var(--clay-shadow-inner-light);
-  transition: all 0.2s ease;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .input {
@@ -91,6 +94,6 @@
 }
 
 /* Color variations for buttons */
-.buttonCoral { background: #ff9a9e; }
-.buttonLavender { background: #a18cd1; }
-.buttonMint { background: #84fab0; }
+.buttonCoral { background: var(--accent-coral); }
+.buttonLavender { background: var(--accent-lavender); }
+.buttonMint { background: var(--accent-mint); }

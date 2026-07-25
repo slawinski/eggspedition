@@ -37,12 +37,12 @@ export default function SyncIndicator() {
     <div className={`${styles.container} ${isSyncing ? styles.syncing : styles.synced}`}>
       {isSyncing ? (
         <>
-          <RefreshCw className={`${styles.icon} ${styles.spin}`} style={{ color: '#a18cd1' }} />
+          <RefreshCw className={`${styles.icon} ${styles.spin}`} style={{ color: 'var(--accent-lavender)' }} />
           <span className={styles.label}>Syncing...</span>
         </>
       ) : (
         <>
-          <Cloud className={styles.icon} style={{ color: '#84fab0' }} />
+          <Cloud className={styles.icon} style={{ color: 'var(--accent-mint)' }} />
           <span className={styles.label}>Synced</span>
         </>
       )}

@@ -15,6 +15,12 @@ const config = defineConfig({
     }),
     viteReact(),
   ],
+  css: {
+    modules: {
+      // Include filename to prevent cross-module collisions
+      generateScopedName: '[name]_[local]',
+    },
+  },
 })
 
 export default config

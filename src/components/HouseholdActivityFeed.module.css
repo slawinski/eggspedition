@@ -8,13 +8,13 @@
   width: 1.5rem;
   height: 1.5rem;
   animation: spin 1s linear infinite;
-  color: #a18cd1;
+  color: var(--accent-lavender);
 }
 
 .errorCard {
   border-radius: 1.5rem;
   padding: 1rem;
-  border: 1px solid rgba(255, 154, 158, 0.2);
+  border: 1px solid var(--accent-coral-muted);
 }
 
 .errorContent {
@@ -23,7 +23,7 @@
   align-items: center;
   gap: 0.5rem;
   font-weight: 700;
-  color: #ff9a9e;
+  color: var(--accent-coral);
 }
 
 .emptyMessage {
@@ -72,7 +72,7 @@
 
 .userName {
   font-weight: 600;
-  color: #a18cd1;
+  color: var(--accent-lavender);
 }
 
 .itemName {

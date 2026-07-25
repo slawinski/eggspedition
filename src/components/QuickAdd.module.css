@@ -22,7 +22,7 @@
 .titleIcon {
   width: 0.875rem;
   height: 0.875rem;
-  color: #ff9a9e;
+  color: var(--accent-coral);
 }
 
 .buttonList {
@@ -48,23 +48,21 @@
   font-weight: 700;
   color: var(--sea-ink);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: transform 0.2s var(--ease-out-quint), box-shadow 0.2s var(--ease-out-quint), border-color 0.2s ease, background-color 0.2s ease;
   position: relative;
   overflow: hidden;
   user-select: none;
-  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  animation: popIn 0.4s var(--ease-out-expo) both;
 }
 
 @keyframes popIn {
   0% {
-    transform: scale(0.5);
+    transform: scale(0.95);
     opacity: 0;
-    filter: blur(4px);
   }
   70% {
     transform: scale(1.1);
     opacity: 1;
-    filter: blur(0);
   }
   100% {
     transform: scale(1);
@@ -96,44 +94,41 @@
 }
 
 .addButton.settling {
-  border-color: #ff9a9e;
-  background-color: color-mix(in srgb, #ff9a9e 5%, var(--surface-card));
-  color: #ff9a9e;
+  border-color: var(--accent-coral);
+  background-color: color-mix(in srgb, var(--accent-coral) 5%, var(--surface-card));
+  color: var(--accent-coral);
   box-shadow: 
-    0 0 0 2px rgba(255, 154, 158, 0.2),
+    0 0 0 2px var(--accent-coral-muted),
     inset 4px 4px 8px var(--clay-shadow-inner-light),
     inset -4px -4px 8px var(--clay-shadow-inner-dark);
 }
 
 .addButton.settled {
-  border-color: #84fab0;
-  background-color: color-mix(in srgb, #84fab0 8%, var(--surface-card));
-  color: #2f6a4a;
+  border-color: var(--accent-mint);
+  background-color: color-mix(in srgb, var(--accent-mint) 8%, var(--surface-card));
+  color: var(--success);
   transform: scale(1.05);
 }
 
 .addButton.disappearing {
   pointer-events: none;
   animation: 
-    poof 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards,
-    collapse 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    poof 0.4s var(--ease-out-expo) forwards,
+    collapse 0.4s var(--ease-out-expo) forwards;
 }
 
 @keyframes poof {
   0% {
     transform: scale(1.05);
     opacity: 1;
-    filter: blur(0);
   }
   30% {
     transform: scale(1.15);
     opacity: 1;
-    filter: blur(0);
   }
   100% {
-    transform: scale(0);
+    transform: scale(0.95);
     opacity: 0;
-    filter: blur(8px);
   }
 }
 
@@ -169,33 +164,33 @@
   bottom: 0;
   left: 0;
   height: 4px;
-  background: linear-gradient(90deg, #ff9a9e, #ff4d4d);
+  background: linear-gradient(90deg, var(--accent-coral), var(--danger));
   width: 100%;
   transform-origin: left;
 }
 
 .addButton.settling .plusIcon {
   transform: rotate(45deg);
-  color: #ff4d4d;
+  color: var(--danger);
 }
 
 .plusIcon, .checkIcon {
   width: 1rem;
   height: 1rem;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: transform 0.3s var(--ease-out-quint), color 0.3s var(--ease-out-quint), opacity 0.3s var(--ease-out-quint);
 }
 
 .plusIcon {
-  color: #ff9a9e;
+  color: var(--accent-coral);
 }
 
 .checkIcon {
-  color: #2f6a4a;
-  animation: checkPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  color: var(--success);
+  animation: checkPop 0.3s var(--ease-out-expo);
 }
 
 @keyframes checkPop {
-  from { transform: scale(0) rotate(-20deg); opacity: 0; }
+  from { transform: scale(0.95) rotate(-20deg); opacity: 0; }
   to { transform: scale(1) rotate(0); opacity: 1; }
 }
 
@@ -204,10 +199,10 @@
   padding: 0.125rem 0.5rem;
   border-radius: 9999px;
   font-weight: 800;
-  background-color: #ff9a9e;
+  background-color: var(--accent-coral);
   color: white;
   margin-left: 0.25rem;
-  box-shadow: 0 4px 8px rgba(255, 154, 158, 0.3);
+  box-shadow: 0 4px 8px var(--accent-coral-glow);
   display: inline-flex;
   align-items: center;
   justify-content: center;

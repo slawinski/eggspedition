@@ -11,7 +11,7 @@
     8px 8px 16px var(--clay-shadow-outer),
     inset 3px 3px 5px var(--clay-shadow-inner-light),
     inset -3px -3px 5px var(--clay-shadow-inner-dark);
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: transform 0.2s var(--ease-out-quint), background-color 0.2s var(--ease-out-quint), box-shadow 0.2s var(--ease-out-quint);
   color: var(--sea-ink);
 }
 
@@ -35,8 +35,8 @@
   justify-content: center;
   border-radius: calc(var(--radius-base) * 0.6);
   color: white;
-  box-shadow: inset 2px 2px 4px rgba(255, 255, 255, 0.4);
-  transition: all 0.3s ease;
+  box-shadow: inset 2px 2px 4px var(--inset-glint);
+  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
 }
 
 @media (min-width: 768px) {
@@ -47,18 +47,18 @@
 }
 
 .sunContainer {
-  background: linear-gradient(to bottom right, #f6d365, #fda085);
+  background: linear-gradient(to bottom right, var(--grad-sun-from), var(--grad-sun-to));
 }
 
 .moonContainer {
-  background: linear-gradient(to bottom right, #a18cd1, #fbc2eb);
+  background: linear-gradient(to bottom right, var(--grad-moon-from), var(--grad-moon-to));
 }
 
 .icon {
   stroke-width: 2.5px;
   width: 1.125rem;
   height: 1.125rem;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+  filter: drop-shadow(0 2px 4px var(--shadow-color));
 }
 
 

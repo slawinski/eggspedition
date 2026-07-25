@@ -3,19 +3,19 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #fdf6f0;
+  background-color: var(--bg-base);
 }
 
 .card {
   padding: 2rem;
   border-radius: 1rem;
-  background-color: white;
-  box-shadow: 8px 8px 16px rgba(174, 174, 192, 0.4);
+  background-color: var(--surface-card);
+  box-shadow: 8px 8px 16px var(--clay-shadow-outer);
 }
 
 .title {
   margin-bottom: 1rem;
-  color: #ff9a9e;
+  color: var(--accent-coral);
 }
 
 .message {
@@ -24,6 +24,6 @@
 
 .link {
   font-weight: 700;
-  color: #a18cd1;
+  color: var(--accent-lavender);
   text-decoration: none;
 }

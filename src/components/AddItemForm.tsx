@@ -312,7 +312,7 @@ export default function AddItemForm({ onSuccess }: { onSuccess?: () => void }) {
                       onMouseEnter={() => setSelectedIndex(idx)}
                     >
                       <div className={styles.suggestionMain}>
-                        <Icon className={styles.iconXs} style={{ color: activeProperty.type === 'category' ? '#ff9a9e' : '#a18cd1' }} />
+                        <Icon className={styles.iconXs} style={{ color: activeProperty.type === 'category' ? 'var(--accent-coral)' : 'var(--accent-lavender)' }} />
                         <span className={styles.suggestionName}>{s.name}</span>
                         {s.isNew && <span className={styles.miniTag}>New {activeProperty.type}</span>}
                       </div>
@@ -340,7 +340,7 @@ export default function AddItemForm({ onSuccess }: { onSuccess?: () => void }) {
                     onMouseEnter={() => setSelectedIndex(idx)}
                   >
                     <div className={styles.suggestionMain}>
-                      {s.isNew && <Sparkles className={styles.iconXs} style={{ color: '#ff9a9e' }} />}
+                      {s.isNew && <Sparkles className={styles.iconXs} style={{ color: 'var(--accent-coral)' }} />}
                       <span className={styles.suggestionName}>{s.name}</span>
                       
                       <div className={styles.suggestionDetails}>

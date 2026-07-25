@@ -7,7 +7,7 @@
   backdrop-filter: blur(16px);
   display: flex;
   align-items: center;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease;
   border-bottom: 1px solid var(--line);
 }
 
@@ -36,7 +36,7 @@
     8px 8px 16px var(--clay-shadow-outer),
     inset 4px 4px 6px var(--clay-shadow-inner-light),
     inset -4px -4px 6px var(--clay-shadow-inner-dark);
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: transform 0.2s var(--ease-out-quint), box-shadow 0.2s var(--ease-out-quint), background-color 0.2s ease;
 }
 
 .logoLink:hover {
@@ -50,16 +50,13 @@
 .logoIcon {
   height: 1.25rem;
   width: 1.25rem;
-  color: #ff9a9e;
-  filter: drop-shadow(0 2px 4px rgba(255, 154, 158, 0.3));
+  color: var(--accent-coral);
+  filter: drop-shadow(0 2px 4px var(--accent-coral-glow));
 }
 
 .logoText {
   display: none;
-  background: linear-gradient(to right, #ff9a9e, #a18cd1);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--accent-coral);
   font-weight: 800;
   letter-spacing: -0.02em;
 }
@@ -93,7 +90,7 @@
     8px 8px 16px var(--clay-shadow-outer),
     inset 3px 3px 5px var(--clay-shadow-inner-light),
     inset -3px -3px 5px var(--clay-shadow-inner-dark);
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .userButton:hover {
@@ -114,7 +111,7 @@
   align-items: center;
   justify-content: center;
   border-radius: calc(var(--radius-base) * 0.6);
-  background: linear-gradient(to bottom right, #ff9a9e, #fecfef);
+  background: linear-gradient(to bottom right, var(--grad-avatar-from), var(--grad-avatar-to));
   color: white;
   box-shadow: inset 2px 2px 4px rgba(255, 255, 255, 0.4);
 }
@@ -134,7 +131,7 @@
 .chevronIcon {
   height: 0.875rem;
   width: 0.875rem;
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: transform 0.3s var(--ease-out-quint);
   color: var(--sea-ink-soft);
 }
 
@@ -156,7 +153,7 @@
     30px 30px 60px var(--clay-shadow-outer),
     inset 8px 8px 12px var(--clay-shadow-inner-light),
     inset -8px -8px 12px var(--clay-shadow-inner-dark);
-  animation: animateIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: animateIn 0.2s var(--ease-out-expo);
   z-index: 100;
 }
 
@@ -272,7 +269,7 @@
   border: none;
   cursor: pointer;
   border-radius: 0.5rem;
-  background-color: #ff9a9e;
+  background-color: var(--accent-coral);
   transition: opacity 0.15s ease;
 }
 
@@ -297,7 +294,7 @@
   font-weight: 700;
   color: var(--sea-ink-soft);
   text-decoration: none;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
   border: none;
   background: transparent;
   cursor: pointer;
@@ -317,8 +314,8 @@
 }
 
 .logoutItem:hover {
-  background-color: #fff1f2;
-  color: #ef4444;
+  background-color: var(--danger-soft);
+  color: var(--danger);
 }
 
 .loginLink {
@@ -334,7 +331,7 @@
     8px 8px 16px var(--clay-shadow-outer),
     inset 4px 4px 6px var(--clay-shadow-inner-light),
     inset -4px -4px 6px var(--clay-shadow-inner-dark);
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .loginLink:hover {

@@ -39,10 +39,10 @@ export default function HouseholdActivityFeed() {
 
   const getActionIcon = (action: string) => {
     switch (action) {
-      case 'add': return <PlusCircle className={styles.actionIcon} style={{ color: '#ff9a9e' }} />
-      case 'check': return <CheckCircle className={styles.actionIcon} style={{ color: '#84fab0' }} />
-      case 'uncheck': return <RefreshCcw className={styles.actionIcon} style={{ color: '#a18cd1' }} />
-      case 'remove': return <XCircle className={styles.actionIcon} style={{ color: '#9ca3af' }} />
+      case 'add': return <PlusCircle className={styles.actionIcon} style={{ color: 'var(--accent-coral)' }} />
+      case 'check': return <CheckCircle className={styles.actionIcon} style={{ color: 'var(--accent-mint)' }} />
+      case 'uncheck': return <RefreshCcw className={styles.actionIcon} style={{ color: 'var(--accent-lavender)' }} />
+      case 'remove': return <XCircle className={styles.actionIcon} style={{ color: 'var(--sea-ink-soft)' }} />
       default: return <History className={styles.actionIcon} />
     }
   }

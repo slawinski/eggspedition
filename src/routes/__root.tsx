@@ -8,12 +8,13 @@ import Header from '../components/Header'
 import MobileNav from '../components/MobileNav'
 import Signals from '../components/Signals'
 import styles from './__root.module.css'
+import { useEffect, useState } from 'react'
 
 import appCss from '../styles.css?url'
 
-const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'auto';var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var resolved=mode==='auto'?(prefersDark?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(mode==='auto'){root.removeAttribute('data-theme')}else{root.setAttribute('data-theme',mode)}root.style.colorScheme=resolved;}catch(e){}})();`
+const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'auto';var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var resolved=mode==='auto'?(prefersDark?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(mode==='auto'){root.removeAttribute('data-theme')}else{root.setAttribute('data-theme',mode)}root.style.colorScheme=resolved;window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(e){var stored=window.localStorage.getItem('theme');if(!stored||stored==='auto'){var r=e.matches?'dark':'light';document.querySelector('meta[name="theme-color"]')?.setAttribute('content',r==='dark'?'#111118':'#e7f3ec')}});window.addEventListener('storage',function(e){if(e.key==='theme'){document.querySelector('meta[name="theme-color"]')?.setAttribute('content',e.newValue==='dark'?'#111118':'#e7f3ec')}})}catch(e){}})();`
 
-const SW_REGISTER_SCRIPT = `if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(function(e){console.warn('SW registration failed:',e)})}`
+const SW_REGISTER_SCRIPT = `(function(){var isDev=window.location.hostname.includes('localhost')||window.location.hostname.includes('127.0.0.1');if(isDev){navigator.serviceWorker.getRegistrations().then(function(regs){regs.forEach(function(r){r.unregister()})});return}if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(function(e){console.warn('SW registration failed:',e)})}})()`
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
@@ -23,6 +24,13 @@ export const Route = createRootRouteWithContext<{
     const session = await getSessionServerFn()
     return { session }
   },
+  notFoundComponent: () => (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '1rem', padding: '2rem', textAlign: 'center' }}>
+      <h1 style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--sea-ink)' }}>404</h1>
+      <p style={{ color: 'var(--sea-ink-soft)', fontSize: '1rem' }}>This page doesn't exist or has been moved.</p>
+      <a href="/" style={{ color: 'var(--lagoon-deep)', fontWeight: 600 }}>Back to home</a>
+    </div>
+  ),
   head: () => ({
     meta: [
       {
@@ -108,28 +116,44 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    // Update theme-color meta after hydration (avoids SSR mismatch)
+    const stored = localStorage.getItem('theme')
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    const mode = (stored === 'light' || stored === 'dark' || stored === 'auto') ? stored : 'auto'
+    const resolved = mode === 'auto' ? (prefersDark ? 'dark' : 'light') : mode
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', resolved === 'dark' ? '#111118' : '#e7f3ec')
+  }, [])
+
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
+      <head suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: SW_REGISTER_SCRIPT }} />
         <HeadContent />
       </head>
-      <body className={styles.body}>
+      <body className={styles.body} suppressHydrationWarning>
         {children}
-        <TanStackDevtools
-          config={{
-            position: 'bottom-right',
-          }}
-          plugins={[
-            {
-              name: 'Tanstack Router',
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-          ]}
-        />
+        <Devtools />
         <Scripts />
       </body>
     </html>
+  )
+}
+
+function Devtools() {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+  if (!mounted) return null
+  return (
+    <TanStackDevtools
+      config={{ position: 'bottom-right' }}
+      plugins={[
+        {
+          name: 'Tanstack Router',
+          render: <TanStackRouterDevtoolsPanel />,
+        },
+      ]}
+    />
   )
 }

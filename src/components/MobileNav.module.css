@@ -32,7 +32,7 @@
   background: transparent;
   color: var(--sea-ink-soft);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: color 0.2s var(--ease-out-quint), background-color 0.2s var(--ease-out-quint), border-color 0.2s var(--ease-out-quint), box-shadow 0.2s var(--ease-out-quint), transform 0.2s var(--ease-out-quint);
   border-radius: var(--radius-base);
   min-width: 4rem;
 }
@@ -73,25 +73,25 @@
   width: 3.75rem;
   height: 3.75rem;
   border-radius: calc(var(--radius-base) * 1.5);
-  background: linear-gradient(to bottom right, #ff9a9e, #a18cd1);
+  background: linear-gradient(to bottom right, var(--accent-coral), var(--accent-lavender));
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--inset-glint);
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 
-    0 12px 28px rgba(255, 154, 158, 0.4),
-    inset 4px 4px 8px rgba(255, 255, 255, 0.4),
+    0 12px 28px var(--accent-coral-glow),
+    inset 4px 4px 8px var(--inset-glint),
     inset -4px -4px 8px rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: transform 0.3s var(--ease-out-quint), box-shadow 0.3s var(--ease-out-quint);
 }
 
 .fab:hover {
   transform: translateY(-4px) scale(1.05);
   box-shadow: 
-    0 18px 32px rgba(255, 154, 158, 0.5),
-    inset 4px 4px 8px rgba(255, 255, 255, 0.4);
+    0 18px 32px var(--accent-coral-strong),
+    inset 4px 4px 8px var(--inset-glint);
 }
 
 .fab:active {

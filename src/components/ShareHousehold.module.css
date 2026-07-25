@@ -37,7 +37,7 @@
 .successIcon {
   width: 1rem;
   height: 1rem;
-  color: #84fab0;
+  color: var(--accent-mint);
 }
 
 .divider {
@@ -74,7 +74,7 @@
   border: none;
   cursor: pointer;
   border-radius: 0.5rem;
-  background-color: #ff9a9e;
+  background-color: var(--accent-coral);
   transition: opacity 0.15s ease;
 }
 
