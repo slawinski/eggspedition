@@ -1,8 +1,9 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import AddItemForm from '../components/AddItemForm'
 import QuickAdd from '../components/QuickAdd'
 import SmartView from '../components/SmartView'
 import ShareHousehold from '../components/ShareHousehold'
+import LandingPage from '../components/landing/LandingPage'
 import { getGroceryItemsFn, getFrequentItemsFn, getQuickAddItemsFn, getGroceryItemsGroupedFn, getCategoriesFn, getStoresFn, getHouseholdLogsFn } from '../services/grocery.api'
 import styles from './index.module.css'
 
@@ -52,30 +53,7 @@ function Home() {
   const { session } = Route.useRouteContext()
 
   if (!session) {
-    return (
-      <main className={styles.main}>
-        <section className={styles.heroSection}>
-          <div className={styles.heroGradient1} />
-          <div className={styles.heroGradient2} />
-          <p className={styles.heroKicker}>Family Shopping Made Simple</p>
-          <h1 className={styles.heroTitle}>
-            Squishy. Shared. <br /> Seamless.
-          </h1>
-          <p className={styles.heroDescription}>
-            Eggspedition is the delightful, claymorphic grocery list app for your household.
-            Real-time sync, matrix categorization, and a feel-good UI.
-          </p>
-          <div className={styles.heroActions}>
-            <Link
-              to="/login"
-              className={styles.getStartedButton}
-            >
-              Get Started
-            </Link>
-          </div>
-        </section>
-      </main>
-    )
+    return <LandingPage />
   }
 
   return (

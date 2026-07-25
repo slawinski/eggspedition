@@ -60,27 +60,32 @@ export default function Header() {
   return (
     <header className={styles.header}>
       <nav className={styles.nav}>
-        <h1 className={styles.title}>
-          <Link
-            to="/"
-            className={styles.logoLink}
-          >
+        <h1>
+          <Link to="/" className={styles.logoLink}>
             <ShoppingBasket className={styles.logoIcon} />
-            <span className={styles.logoText}>
-              Eggspedition
-            </span>
+            <span className={styles.logoText}>Eggspedition</span>
           </Link>
         </h1>
 
-        <div className={styles.actions}>
-          <SyncIndicator />
-          <ThemeToggle />
-          
-          {session ? (
+        {!session && (
+          <div className={styles.publicNav}>
+            <a href="#how-it-works" className={styles.publicNavLink}>How it works</a>
+            <a href="#features" className={styles.publicNavLink}>Features</a>
+            <ThemeToggle />
+            <Link to="/login" className={styles.publicLoginLink}>Log in</Link>
+            <Link to="/login" className={styles.publicPrimaryLink}>Start your list</Link>
+          </div>
+        )}
+
+        {session && (
+          <div className={styles.actions}>
+            <SyncIndicator />
+            <ThemeToggle />
+
             <div className={styles.userMenu} ref={dropdownRef}>
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className={`${styles.userButton} ${isProfileOpen ? styles.userButtonActive : styles.userButtonInactive}`}
+                className={`${styles.userButton} ${isProfileOpen ? styles.userButtonActive : ''}`}
               >
                 <div className={styles.userAvatar}>
                   <User className={styles.avatarIcon} />
@@ -94,25 +99,19 @@ export default function Header() {
                     <p className={styles.accountLabel}>Account</p>
                     <p className={styles.accountEmail}>{session.email}</p>
                   </div>
-                  
+
                   {session.householdId && (
                     <>
                       <div className={styles.dropdownSection}>
                         <p className={styles.sectionLabel}>Household</p>
                         <div className={styles.householdActions}>
-                          <button
-                            onClick={handleCopy}
-                            className={styles.householdActionBtn}
-                          >
+                          <button onClick={handleCopy} className={styles.householdActionBtn}>
                             {copied ? <Check className={styles.householdActionIcon} /> : <Share2 className={styles.householdActionIcon} />}
                             <span>{copied ? 'Copied!' : 'Share ID'}</span>
                           </button>
                           <span className={styles.householdIdChip}>{session.householdId}</span>
                         </div>
-                        <button
-                          onClick={() => setShowJoin(!showJoin)}
-                          className={styles.householdActionBtn}
-                        >
+                        <button onClick={() => setShowJoin(!showJoin)} className={styles.householdActionBtn}>
                           <UserPlus className={styles.householdActionIcon} />
                           <span>{showJoin ? 'Cancel' : 'Join Household'}</span>
                         </button>
@@ -138,23 +137,16 @@ export default function Header() {
                       )}
                     </>
                   )}
-                  
+
                   <div className={styles.dropdownDivider} />
-                  
-                  <Link
-                    to="/admin"
-                    onClick={() => setIsProfileOpen(false)}
-                    className={styles.dropdownItem}
-                  >
+
+                  <Link to="/admin" onClick={() => setIsProfileOpen(false)} className={styles.dropdownItem}>
                     <Settings className={styles.dropdownIcon} />
                     Admin
                   </Link>
-                  
+
                   <button
-                    onClick={() => {
-                      setIsProfileOpen(false)
-                      handleLogout()
-                    }}
+                    onClick={() => { setIsProfileOpen(false); handleLogout() }}
                     className={`${styles.dropdownItem} ${styles.logoutItem}`}
                   >
                     <LogOut className={styles.dropdownIcon} />
@@ -163,15 +155,8 @@ export default function Header() {
                 </div>
               )}
             </div>
-          ) : (
-            <Link
-              to="/login"
-              className={styles.loginLink}
-            >
-              Login
-            </Link>
-          )}
-        </div>
+          </div>
+        )}
       </nav>
     </header>
   )

@@ -31,6 +31,13 @@ export const Route = createRootRouteWithContext<{
       <a href="/" style={{ color: 'var(--lagoon-deep)', fontWeight: 600 }}>Back to home</a>
     </div>
   ),
+  errorComponent: ({ error }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '1rem', padding: '2rem', textAlign: 'center' }}>
+      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--danger)' }}>Something went wrong</h1>
+      <p style={{ color: 'var(--sea-ink-soft)', fontSize: '0.9375rem', maxWidth: 480 }}>{error?.message || 'An unexpected error occurred.'}</p>
+      <a href="/" style={{ color: 'var(--lagoon-deep)', fontWeight: 600 }}>Back to home</a>
+    </div>
+  ),
   head: () => ({
     meta: [
       {
@@ -42,7 +49,7 @@ export const Route = createRootRouteWithContext<{
       },
       {
         name: 'description',
-        content: 'Eggspedition — Squishy. Shared. Seamless. The delightful grocery list app for your household.',
+        content: 'Keep your household grocery list in sync. Add items quickly, organise them by category or store, and shop from the same list on every phone.',
       },
       {
         name: 'theme-color',
@@ -50,6 +57,10 @@ export const Route = createRootRouteWithContext<{
       },
       {
         name: 'apple-mobile-web-app-capable',
+        content: 'yes',
+      },
+      {
+        name: 'mobile-web-app-capable',
         content: 'yes',
       },
       {
@@ -61,7 +72,27 @@ export const Route = createRootRouteWithContext<{
         content: 'Eggspedition',
       },
       {
-        title: 'Eggspedition - Grocery List',
+        property: 'og:title',
+        content: 'Eggspedition — A shared grocery list for your household',
+      },
+      {
+        property: 'og:description',
+        content: 'Keep your household grocery list in sync. Add items quickly, organise them by category or store, and shop from the same list on every phone.',
+      },
+      {
+        property: 'og:type',
+        content: 'website',
+      },
+      {
+        property: 'og:image',
+        content: '/og-eggspedition.png',
+      },
+      {
+        name: 'twitter:card',
+        content: 'summary_large_image',
+      },
+      {
+        title: 'Eggspedition — A shared grocery list for your household',
       },
     ],
     links: [
@@ -134,6 +165,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body className={styles.body} suppressHydrationWarning>
+        <a href="#main-content" className="skip-link">Skip to content</a>
         {children}
         <Devtools />
         <Scripts />

@@ -85,7 +85,7 @@ self.addEventListener('fetch', (event) => {
         .catch(() => {
           // Try to serve from cache, fall back to the root
           return caches.match(event.request).then((cached) => {
-            return cached || caches.match('/')
+            return cached || caches.match('/').then((r) => r || new Response('Offline', { status: 503 }))
           })
         })
     )
@@ -94,6 +94,8 @@ self.addEventListener('fetch', (event) => {
 
   // Everything else: network-first
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
+    fetch(event.request).catch(() =>
+      caches.match(event.request).then((cached) => cached || new Response('Network error', { status: 408 }))
+    )
   )
 })
