@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Horizontally symmetric egg path, centered at (256, 256).
+       Bounds: x 136–376 (240 px wide), y 107–405 (298 px tall).
+       No text, no emoji, no font dependency. -->
+  <path
+    d="
+      M 256 107
+      C 190 107, 136 180, 136 260
+      C 136 340, 188 405, 256 405
+      C 324 405, 376 340, 376 260
+      C 376 180, 322 107, 256 107
+      Z
+    "
+    fill="#ffffff"
+  />
+
+  <!-- Egg highlight/shine -->
+  <ellipse cx="215" cy="210" rx="42" ry="55" fill="rgba(255,255,255,0.3)" />
+</svg>

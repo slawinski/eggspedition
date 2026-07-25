@@ -1,29 +1,56 @@
 import sharp from 'sharp'
-import { readFileSync } from 'fs'
+import pngToIco from 'png-to-ico'
+import { readFile, writeFile, mkdir } from 'node:fs/promises'
 
-const svg = readFileSync('public/icon.svg')
+const publicDir = 'public'
+const sourceDir = 'scripts/icon-assets'
 
-const sizes = [
-  { name: 'icon-192.png', size: 192 },
-  { name: 'icon-512.png', size: 512 },
-  { name: 'apple-touch-icon.png', size: 180 },
-  { name: 'favicon-32.png', size: 32 },
-  { name: 'favicon-16.png', size: 16 },
+const installSvg = await readFile(`${sourceDir}/icon-square.svg`)
+const faviconSvg = await readFile(`${sourceDir}/favicon.svg`)
+
+// ── Install icons (full-bleed, opaque, for PWA + Apple) ──
+const installOutputs = [
+  { file: 'pwa-icon-192.png', size: 192 },
+  { file: 'pwa-icon-512.png', size: 512 },
+  { file: 'pwa-maskable-192.png', size: 192 },
+  { file: 'pwa-maskable-512.png', size: 512 },
+  { file: 'apple-touch-icon-v2.png', size: 180 },
 ]
 
-for (const { name, size } of sizes) {
-  await sharp(svg)
-    .resize(size, size)
-    .png()
-    .toFile(`public/${name}`)
-  console.log(`Generated public/${name} (${size}x${size})`)
+for (const { file, size } of installOutputs) {
+  await sharp(installSvg)
+    .resize(size, size, { fit: 'fill' })
+    .png({ compressionLevel: 9 })
+    .toFile(`${publicDir}/${file}`)
+  console.log(`Generated ${publicDir}/${file} (${size}×${size})`)
 }
 
-// Generate multi-size ICO: just use the 48x48 PNG as favicon (browsers accept PNG favicons)
-await sharp(svg)
-  .resize(48, 48)
-  .png()
-  .toFile('public/favicon.ico')
-console.log('Generated public/favicon.ico (48x48)')
+// ── Favicons (simplified, small-size optimized) ──
+const faviconOutputs = [
+  { file: 'favicon-16.png', size: 16 },
+  { file: 'favicon-32.png', size: 32 },
+  { file: 'favicon-48.png', size: 48 },
+]
+
+for (const { file, size } of faviconOutputs) {
+  await sharp(faviconSvg)
+    .resize(size, size, { fit: 'fill' })
+    .png({ compressionLevel: 9 })
+    .toFile(`${publicDir}/${file}`)
+  console.log(`Generated ${publicDir}/${file} (${size}×${size})`)
+}
+
+// ── Real ICO from multi-size favicons ──
+const ico = await pngToIco([
+  `${publicDir}/favicon-16.png`,
+  `${publicDir}/favicon-32.png`,
+  `${publicDir}/favicon-48.png`,
+])
+await writeFile(`${publicDir}/favicon.ico`, ico)
+console.log(`Generated ${publicDir}/favicon.ico (multi-size ICO)`)
+
+// ── Copy favicon SVG to public ──
+await writeFile(`${publicDir}/favicon.svg`, faviconSvg)
+console.log(`Copied ${publicDir}/favicon.svg`)
 
 console.log('\n✅ All PWA icons generated!')

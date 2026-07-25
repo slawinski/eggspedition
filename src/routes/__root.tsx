@@ -76,7 +76,7 @@ export const Route = createRootRouteWithContext<{
       {
         rel: 'icon',
         type: 'image/svg+xml',
-        href: '/icon.svg',
+        href: '/favicon.svg',
       },
       {
         rel: 'icon',
@@ -92,7 +92,8 @@ export const Route = createRootRouteWithContext<{
       },
       {
         rel: 'apple-touch-icon',
-        href: '/apple-touch-icon.png',
+        sizes: '180x180',
+        href: '/apple-touch-icon-v2.png',
       },
     ],
   }),

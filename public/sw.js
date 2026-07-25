@@ -1,15 +1,22 @@
 // Eggspedition Service Worker — cache-first for static assets, network-first for pages
-const CACHE_NAME = 'eggspedition-v1'
+const CACHE_NAME = 'eggspedition-v2'
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
-  '/icon.svg',
-  '/icon-192.png',
-  '/icon-512.png',
-  '/apple-touch-icon.png',
-  '/favicon-32.png',
+
+  '/favicon.svg',
   '/favicon-16.png',
+  '/favicon-32.png',
+  '/favicon-48.png',
   '/favicon.ico',
+
+  '/apple-touch-icon-v2.png',
+
+  '/pwa-icon-192.png',
+  '/pwa-icon-512.png',
+  '/pwa-maskable-192.png',
+  '/pwa-maskable-512.png',
+
   '/robots.txt',
 ]
 

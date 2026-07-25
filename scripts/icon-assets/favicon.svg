@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff9a9e"/>
+      <stop offset="100%" stop-color="#a18cd1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded tile with small margin for favicon readability -->
+  <rect x="2" y="2" width="28" height="28" rx="7" fill="url(#bg)"/>
+
+  <!-- Simplified centered egg at (16, 16) -->
+  <g transform="translate(0, 0)">
+    <path
+      d="
+        M 16 8
+        C 12.5 8, 9.5 12, 9.5 16.5
+        C 9.5 21, 12.5 24, 16 24
+        C 19.5 24, 22.5 21, 22.5 16.5
+        C 22.5 12, 19.5 8, 16 8
+        Z
+      "
+      fill="#ffffff"
+    />
+    <ellipse cx="14" cy="14" rx="2.5" ry="3" fill="rgba(255,255,255,0.3)" />
+  </g>
+</svg>
