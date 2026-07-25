@@ -1,9 +1,8 @@
 .header {
   position: sticky;
-  top: env(safe-area-inset-top, 0px);
+  top: 0;
   z-index: 50;
-  height: calc(var(--header-h) + env(safe-area-inset-top, 0px));
-  padding-top: env(safe-area-inset-top, 0px);
+  height: var(--header-h);
   background-color: var(--header-bg);
   backdrop-filter: blur(16px);
   display: flex;
