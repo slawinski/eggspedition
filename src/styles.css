@@ -141,6 +141,7 @@ html:focus-within {
 
 body {
   min-height: 100vh;
+  min-height: 100dvh;
   text-rendering: optimizeSpeed;
   line-height: 1.5;
   font-size: var(--font-body);
@@ -179,6 +180,9 @@ html,
 body {
   overflow-x: hidden;
   min-height: 100%;
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -194,12 +198,18 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 body::before {
   content: "";
   position: fixed;
   inset: 0;
+  width: 100vw;
+  width: 100dvw;
+  height: 100vh;
+  height: 100dvh;
   pointer-events: none;
   z-index: -1;
   opacity: 0.28;
@@ -213,6 +223,10 @@ body::after {
   content: "";
   position: fixed;
   inset: 0;
+  width: 100vw;
+  width: 100dvw;
+  height: 100vh;
+  height: 100dvh;
   pointer-events: none;
   z-index: -1;
   opacity: 0.14;
