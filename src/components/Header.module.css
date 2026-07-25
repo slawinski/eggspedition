@@ -2,7 +2,8 @@
   position: sticky;
   top: 0;
   z-index: 50;
-  height: var(--header-h);
+  height: calc(var(--header-h) + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
   background-color: var(--header-bg);
   backdrop-filter: blur(16px);
   display: flex;
@@ -18,7 +19,8 @@
   width: 100%;
   max-width: 1440px;
   margin-inline: auto;
-  padding-inline: var(--spacing-base);
+  padding-left: max(var(--spacing-base), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--spacing-base), env(safe-area-inset-right, 0px));
 }
 
 .logoLink {
