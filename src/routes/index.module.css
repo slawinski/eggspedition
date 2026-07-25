@@ -3,7 +3,9 @@
   margin-inline: auto;
   padding-left: 0.75rem;
   padding-right: 0.75rem;
-  padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0.5rem));
+  padding-bottom: calc(
+    5rem + env(safe-area-inset-bottom, 0px)
+  );
   padding-top: 1rem;
 }
 

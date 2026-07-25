@@ -9,7 +9,11 @@ export default function MobileNav() {
   const isActive = (path: string) => pathname === path
 
   return (
-    <nav className={styles.mobileNav}>
+    <nav
+      className={styles.mobileNav}
+      aria-label="Primary navigation"
+      data-mobile-nav
+    >
       <Link 
         to="/" 
         className={`${styles.navItem} ${isActive('/') ? styles.navItemActive : ''}`}
