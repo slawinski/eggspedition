@@ -1,0 +1,195 @@
+/* ---- Dialog backdrop and positioning ---- */
+.dialog {
+  position: fixed;
+  inset: auto 0 0 0;
+
+  width: 100%;
+  max-width: 40rem;
+  max-height: calc(
+    100dvh - max(0.5rem, env(safe-area-inset-top, 0px))
+  );
+
+  margin: 0 auto;
+  padding: 0;
+
+  overflow: hidden;
+
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 1.75rem 1.75rem 0 0;
+
+  background: var(--surface-card);
+  color: var(--sea-ink);
+
+  box-shadow:
+    0 -1.5rem 4rem var(--shadow-color-strong),
+    0 -0.5rem 1.5rem var(--shadow-color);
+}
+
+.dialog::backdrop {
+  background: rgba(10, 24, 28, 0.34);
+  backdrop-filter: blur(3px);
+}
+
+/* Open animation */
+.dialog[open] {
+  animation: sheetIn 260ms var(--ease-out-expo) both;
+}
+
+.dialog[open]::backdrop {
+  animation: backdropIn 180ms ease-out both;
+}
+
+@keyframes sheetIn {
+  from {
+    opacity: 0;
+    transform: translateY(2rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes backdropIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog[open],
+  .dialog[open]::backdrop {
+    animation: none;
+  }
+}
+
+/* ---- Inner layout ---- */
+.sheet {
+  display: flex;
+  flex-direction: column;
+  max-height: inherit;
+}
+
+/* ---- Header ---- */
+.header {
+  flex: 0 0 auto;
+  padding: 0.75rem 1.25rem 0.5rem;
+}
+
+.dragHandle {
+  display: flex;
+  justify-content: center;
+  padding: 0.25rem 0 0.5rem;
+}
+
+.dragHandleBar {
+  width: 2.5rem;
+  height: 0.25rem;
+  border-radius: 9999px;
+  background: var(--line);
+  opacity: 0.6;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--sea-ink);
+}
+
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
+  color: var(--sea-ink-soft);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.closeButton:hover {
+  background: var(--bg-base);
+  color: var(--sea-ink);
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid var(--lagoon);
+  outline-offset: 2px;
+}
+
+.closeIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* ---- Composer: input row ---- */
+.composer {
+  flex: 0 0 auto;
+  padding: 0 1.25rem 0.75rem;
+}
+
+/* ---- Status area ---- */
+.status {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 1.25rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--success);
+  animation: statusIn 260ms var(--ease-out-expo) both;
+}
+
+@keyframes statusIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status {
+    animation: none;
+  }
+}
+
+.statusIcon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+/* ---- Scrollable Quick Add area ---- */
+.scrollContent {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 1.25rem;
+}
+
+/* ---- Footer safe area ---- */
+.footerSafeArea {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+}

@@ -11,6 +11,12 @@
   }
 }
 
+.containerSheet {
+  gap: 0.75rem;
+  margin-bottom: 0;
+}
+
+/* ---- Section heading ---- */
 .title {
   margin: 0;
   font-size: 0.75rem;
@@ -31,6 +37,7 @@
   color: var(--accent-coral);
 }
 
+/* ---- Button grid ---- */
 .buttonList {
   display: flex;
   flex-wrap: wrap;
@@ -38,6 +45,11 @@
   align-items: flex-start;
 }
 
+.buttonListSheet {
+  gap: 0.5rem;
+}
+
+/* ---- Add button ---- */
 .addButton {
   display: flex;
   align-items: center;
@@ -46,7 +58,7 @@
   border-radius: 1.25rem;
   background-color: var(--surface-card);
   border: 1px solid var(--line);
-  box-shadow: 
+  box-shadow:
     12px 12px 24px var(--shadow-color),
     inset 4px 4px 8px var(--clay-shadow-inner-light),
     inset -4px -4px 8px var(--clay-shadow-inner-dark);
@@ -54,11 +66,26 @@
   font-weight: 700;
   color: var(--sea-ink);
   cursor: pointer;
-  transition: transform 0.2s var(--ease-out-quint), box-shadow 0.2s var(--ease-out-quint), border-color 0.2s ease, background-color 0.2s ease;
+  transition:
+    transform 0.2s var(--ease-out-quint),
+    box-shadow 0.2s var(--ease-out-quint),
+    border-color 0.2s ease,
+    background-color 0.2s ease;
   position: relative;
   overflow: hidden;
   user-select: none;
   animation: popIn 0.4s var(--ease-out-expo) both;
+}
+
+.addButtonSheet {
+  padding: 0.5rem 0.875rem;
+  border-radius: 1rem;
+  font-size: 0.8125rem;
+  box-shadow:
+    6px 6px 12px var(--shadow-color),
+    inset 2px 2px 4px var(--clay-shadow-inner-light),
+    inset -2px -2px 4px var(--clay-shadow-inner-dark);
+  animation: none;
 }
 
 @keyframes popIn {
@@ -78,16 +105,20 @@
 
 .addButton:hover {
   transform: translateY(-3px);
-  box-shadow: 
+  box-shadow:
     16px 16px 32px var(--shadow-color),
     inset 4px 4px 8px var(--clay-shadow-inner-light),
     inset -4px -4px 8px var(--clay-shadow-inner-dark);
   border-color: var(--lagoon);
 }
 
+.addButtonSheet:hover {
+  transform: translateY(-1px);
+}
+
 .addButton:active {
   transform: scale(0.92);
-  box-shadow: 
+  box-shadow:
     4px 4px 8px var(--shadow-color),
     inset 2px 2px 4px var(--clay-shadow-inner-light),
     inset -2px -2px 4px var(--clay-shadow-inner-dark);
@@ -99,11 +130,21 @@
   transform: none;
 }
 
+.addButton:focus-visible {
+  outline: 2px solid var(--lagoon);
+  outline-offset: 2px;
+}
+
+/* ---- Settling & settled states (standalone) ---- */
 .addButton.settling {
   border-color: var(--accent-coral);
-  background-color: color-mix(in srgb, var(--accent-coral) 5%, var(--surface-card));
+  background-color: color-mix(
+    in srgb,
+    var(--accent-coral) 5%,
+    var(--surface-card)
+  );
   color: var(--accent-coral);
-  box-shadow: 
+  box-shadow:
     0 0 0 2px var(--accent-coral-muted),
     inset 4px 4px 8px var(--clay-shadow-inner-light),
     inset -4px -4px 8px var(--clay-shadow-inner-dark);
@@ -111,16 +152,31 @@
 
 .addButton.settled {
   border-color: var(--accent-mint);
-  background-color: color-mix(in srgb, var(--accent-mint) 8%, var(--surface-card));
+  background-color: color-mix(
+    in srgb,
+    var(--accent-mint) 8%,
+    var(--surface-card)
+  );
   color: var(--success);
   transform: scale(1.05);
 }
 
 .addButton.disappearing {
   pointer-events: none;
-  animation: 
+  animation:
     poof 0.4s var(--ease-out-expo) forwards,
     collapse 0.4s var(--ease-out-expo) forwards;
+}
+
+/* Sheet done state */
+.addButtonSheetDone {
+  border-color: var(--accent-mint);
+  background-color: color-mix(
+    in srgb,
+    var(--accent-mint) 12%,
+    var(--surface-card)
+  );
+  color: var(--success);
 }
 
 @keyframes poof {
@@ -160,11 +216,12 @@
     max-height: 0;
     padding-inline: 0;
     padding-block: 0;
-    margin-right: -0.75rem; /* Counteract the gap */
+    margin-right: -0.75rem;
     opacity: 0;
   }
 }
 
+/* ---- Timer progress bar (standalone) ---- */
 .timerProgress {
   position: absolute;
   bottom: 0;
@@ -180,10 +237,16 @@
   color: var(--danger);
 }
 
-.plusIcon, .checkIcon {
+/* ---- Icons ---- */
+.plusIcon,
+.checkIcon,
+.checkIconSheet {
   width: 1rem;
   height: 1rem;
-  transition: transform 0.3s var(--ease-out-quint), color 0.3s var(--ease-out-quint), opacity 0.3s var(--ease-out-quint);
+  transition:
+    transform 0.3s var(--ease-out-quint),
+    color 0.3s var(--ease-out-quint),
+    opacity 0.3s var(--ease-out-quint);
 }
 
 .plusIcon {
@@ -195,11 +258,25 @@
   animation: checkPop 0.3s var(--ease-out-expo);
 }
 
-@keyframes checkPop {
-  from { transform: scale(0.95) rotate(-20deg); opacity: 0; }
-  to { transform: scale(1) rotate(0); opacity: 1; }
+.checkIconSheet {
+  color: var(--success);
+  animation: checkPop 0.3s var(--ease-out-expo);
+  width: 0.875rem;
+  height: 0.875rem;
 }
 
+@keyframes checkPop {
+  from {
+    transform: scale(0.95) rotate(-20deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+
+/* ---- Quantity badge ---- */
 .quantityBadge {
   font-size: 0.625rem;
   padding: 0.125rem 0.5rem;
@@ -213,4 +290,46 @@
   align-items: center;
   justify-content: center;
   min-width: 1.25rem;
+}
+
+/* ---- Pending spinner (sheet mode) ---- */
+.pendingSpinner {
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 2px solid color-mix(in srgb, var(--accent-coral) 25%, transparent);
+  border-top-color: var(--accent-coral);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  display: inline-block;
+  margin-left: 0.25rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- Show all button ---- */
+.showAllButton {
+  background: none;
+  border: none;
+  color: var(--lagoon-deep);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.375rem 0.5rem;
+  text-align: center;
+  width: 100%;
+  border-radius: 0.75rem;
+  transition: background-color 0.15s ease;
+}
+
+.showAllButton:hover {
+  background: var(--bg-base);
+}
+
+.showAllButton:focus-visible {
+  outline: 2px solid var(--lagoon);
+  outline-offset: 2px;
 }

@@ -1,4 +1,11 @@
-import { HeadContent, Scripts, createRootRouteWithContext, Outlet } from '@tanstack/react-router'
+import {
+  HeadContent,
+  Scripts,
+  createRootRouteWithContext,
+  Outlet,
+  useNavigate,
+  useRouter,
+} from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import type { QueryClient } from '@tanstack/react-query'
@@ -7,14 +14,22 @@ import { getSessionServerFn } from '../services/auth.api'
 import Header from '../components/Header'
 import MobileNav from '../components/MobileNav'
 import Signals from '../components/Signals'
+import AddItemSheet from '../components/AddItemSheet'
 import styles from './__root.module.css'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
+import { z } from 'zod'
 
 import appCss from '../styles.css?url'
 
 const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'auto';var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var resolved=mode==='auto'?(prefersDark?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(mode==='auto'){root.removeAttribute('data-theme')}else{root.setAttribute('data-theme',mode)}root.style.colorScheme=resolved;window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(e){var stored=window.localStorage.getItem('theme');if(!stored||stored==='auto'){var r=e.matches?'dark':'light';document.querySelector('meta[name="theme-color"]')?.setAttribute('content',r==='dark'?'#111118':'#e7f3ec')}});window.addEventListener('storage',function(e){if(e.key==='theme'){document.querySelector('meta[name="theme-color"]')?.setAttribute('content',e.newValue==='dark'?'#111118':'#e7f3ec')}})}catch(e){}})();`
 
 const SW_REGISTER_SCRIPT = `(function(){var isDev=window.location.hostname.includes('localhost')||window.location.hostname.includes('127.0.0.1');if(isDev){navigator.serviceWorker.getRegistrations().then(function(regs){regs.forEach(function(r){r.unregister()})});return}if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(function(e){console.warn('SW registration failed:',e)})}})()`
+
+const rootSearchSchema = z
+  .object({
+    add: z.literal('item').optional().catch(undefined),
+  })
+  .passthrough()
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
@@ -24,6 +39,7 @@ export const Route = createRootRouteWithContext<{
     const session = await getSessionServerFn()
     return { session }
   },
+  validateSearch: (search) => rootSearchSchema.parse(search),
   notFoundComponent: () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '1rem', padding: '2rem', textAlign: 'center' }}>
       <h1 style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--sea-ink)' }}>404</h1>
@@ -134,6 +150,50 @@ export const Route = createRootRouteWithContext<{
 
 function RootComponent() {
   const { session } = Route.useRouteContext()
+  const search = Route.useSearch()
+  const navigate = useNavigate()
+  const router = useRouter()
+  const fabRef = useRef<HTMLButtonElement>(null)
+
+  const isAddItemSheetOpen = search.add === 'item'
+
+  const currentPathname = router.state.location.pathname
+
+  const openAddItemSheet = () => {
+    navigate({
+      to: currentPathname,
+      search: (previous) => ({
+        ...previous,
+        add: 'item' as const,
+      }),
+      state: (previous) => ({
+        ...previous,
+        addItemSheetOpenedInApp: true,
+      }),
+    })
+  }
+
+  const closeAddItemSheet = () => {
+    // If the sheet was opened in-app (there's a history entry before it),
+    // use browser Back. Otherwise, replace the search param.
+    const locationState = router.state.location
+      .state as unknown as Record<string, unknown> | undefined
+    const wasOpenedInApp =
+      locationState?.addItemSheetOpenedInApp === true
+
+    if (wasOpenedInApp && window.history.length > 1) {
+      router.history.back()
+    } else {
+      navigate({
+        to: currentPathname,
+        replace: true,
+        search: (previous) => {
+          const { add: _add, ...rest } = previous
+          return rest
+        },
+      })
+    }
+  }
 
   return (
     <div className={styles.layout}>
@@ -142,7 +202,20 @@ function RootComponent() {
       <div className={styles.main}>
         <Outlet />
       </div>
-      {session && <MobileNav />}
+      {session && (
+        <MobileNav
+          fabRef={fabRef}
+          isAddItemSheetOpen={isAddItemSheetOpen}
+          onAddClick={openAddItemSheet}
+        />
+      )}
+      {session && (
+        <AddItemSheet
+          isOpen={isAddItemSheetOpen}
+          onClose={closeAddItemSheet}
+          triggerRef={fabRef}
+        />
+      )}
     </div>
   )
 }

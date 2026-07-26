@@ -1,19 +1,34 @@
 import { useRouteContext } from '@tanstack/react-router'
 import { useState, useEffect, useRef } from 'react'
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
-import { addGroceryItemFn, getCategoriesFn, getStoresFn, getQuickAddItemsFn } from '../services/grocery.api'
+import { useQuery } from '@tanstack/react-query'
+import {
+  getCategoriesFn,
+  getStoresFn,
+  getQuickAddItemsFn,
+} from '../services/grocery.api'
+import { useAddGroceryItem } from '../hooks/useAddGroceryItem'
+import {
+  parseAddItemInput,
+  type ParsedAddItemInput,
+} from '../lib/parseAddItemInput'
+import type { GroceryItem } from '../lib/schemas'
 import styles from './AddItemForm.module.css'
-import { Tag, Store as StoreIcon, Hash, CornerDownLeft, Sparkles } from 'lucide-react'
-import { z } from 'zod'
-import Modal from './Modal'
-import ManageTags from './ManageTags'
+import {
+  Tag,
+  Store as StoreIcon,
+  Hash,
+  CornerDownLeft,
+  Sparkles,
+  Minus,
+  Plus,
+  Search,
+} from 'lucide-react'
 
-const addItemSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  quantity: z.string().optional(),
-  categoryName: z.string().optional().nullable(),
-  storeName: z.string().optional().nullable(),
-})
+export interface AddItemFormProps {
+  variant?: 'inline' | 'sheet'
+  autoFocus?: boolean
+  onItemAdded?: (result: { name: string; quantity: string }) => void
+}
 
 type Suggestion = {
   name: string
@@ -27,18 +42,32 @@ type Suggestion = {
   id?: string
 }
 
-export default function AddItemForm({ onSuccess }: { onSuccess?: () => void }) {
+export default function AddItemForm({
+  variant = 'inline',
+  autoFocus = false,
+  onItemAdded,
+}: AddItemFormProps) {
   const { session } = useRouteContext({ from: '__root__' })
   const [inputValue, setInputValue] = useState('')
   const [cursorPosition, setCursorPosition] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(-1)
-  const [managingType, setManagingType] = useState<'category' | 'store' | null>(null)
+  // Metadata controls state
+  const [activePicker, setActivePicker] = useState<
+    'quantity' | 'category' | 'store' | null
+  >(null)
+  const [explicitQuantity, setExplicitQuantity] = useState('1')
+  const [explicitCategory, setExplicitCategory] = useState<
+    string | null
+  >(null)
+  const [explicitStore, setExplicitStore] = useState<string | null>(
+    null,
+  )
+  const [pickerSearch, setPickerSearch] = useState('')
+
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-
-  const queryClient = useQueryClient()
 
   const { data: categories = [] } = useQuery({
     queryKey: ['categories', session?.householdId],
@@ -58,160 +87,225 @@ export default function AddItemForm({ onSuccess }: { onSuccess?: () => void }) {
     enabled: !!session?.householdId,
   })
 
-  // DSL Parser
-  const parseDSL = (input: string) => {
-    const categoryMatch = input.match(/#([^\s#@]+)/)
-    const storeMatch = input.match(/@([^\s#@]+)/)
-    const quantityMatch = input.match(/\s[x\*](\d+)/) || input.match(/^(\d+)\s/)
-    
-    const categoryName = categoryMatch ? categoryMatch[1] : null
-    const storeName = storeMatch ? storeMatch[1] : null
-    const quantity = quantityMatch ? quantityMatch[1] : '1'
-    
-    let name = input
-      .replace(/#[^\s#@]+/, '')
-      .replace(/@[^\s#@]+/, '')
-      .replace(/\s[x\*](\d+)/, '')
-      .replace(/^(\d+)\s/, '')
-      .trim()
-      
-    return { name, categoryName, storeName, quantity }
-  }
+  const parsed: ParsedAddItemInput = parseAddItemInput(inputValue)
 
-  const parsed = parseDSL(inputValue)
+  // Resolve effective metadata with precedence: explicit > DSL > default
+  const effectiveQuantity = explicitQuantity !== '1' ? explicitQuantity : parsed.quantity
+  const effectiveCategory = explicitCategory ?? parsed.categoryName
+  const effectiveStore = explicitStore ?? parsed.storeName
+
+  const mutation = useAddGroceryItem({
+    onSuccess: (_result: GroceryItem) => {
+      setInputValue('')
+      setCursorPosition(0)
+      setShowSuggestions(false)
+      setSelectedIndex(-1)
+      setError(null)
+      setExplicitQuantity('1')
+      setExplicitCategory(null)
+      setExplicitStore(null)
+      setActivePicker(null)
+      onItemAdded?.({
+        name: parsed.name,
+        quantity: effectiveQuantity,
+      })
+    },
+    onError: (err: Error) => {
+      setError(err.message || "Couldn't add this item. Try again.")
+    },
+  })
 
   // Determine what type of suggestions to show
   const getActiveProperty = () => {
-    // If there is a space right before the cursor, we are not in a tag
     if (cursorPosition > 0 && inputValue[cursorPosition - 1] === ' ') {
-      return null;
+      return null
     }
 
-    const textBeforeCursor = inputValue.substring(0, cursorPosition);
-    const words = textBeforeCursor.split(/\s+/);
-    const currentWord = words[words.length - 1];
+    const textBeforeCursor = inputValue.substring(0, cursorPosition)
+    const words = textBeforeCursor.split(/\s+/)
+    const currentWord = words[words.length - 1]
 
     if (currentWord.startsWith('#')) {
-      return { type: 'category' as const, query: currentWord.substring(1) };
+      return { type: 'category' as const, query: currentWord.substring(1) }
     }
     if (currentWord.startsWith('@')) {
-      return { type: 'store' as const, query: currentWord.substring(1) };
+      return { type: 'store' as const, query: currentWord.substring(1) }
     }
-    return null;
-  };
+    return null
+  }
 
-  const activeProperty = getActiveProperty();
+  const activeProperty = getActiveProperty()
 
   const getSuggestions = (): Suggestion[] => {
     if (activeProperty) {
-      const { type, query } = activeProperty;
-      const list = type === 'category' ? categories : stores;
+      const { type, query } = activeProperty
+      const list = type === 'category' ? categories : stores
       const matches: Suggestion[] = list
-        .filter(i => i.name.toLowerCase().includes(query.toLowerCase()))
-        .map(i => ({ name: i.name, type: type }));
-      
-      const hasExactMatch = matches.some(m => m.name.toLowerCase() === query.toLowerCase());
+        .filter((i) =>
+          i.name.toLowerCase().includes(query.toLowerCase()),
+        )
+        .map((i) => ({ name: i.name, type }))
+
+      const hasExactMatch = matches.some(
+        (m) => m.name.toLowerCase() === query.toLowerCase(),
+      )
       if (query && !hasExactMatch) {
-        matches.push({ name: query, type: type, isNew: true });
+        matches.push({ name: query, type, isNew: true })
       }
-      return matches.slice(0, 5);
+      return matches.slice(0, 5)
     }
 
     if (parsed.name.length > 0) {
       const quickMatches: Suggestion[] = quickAddItems
-        .filter(i => i.name.toLowerCase().includes(parsed.name.toLowerCase()))
-        .map(i => ({ ...i, type: 'Quick Add' as const }));
+        .filter((i) =>
+          i.name.toLowerCase().includes(parsed.name.toLowerCase()),
+        )
+        .map((i) => ({ ...i, type: 'Quick Add' as const }))
 
       const hasExactMatch = quickMatches.some(
-        m => m.name.toLowerCase() === parsed.name.toLowerCase()
-      );
+        (m) => m.name.toLowerCase() === parsed.name.toLowerCase(),
+      )
 
-      const suggestions: Suggestion[] = [...quickMatches];
+      const suggestions: Suggestion[] = [...quickMatches]
 
       if (!hasExactMatch) {
-        suggestions.push({ 
-          name: parsed.name, 
-          type: 'New Item' as const, 
-          isNew: true, 
-          categoryName: parsed.categoryName, 
-          storeName: parsed.storeName, 
-          quantity: parsed.quantity 
-        });
+        suggestions.push({
+          name: parsed.name,
+          type: 'New Item' as const,
+          isNew: true,
+          categoryName: effectiveCategory,
+          storeName: effectiveStore,
+          quantity: effectiveQuantity,
+        })
       }
 
-      return suggestions.slice(0, 6);
+      return suggestions.slice(0, 6)
     }
 
-    return [];
-  };
+    return []
+  }
 
-  const suggestions = getSuggestions();
+  const suggestions = getSuggestions()
+
+  // Auto-focus on mount when requested
+  useEffect(() => {
+    if (autoFocus && inputRef.current) {
+      requestAnimationFrame(() => {
+        inputRef.current?.focus({ preventScroll: true })
+      })
+    }
+  }, [autoFocus])
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setShowSuggestions(false)
+        setActivePicker(null)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    return () =>
+      document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   useEffect(() => {
     setSelectedIndex(-1)
   }, [inputValue])
 
-  const mutation = useMutation({
-    mutationFn: (data: z.infer<typeof addItemSchema>) => 
-      addGroceryItemFn({ data }),
-    onSuccess: () => {
-      setInputValue('')
-      setCursorPosition(0)
-      setShowSuggestions(false)
-      setSelectedIndex(-1)
-      setError(null)
-      queryClient.invalidateQueries({ queryKey: ['grocery-items'] })
-      queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'] })
-      queryClient.invalidateQueries({ queryKey: ['household-logs'] })
-      queryClient.invalidateQueries({ queryKey: ['frequent-items'] })
-      onSuccess?.()
-    },
-    onError: (err: any) => {
-      setError(err.message || 'Failed to add item')
+  // Reset picker search when picker changes
+  useEffect(() => {
+    setPickerSearch('')
+  }, [activePicker])
+
+  // --- Picker handlers ---
+
+  function togglePicker(
+    picker: 'quantity' | 'category' | 'store',
+  ) {
+    setActivePicker((prev) => (prev === picker ? null : picker))
+  }
+
+  function handleQuantityChange(value: string) {
+    const num = parseInt(value, 10)
+    if (isNaN(num) || num < 1) {
+      setExplicitQuantity('1')
+    } else {
+      setExplicitQuantity(String(num))
     }
-  })
+  }
+
+  function handleCategorySelect(name: string | null) {
+    setExplicitCategory(name)
+    setActivePicker(null)
+    setPickerSearch('')
+  }
+
+  function handleStoreSelect(name: string | null) {
+    setExplicitStore(name)
+    setActivePicker(null)
+    setPickerSearch('')
+  }
+
+  // Filtered lists for pickers
+  const filteredCategories = pickerSearch
+    ? categories.filter((c) =>
+        c.name.toLowerCase().includes(pickerSearch.toLowerCase()),
+      )
+    : categories
+
+  const filteredStores = pickerSearch
+    ? stores.filter((s) =>
+        s.name.toLowerCase().includes(pickerSearch.toLowerCase()),
+      )
+    : stores
+
+  // Check if exact search match exists in the list
+  const categoryExactExists =
+    pickerSearch &&
+    filteredCategories.some(
+      (c) => c.name.toLowerCase() === pickerSearch.toLowerCase(),
+    )
+  const storeExactExists =
+    pickerSearch &&
+    filteredStores.some(
+      (s) => s.name.toLowerCase() === pickerSearch.toLowerCase(),
+    )
 
   const handlePropertyClick = (propName: string) => {
-    if (!activeProperty) return;
-    const symbol = activeProperty.type === 'category' ? '#' : '@';
-    const textBeforeCursor = inputValue.substring(0, cursorPosition);
-    const textAfterCursor = inputValue.substring(cursorPosition);
-    
-    // Replace the current partial tag with the selected one
-    const replacement = `${symbol}${propName} `;
-    const newTextBefore = textBeforeCursor.replace(new RegExp(`${symbol}[^\\s#@]*$`), replacement);
-    const newText = newTextBefore + textAfterCursor;
-    const newPos = newTextBefore.length;
+    if (!activeProperty) return
+    const symbol = activeProperty.type === 'category' ? '#' : '@'
+    const textBeforeCursor = inputValue.substring(0, cursorPosition)
+    const textAfterCursor = inputValue.substring(cursorPosition)
 
-    setInputValue(newText);
-    setCursorPosition(newPos);
-    setShowSuggestions(true);
-    setSelectedIndex(-1);
-    
-    // Set DOM selection manually to be safe
+    const replacement = `${symbol}${propName} `
+    const newTextBefore = textBeforeCursor.replace(
+      new RegExp(`${symbol}[^\\s#@]*$`),
+      replacement,
+    )
+    const newText = newTextBefore + textAfterCursor
+    const newPos = newTextBefore.length
+
+    setInputValue(newText)
+    setCursorPosition(newPos)
+    setShowSuggestions(true)
+    setSelectedIndex(-1)
+
     setTimeout(() => {
       if (inputRef.current) {
-        inputRef.current.selectionStart = newPos;
-        inputRef.current.selectionEnd = newPos;
-        inputRef.current.focus();
+        inputRef.current.selectionStart = newPos
+        inputRef.current.selectionEnd = newPos
+        inputRef.current.focus()
       }
-    }, 0);
-  };
+    }, 0)
+  }
 
   const handleSuggestionClick = (suggestion: Suggestion) => {
     if (activeProperty) {
-      handlePropertyClick(suggestion.name);
-      return;
+      handlePropertyClick(suggestion.name)
+      return
     }
 
     if (suggestion.type === 'New Item') {
@@ -219,20 +313,39 @@ export default function AddItemForm({ onSuccess }: { onSuccess?: () => void }) {
       return
     }
 
-    const { categoryName, storeName, quantity } = parsed
+    // Use template metadata with explicit > DSL precedence
+    const resolvedCategoryName =
+      explicitCategory ??
+      parsed.categoryName ??
+      (suggestion.categoryId
+        ? categories.find((c) => c.id === suggestion.categoryId)?.name
+        : null)
+
+    const resolvedStoreName =
+      explicitStore ??
+      parsed.storeName ??
+      (suggestion.storeId
+        ? stores.find((s) => s.id === suggestion.storeId)?.name
+        : null)
+
+    const resolvedQuantity =
+      explicitQuantity !== '1'
+        ? explicitQuantity
+        : (parsed.quantity !== '1' ? parsed.quantity : undefined)
+
     mutation.mutate({
       name: suggestion.name,
-      quantity: quantity || undefined,
-      categoryName: categoryName || (suggestion.categoryId ? categories.find(c => c.id === suggestion.categoryId)?.name : null),
-      storeName: storeName || (suggestion.storeId ? stores.find(s => s.id === suggestion.storeId)?.name : null),
+      quantity: resolvedQuantity,
+      categoryName: resolvedCategoryName,
+      storeName: resolvedStoreName,
     })
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Update cursor position state on every key stroke
     setTimeout(() => {
-      if (inputRef.current) setCursorPosition(inputRef.current.selectionStart || 0);
-    }, 0);
+      if (inputRef.current)
+        setCursorPosition(inputRef.current.selectionStart || 0)
+    }, 0)
 
     if (!showSuggestions || suggestions.length === 0) {
       if (e.key === 'Enter' && inputValue.trim()) {
@@ -243,10 +356,12 @@ export default function AddItemForm({ onSuccess }: { onSuccess?: () => void }) {
 
     if (e.key === 'ArrowDown') {
       e.preventDefault()
-      setSelectedIndex(prev => (prev < suggestions.length - 1 ? prev + 1 : prev))
+      setSelectedIndex((prev) =>
+        prev < suggestions.length - 1 ? prev + 1 : prev,
+      )
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
-      setSelectedIndex(prev => (prev > 0 ? prev - 1 : -1))
+      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1))
     } else if (e.key === 'Enter') {
       e.preventDefault()
       if (selectedIndex >= 0) {
@@ -255,6 +370,10 @@ export default function AddItemForm({ onSuccess }: { onSuccess?: () => void }) {
         handleSubmit()
       }
     } else if (e.key === 'Escape') {
+      if (activePicker) {
+        setActivePicker(null)
+        return
+      }
       setShowSuggestions(false)
     }
   }
@@ -266,18 +385,32 @@ export default function AddItemForm({ onSuccess }: { onSuccess?: () => void }) {
 
     mutation.mutate({
       name: parsed.name,
-      quantity: parsed.quantity,
-      categoryName: parsed.categoryName,
-      storeName: parsed.storeName,
+      quantity: effectiveQuantity !== '1' ? effectiveQuantity : undefined,
+      categoryName: effectiveCategory ?? undefined,
+      storeName: effectiveStore ?? undefined,
     })
   }
 
+  const isSheet = variant === 'sheet'
+
+  // Determine chip display values
+  const displayQuantity = isSheet ? effectiveQuantity : parsed.quantity
+  const displayCategory = isSheet ? effectiveCategory ?? parsed.categoryName : parsed.categoryName
+  const displayStore = isSheet ? effectiveStore ?? parsed.storeName : parsed.storeName
+
   return (
-    <div className={styles.container} ref={containerRef}>
+    <div
+      className={`${styles.container} ${isSheet ? styles.sheetContainer : ''}`}
+      ref={containerRef}
+    >
       <form onSubmit={handleSubmit} className={styles.mainForm}>
         <div className={styles.inputWrapper}>
+          <label htmlFor="add-item-name" className="sr-only">
+            Item name
+          </label>
           <input
             ref={inputRef}
+            id="add-item-name"
             type="text"
             value={inputValue}
             onChange={(e) => {
@@ -285,24 +418,32 @@ export default function AddItemForm({ onSuccess }: { onSuccess?: () => void }) {
               setCursorPosition(e.target.selectionStart || 0)
               setShowSuggestions(true)
             }}
-            onMouseUp={() => setCursorPosition(inputRef.current?.selectionStart || 0)}
+            onMouseUp={() =>
+              setCursorPosition(inputRef.current?.selectionStart || 0)
+            }
             onFocus={() => {
               setCursorPosition(inputRef.current?.selectionStart || 0)
               setShowSuggestions(true)
             }}
             onKeyDown={handleKeyDown}
-            placeholder="Add milk #Dairy @Costco..."
+            placeholder="What do you need?"
             className={styles.textInput}
             disabled={mutation.isPending}
+            autoCapitalize="sentences"
+            autoCorrect="on"
+            autoComplete="off"
+            spellCheck
+            enterKeyHint="done"
           />
 
           {showSuggestions && suggestions.length > 0 && (
             <div className={styles.suggestionsList}>
               {suggestions.map((s, idx) => {
-                const isHighlighted = idx === selectedIndex;
-                
+                const isHighlighted = idx === selectedIndex
+
                 if (activeProperty) {
-                  const Icon = activeProperty.type === 'category' ? Tag : StoreIcon;
+                  const Icon =
+                    activeProperty.type === 'category' ? Tag : StoreIcon
                   return (
                     <button
                       key={`${s.name}-${idx}`}
@@ -312,24 +453,51 @@ export default function AddItemForm({ onSuccess }: { onSuccess?: () => void }) {
                       onMouseEnter={() => setSelectedIndex(idx)}
                     >
                       <div className={styles.suggestionMain}>
-                        <Icon className={styles.iconXs} style={{ color: activeProperty.type === 'category' ? 'var(--accent-coral)' : 'var(--accent-lavender)' }} />
-                        <span className={styles.suggestionName}>{s.name}</span>
-                        {s.isNew && <span className={styles.miniTag}>New {activeProperty.type}</span>}
+                        <Icon
+                          className={styles.iconXs}
+                          style={{
+                            color:
+                              activeProperty.type === 'category'
+                                ? 'var(--accent-coral)'
+                                : 'var(--accent-lavender)',
+                          }}
+                        />
+                        <span className={styles.suggestionName}>
+                          {s.name}
+                        </span>
+                        {s.isNew && (
+                          <span className={styles.miniTag}>
+                            New {activeProperty.type}
+                          </span>
+                        )}
                       </div>
                       <div className={styles.suggestionHint}>
-                        {isHighlighted && <CornerDownLeft className={styles.enterIcon} />}
+                        {isHighlighted && (
+                          <CornerDownLeft
+                            className={styles.enterIcon}
+                          />
+                        )}
                       </div>
                     </button>
-                  );
+                  )
                 }
 
-                const displayCategory = s.type === 'New Item' 
-                  ? s.categoryName 
-                  : (s.categoryId ? categories.find(c => c.id === s.categoryId)?.name : null);
-                const displayStore = s.type === 'New Item' 
-                  ? s.storeName 
-                  : (s.storeId ? stores.find(st => st.id === s.storeId)?.name : null);
-                const displayQuantity = s.type === 'New Item' ? s.quantity : null;
+                const displayCategoryVal =
+                  s.type === 'New Item'
+                    ? s.categoryName
+                    : s.categoryId
+                      ? categories.find((c) => c.id === s.categoryId)
+                          ?.name
+                      : null
+                const displayStoreVal =
+                  s.type === 'New Item'
+                    ? s.storeName
+                    : s.storeId
+                      ? stores.find((st) => st.id === s.storeId)
+                          ?.name
+                      : null
+                const displayQuantityVal =
+                  s.type === 'New Item' ? s.quantity : null
 
                 return (
                   <button
@@ -340,31 +508,62 @@ export default function AddItemForm({ onSuccess }: { onSuccess?: () => void }) {
                     onMouseEnter={() => setSelectedIndex(idx)}
                   >
                     <div className={styles.suggestionMain}>
-                      {s.isNew && <Sparkles className={styles.iconXs} style={{ color: 'var(--accent-coral)' }} />}
-                      <span className={styles.suggestionName}>{s.name}</span>
-                      
+                      {s.isNew && (
+                        <Sparkles
+                          className={styles.iconXs}
+                          style={{ color: 'var(--accent-coral)' }}
+                        />
+                      )}
+                      <span className={styles.suggestionName}>
+                        {s.name}
+                      </span>
+
                       <div className={styles.suggestionDetails}>
-                        {displayQuantity && displayQuantity !== '1' && (
-                          <span className={`${styles.miniTag} ${styles.miniTagQuantity}`}>
-                            <Hash className={styles.miniTagIcon} /> {displayQuantity}
+                        {displayQuantityVal &&
+                          displayQuantityVal !== '1' && (
+                            <span
+                              className={`${styles.miniTag} ${styles.miniTagQuantity}`}
+                            >
+                              <Hash
+                                className={styles.miniTagIcon}
+                              />{' '}
+                              {displayQuantityVal}
+                            </span>
+                          )}
+                        {displayCategoryVal && (
+                          <span
+                            className={`${styles.miniTag} ${styles.miniTagCategory}`}
+                          >
+                            <Tag className={styles.miniTagIcon} />{' '}
+                            {displayCategoryVal}
                           </span>
                         )}
-                        {displayCategory && (
-                          <span className={`${styles.miniTag} ${styles.miniTagCategory}`}>
-                            <Tag className={styles.miniTagIcon} /> {displayCategory}
-                          </span>
-                        )}
-                        {displayStore && (
-                          <span className={`${styles.miniTag} ${styles.miniTagStore}`}>
-                            <StoreIcon className={styles.miniTagIcon} /> {displayStore}
+                        {displayStoreVal && (
+                          <span
+                            className={`${styles.miniTag} ${styles.miniTagStore}`}
+                          >
+                            <StoreIcon
+                              className={styles.miniTagIcon}
+                            />{' '}
+                            {displayStoreVal}
                           </span>
                         )}
                       </div>
                     </div>
 
                     <div className={styles.suggestionHint}>
-                      <span className={styles.suggestionType}>{s.type}</span>
-                      {isHighlighted && <CornerDownLeft className={styles.enterIcon} />}
+                      <span className={styles.suggestionType}>
+                        {s.type === 'Quick Add'
+                          ? 'Saved item'
+                          : s.type === 'New Item'
+                            ? 'Add new item'
+                            : 'Quick Add'}
+                      </span>
+                      {isHighlighted && (
+                        <CornerDownLeft
+                          className={styles.enterIcon}
+                        />
+                      )}
                     </div>
                   </button>
                 )
@@ -372,23 +571,219 @@ export default function AddItemForm({ onSuccess }: { onSuccess?: () => void }) {
             </div>
           )}
         </div>
-      </form>
-      
-      {error && <p className={styles.errorMessage}>{error}</p>}
 
-      <Modal 
-        isOpen={!!managingType} 
-        onClose={() => setManagingType(null)} 
-        title={`Manage ${managingType === 'category' ? 'Categories' : 'Stores'}`}
-      >
-        {managingType && (
-          <ManageTags 
-            type={managingType} 
-            tags={managingType === 'category' ? (categories || []) : (stores || [])} 
-            onClose={() => setManagingType(null)}
-          />
-        )}
-      </Modal>
+        {/* Visible Add button */}
+        <button
+          type="submit"
+          className={styles.submitButton}
+          disabled={!parsed.name || mutation.isPending}
+        >
+          {mutation.isPending ? (
+            <span className={styles.spinner} aria-hidden="true" />
+          ) : null}
+          Add
+        </button>
+      </form>
+
+      {/* ---- Metadata controls (sheet mode only) ---- */}
+      {isSheet && (
+        <div className={styles.metadataRow}>
+          <button
+            type="button"
+            className={`${styles.metadataChip} ${activePicker === 'quantity' ? styles.metadataChipActive : ''} ${explicitQuantity !== '1' ? styles.metadataChipSet : ''}`}
+            onClick={() => togglePicker('quantity')}
+            aria-expanded={activePicker === 'quantity'}
+          >
+            <Hash className={styles.metadataChipIcon} />
+            {displayQuantity} item{displayQuantity !== '1' ? 's' : ''}
+          </button>
+
+          <button
+            type="button"
+            className={`${styles.metadataChip} ${activePicker === 'category' ? styles.metadataChipActive : ''} ${displayCategory ? styles.metadataChipSet : ''}`}
+            onClick={() => togglePicker('category')}
+            aria-expanded={activePicker === 'category'}
+          >
+            <Tag className={styles.metadataChipIcon} />
+            {displayCategory || 'Category'}
+          </button>
+
+          <button
+            type="button"
+            className={`${styles.metadataChip} ${activePicker === 'store' ? styles.metadataChipActive : ''} ${displayStore ? styles.metadataChipSet : ''}`}
+            onClick={() => togglePicker('store')}
+            aria-expanded={activePicker === 'store'}
+          >
+            <StoreIcon className={styles.metadataChipIcon} />
+            {displayStore || 'Store'}
+          </button>
+        </div>
+      )}
+
+      {/* ---- Quantity Picker ---- */}
+      {isSheet && activePicker === 'quantity' && (
+        <div className={styles.pickerPanel}>
+          <div className={styles.quantityControls}>
+            <button
+              type="button"
+              className={styles.quantityBtn}
+              disabled={parseInt(effectiveQuantity, 10) <= 1}
+              onClick={() =>
+                handleQuantityChange(
+                  String(
+                    Math.max(1, parseInt(effectiveQuantity, 10) - 1),
+                  ),
+                )
+              }
+              aria-label="Decrease quantity"
+            >
+              <Minus className={styles.quantityBtnIcon} />
+            </button>
+            <input
+              type="number"
+              className={styles.quantityInput}
+              value={effectiveQuantity}
+              onChange={(e) =>
+                handleQuantityChange(e.target.value)
+              }
+              min="1"
+              step="1"
+              inputMode="numeric"
+              aria-label="Quantity"
+            />
+            <button
+              type="button"
+              className={styles.quantityBtn}
+              onClick={() =>
+                handleQuantityChange(
+                  String(parseInt(effectiveQuantity, 10) + 1),
+                )
+              }
+              aria-label="Increase quantity"
+            >
+              <Plus className={styles.quantityBtnIcon} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ---- Category Picker ---- */}
+      {isSheet && activePicker === 'category' && (
+        <div className={styles.pickerPanel}>
+          <div className={styles.pickerSearch}>
+            <Search className={styles.pickerSearchIcon} />
+            <input
+              type="text"
+              className={styles.pickerSearchInput}
+              placeholder="Search categories"
+              value={pickerSearch}
+              onChange={(e) => setPickerSearch(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <div className={styles.pickerOptions}>
+            <button
+              type="button"
+              className={`${styles.pickerOption} ${!explicitCategory ? styles.pickerOptionSelected : ''}`}
+              onClick={() => handleCategorySelect(null)}
+            >
+              <span
+                className={`${styles.pickerRadio} ${!explicitCategory ? styles.pickerRadioChecked : ''}`}
+              />
+              No category
+            </button>
+            {filteredCategories.slice(0, 8).map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                className={`${styles.pickerOption} ${explicitCategory === cat.name ? styles.pickerOptionSelected : ''}`}
+                onClick={() => handleCategorySelect(cat.name)}
+              >
+                <span
+                  className={`${styles.pickerRadio} ${explicitCategory === cat.name ? styles.pickerRadioChecked : ''}`}
+                />
+                {cat.name}
+              </button>
+            ))}
+            {pickerSearch &&
+              !categoryExactExists &&
+              pickerSearch.trim() && (
+                <button
+                  type="button"
+                  className={`${styles.pickerOption} ${styles.pickerOptionNew}`}
+                  onClick={() =>
+                    handleCategorySelect(pickerSearch.trim())
+                  }
+                >
+                  <Plus className={styles.pickerNewIcon} />
+                  Create "{pickerSearch.trim()}"
+                </button>
+              )}
+          </div>
+        </div>
+      )}
+
+      {/* ---- Store Picker ---- */}
+      {isSheet && activePicker === 'store' && (
+        <div className={styles.pickerPanel}>
+          <div className={styles.pickerSearch}>
+            <Search className={styles.pickerSearchIcon} />
+            <input
+              type="text"
+              className={styles.pickerSearchInput}
+              placeholder="Search stores"
+              value={pickerSearch}
+              onChange={(e) => setPickerSearch(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <div className={styles.pickerOptions}>
+            <button
+              type="button"
+              className={`${styles.pickerOption} ${!explicitStore ? styles.pickerOptionSelected : ''}`}
+              onClick={() => handleStoreSelect(null)}
+            >
+              <span
+                className={`${styles.pickerRadio} ${!explicitStore ? styles.pickerRadioChecked : ''}`}
+              />
+              No store
+            </button>
+            {filteredStores.slice(0, 8).map((store) => (
+              <button
+                key={store.id}
+                type="button"
+                className={`${styles.pickerOption} ${explicitStore === store.name ? styles.pickerOptionSelected : ''}`}
+                onClick={() => handleStoreSelect(store.name)}
+              >
+                <span
+                  className={`${styles.pickerRadio} ${explicitStore === store.name ? styles.pickerRadioChecked : ''}`}
+                />
+                {store.name}
+              </button>
+            ))}
+            {pickerSearch &&
+              !storeExactExists &&
+              pickerSearch.trim() && (
+                <button
+                  type="button"
+                  className={`${styles.pickerOption} ${styles.pickerOptionNew}`}
+                  onClick={() =>
+                    handleStoreSelect(pickerSearch.trim())
+                  }
+                >
+                  <Plus className={styles.pickerNewIcon} />
+                  Create "{pickerSearch.trim()}"
+                </button>
+              )}
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <p className={styles.errorMessage} role="alert">
+          {error}
+        </p>
+      )}
     </div>
   )
 }

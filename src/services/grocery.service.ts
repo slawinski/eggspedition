@@ -227,7 +227,7 @@ export async function getCategories(householdId: string) {
 }
 
 export async function addCategory(householdId: string, name: string) {
-  const data = insertCategorySchema.parse({ name, householdId })
+  const data = insertCategorySchema.parse({ name: name.toLowerCase(), householdId })
   const [category] = await db.insert(categories).values(data).returning()
   return category
 }
@@ -237,7 +237,7 @@ export async function getStores(householdId: string) {
 }
 
 export async function addStore(householdId: string, name: string) {
-  const data = insertStoreSchema.parse({ name, householdId })
+  const data = insertStoreSchema.parse({ name: name.toLowerCase(), householdId })
   const [store] = await db.insert(stores).values(data).returning()
   return store
 }
@@ -311,7 +311,7 @@ export async function getQuickAddItems(householdId: string) {
 
 async function resolveCategoryId(householdId: string, name?: string | null) {
   if (!name?.trim()) return null
-  const trimmedName = name.trim()
+  const trimmedName = name.trim().toLowerCase()
   const [existing] = await db
     .select()
     .from(categories)
@@ -329,7 +329,7 @@ async function resolveCategoryId(householdId: string, name?: string | null) {
 
 async function resolveStoreId(householdId: string, name?: string | null) {
   if (!name?.trim()) return null
-  const trimmedName = name.trim()
+  const trimmedName = name.trim().toLowerCase()
   const [existing] = await db
     .select()
     .from(stores)
