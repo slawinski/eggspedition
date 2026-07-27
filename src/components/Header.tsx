@@ -1,7 +1,7 @@
 import { Link, useRouter } from '@tanstack/react-router'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import ThemeToggle from './ThemeToggle'
-import { ShoppingBasket, LogOut, User, ChevronDown, Settings, Share2, UserPlus, Check, LogIn } from 'lucide-react'
+import { ShoppingBasket, LogOut, User, ChevronDown, SlidersHorizontal, Share2, UserPlus, Check, LogIn } from 'lucide-react'
 import SyncIndicator from './SyncIndicator'
 import { logoutServerFn } from '../services/auth.api'
 import { joinHouseholdFn } from '../services/grocery.api'
@@ -140,10 +140,13 @@ export default function Header() {
 
                   <div className={styles.dropdownDivider} />
 
-                  <Link to="/admin" onClick={() => setIsProfileOpen(false)} className={styles.dropdownItem}>
-                    <Settings className={styles.dropdownIcon} />
-                    Admin
-                  </Link>
+                  <div className={styles.dropdownSection}>
+                    <p className={styles.sectionLabel}>Manage</p>
+                    <Link to="/admin" onClick={() => setIsProfileOpen(false)} className={styles.dropdownItem}>
+                      <SlidersHorizontal className={styles.dropdownIcon} aria-hidden="true" />
+                      Manage templates
+                    </Link>
+                  </div>
 
                   <button
                     onClick={() => { setIsProfileOpen(false); handleLogout() }}

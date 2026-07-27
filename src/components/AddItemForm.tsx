@@ -404,40 +404,63 @@ export default function AddItemForm({
       ref={containerRef}
     >
       <form onSubmit={handleSubmit} className={styles.mainForm}>
-        <div className={styles.inputWrapper}>
-          <label htmlFor="add-item-name" className="sr-only">
-            Item name
-          </label>
-          <input
-            ref={inputRef}
-            id="add-item-name"
-            type="text"
-            value={inputValue}
-            onChange={(e) => {
-              setInputValue(e.target.value)
-              setCursorPosition(e.target.selectionStart || 0)
-              setShowSuggestions(true)
-            }}
-            onMouseUp={() =>
-              setCursorPosition(inputRef.current?.selectionStart || 0)
-            }
-            onFocus={() => {
-              setCursorPosition(inputRef.current?.selectionStart || 0)
-              setShowSuggestions(true)
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder="What do you need?"
-            className={styles.textInput}
-            disabled={mutation.isPending}
-            autoCapitalize="sentences"
-            autoCorrect="on"
-            autoComplete="off"
-            spellCheck
-            enterKeyHint="done"
-          />
+        <div className={styles.composerRow}>
+          <div className={styles.inputWrapper}>
+            <label htmlFor="add-item-name" className="sr-only">
+              Item name
+            </label>
+            <input
+              ref={inputRef}
+              id="add-item-name"
+              type="text"
+              value={inputValue}
+              onChange={(e) => {
+                setInputValue(e.target.value)
+                setCursorPosition(e.target.selectionStart || 0)
+                setShowSuggestions(true)
+              }}
+              onMouseUp={() =>
+                setCursorPosition(inputRef.current?.selectionStart || 0)
+              }
+              onFocus={() => {
+                setCursorPosition(inputRef.current?.selectionStart || 0)
+                setShowSuggestions(true)
+              }}
+              onKeyDown={handleKeyDown}
+              placeholder="What do you need?"
+              className={styles.textInput}
+              disabled={mutation.isPending}
+              autoCapitalize="sentences"
+              autoCorrect="on"
+              autoComplete="off"
+              spellCheck
+              enterKeyHint="done"
+            />
+          </div>
 
-          {showSuggestions && suggestions.length > 0 && (
-            <div className={styles.suggestionsList}>
+          {/* Visible Add button */}
+          <button
+            type="submit"
+            className={styles.submitButton}
+            disabled={!parsed.name || mutation.isPending}
+            aria-busy={mutation.isPending}
+            aria-label={mutation.isPending ? 'Adding item' : 'Add item'}
+          >
+            {mutation.isPending && (
+              <span className={styles.spinner} aria-hidden="true" />
+            )}
+            <span className={styles.submitButtonLabel}>Add</span>
+          </button>
+        </div>
+
+        {error && (
+          <div className={styles.errorMessage} role="alert">
+            {error}
+          </div>
+        )}
+
+        {showSuggestions && suggestions.length > 0 && (
+          <div className={styles.suggestionsList}>
               {suggestions.map((s, idx) => {
                 const isHighlighted = idx === selectedIndex
 
@@ -570,19 +593,6 @@ export default function AddItemForm({
               })}
             </div>
           )}
-        </div>
-
-        {/* Visible Add button */}
-        <button
-          type="submit"
-          className={styles.submitButton}
-          disabled={!parsed.name || mutation.isPending}
-        >
-          {mutation.isPending ? (
-            <span className={styles.spinner} aria-hidden="true" />
-          ) : null}
-          Add
-        </button>
       </form>
 
       {/* ---- Metadata controls (sheet mode only) ---- */}
@@ -777,12 +787,6 @@ export default function AddItemForm({
               )}
           </div>
         </div>
-      )}
-
-      {error && (
-        <p className={styles.errorMessage} role="alert">
-          {error}
-        </p>
       )}
     </div>
   )

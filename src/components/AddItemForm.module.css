@@ -1,4 +1,7 @@
 .container {
+  --composer-control-height: 3rem;
+  --submit-button-width: 4.75rem;
+
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -12,47 +15,100 @@
   }
 }
 
-/* Sheet variant removes the outer margin */
+/* Sheet variant: slightly taller touch targets */
 .sheetContainer {
+  --composer-control-height: 3.25rem;
+
   margin-bottom: 0;
 }
 
+/* Narrow viewport override */
+@media (max-width: 359px) {
+  .sheetContainer {
+    --submit-button-width: 4.25rem;
+  }
+}
+
+/* ---- Main form: vertical stack ---- */
 .mainForm {
+  position: relative;
+
   display: flex;
+  flex-direction: column;
   gap: 0.5rem;
+
+  width: 100%;
+}
+
+/* ---- Composer row: input + button in a grid ---- */
+.composerRow {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    var(--submit-button-width);
+  align-items: center;
+  gap: 0.5rem;
+
+  width: 100%;
 }
 
 @media (min-width: 768px) {
-  .mainForm {
+  .composerRow {
     gap: 0.75rem;
   }
 }
 
-.inputWrapper {
-  position: relative;
-  flex: 1 1 0%;
+@media (max-width: 359px) {
+  .composerRow {
+    gap: 0.375rem;
+  }
 }
 
-.textInput {
-  background: var(--bg-base);
-  border-radius: 1.25rem;
-  padding: 0.625rem 1rem;
-  font-size: 1rem;
-  border: 1px solid var(--line);
+/* ---- Input wrapper ---- */
+.inputWrapper {
+  min-width: 0;
   width: 100%;
+}
+
+/* ---- Text input: explicit height, no focus transform ---- */
+.textInput {
+  display: block;
+
+  width: 100%;
+  height: var(--composer-control-height);
+  min-height: var(--composer-control-height);
+
+  padding: 0 1rem;
+
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--sea-ink);
+  box-sizing: border-box;
+
+  background: var(--bg-base);
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  outline: none;
+
   box-shadow: inset 4px 4px 8px var(--clay-shadow-outer),
     inset -4px -4px 8px var(--clay-shadow-inner-light);
-  outline: none;
-  font-weight: 600;
-  color: var(--sea-ink);
+
   transition: box-shadow 0.3s var(--ease-out-quint),
     border-color 0.3s var(--ease-out-quint);
+}
+
+@media (max-width: 359px) {
+  .textInput {
+    padding-inline: 0.875rem;
+  }
 }
 
 @media (min-width: 768px) {
   .textInput {
     border-radius: 1.5rem;
-    padding: 0.875rem 1.25rem;
+    padding-inline: 1.25rem;
+
     box-shadow: inset 8px 8px 16px var(--clay-shadow-outer),
       inset -8px -8px 16px var(--clay-shadow-inner-light);
   }
@@ -65,55 +121,94 @@
   border-color: var(--lagoon);
 }
 
-/* ---- Visible Add button ---- */
+/* ---- Submit button: stable dimensions ---- */
 .submitButton {
-  flex-shrink: 0;
-  min-width: 4rem;
-  min-height: 2.75rem;
-  padding: 0 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+
+  width: var(--submit-button-width);
+  height: var(--composer-control-height);
+  min-width: var(--submit-button-width);
+  min-height: var(--composer-control-height);
+
+  padding: 0 0.75rem;
+  box-sizing: border-box;
+
+  border: 0;
   border-radius: 1.25rem;
+
   background: linear-gradient(
     to right,
     var(--grad-logo-from),
     var(--grad-logo-to)
   );
+
   color: white;
+  font: inherit;
   font-size: 0.9375rem;
   font-weight: 700;
-  border: none;
+  line-height: 1;
+  white-space: nowrap;
+
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.375rem;
-  transition: opacity 0.2s ease, transform 0.2s var(--ease-out-quint);
-  box-shadow: 0 4px 12px var(--accent-coral-glow);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+
+  box-shadow: 0 3px 10px var(--accent-coral-glow);
+
+  transition:
+    opacity 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms var(--ease-out-quint);
 }
 
-.submitButton:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-.submitButton:active:not(:disabled) {
-  transform: scale(0.96);
-}
-
-.submitButton:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+@media (max-width: 359px) {
+  .submitButton {
+    padding-inline: 0.5rem;
+  }
 }
 
 @media (min-width: 768px) {
   .submitButton {
     border-radius: 1.5rem;
-    min-height: 2.875rem;
     font-size: 1rem;
   }
 }
 
+.submitButton:focus-visible {
+  outline: 3px solid var(--lagoon);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .submitButton:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 14px var(--accent-coral-glow);
+  }
+}
+
+.submitButton:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.submitButton:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.submitButtonLabel {
+  display: inline-block;
+}
+
+/* ---- Spinner ---- */
 .spinner {
   width: 1rem;
   height: 1rem;
+  flex: 0 0 1rem;
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: white;
   border-radius: 50%;
@@ -127,19 +222,21 @@
   }
 }
 
-/* ---- Error message ---- */
+/* ---- Error message (inside form, after composerRow) ---- */
 .errorMessage {
+  margin: 0;
+  padding-inline: 1rem;
+
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--danger);
-  margin-left: 1rem;
-  margin-top: 0.25rem;
 }
 
 /* ---- Suggestions dropdown ---- */
 .suggestionsList {
   position: static;
-  margin-top: 0.5rem;
+
+  margin-top: 0;
   background: var(--surface-card);
   border-radius: 1.25rem;
   padding: 0.5rem;
@@ -155,17 +252,31 @@
   animation: slideIn 0.3s var(--ease-out-expo);
 }
 
+/* Sheet: suggestions span full width, normal flow */
+.sheetContainer .suggestionsList {
+  position: static;
+  width: 100%;
+  max-height: 20rem;
+}
+
+/* Inline/desktop: overlay dropdown anchored to the form */
 @media (min-width: 768px) {
-  .suggestionsList {
+  .container:not(.sheetContainer) .suggestionsList {
     position: absolute;
-    top: 110%;
-    left: 0;
+    z-index: 150;
+
+    top: calc(var(--composer-control-height) + 0.75rem);
     right: 0;
+    left: 0;
+
+    width: 100%;
     margin-top: 0;
+
     border-radius: 2rem;
     padding: 0.75rem;
     max-height: 280px;
     gap: 0.375rem;
+
     box-shadow: 30px 30px 60px var(--shadow-color-strong),
       inset 4px 4px 8px var(--clay-shadow-inner-light),
       inset -4px -4px 8px var(--clay-shadow-inner-dark);
@@ -183,6 +294,7 @@
   }
 }
 
+/* ---- Suggestion items ---- */
 .suggestionItem {
   display: flex;
   align-items: flex-start;
@@ -357,7 +469,7 @@
   height: 1rem;
 }
 
-/* ---- Metadata chips row (sheet mode) ---- */
+/* ---- Metadata chips row (sheet mode only) ---- */
 .metadataRow {
   display: flex;
   gap: 0.5rem;

@@ -1,4 +1,4 @@
-import { Home, History, Settings, Plus, Zap } from 'lucide-react'
+import { History, ListChecks, Plus } from 'lucide-react'
 import { Link, useRouterState } from '@tanstack/react-router'
 import type { RefObject } from 'react'
 import styles from './MobileNav.module.css'
@@ -28,22 +28,20 @@ export default function MobileNav({
       <Link
         to="/"
         className={`${styles.navItem} ${isActive('/') ? styles.navItemActive : ''}`}
+        aria-current={isActive('/') ? 'page' : undefined}
       >
-        <Home className={styles.navIcon} />
-        <span className={styles.navLabel}>Home</span>
+        <ListChecks
+          className={styles.navIcon}
+          aria-hidden="true"
+        />
+        <span className={styles.navLabel}>List</span>
       </Link>
-      <Link
-        to="/quick-add"
-        className={`${styles.navItem} ${isActive('/quick-add') ? styles.navItemActive : ''}`}
-      >
-        <Zap className={styles.navIcon} />
-        <span className={styles.navLabel}>Quick Add</span>
-      </Link>
+
       <div className={styles.fabWrapper}>
         <button
           ref={fabRef}
           type="button"
-          className={styles.fab}
+          className={`${styles.fab} ${isAddItemSheetOpen ? styles.fabOpen : ''}`}
           aria-label="Add item"
           aria-haspopup="dialog"
           aria-controls="add-item-sheet"
@@ -53,19 +51,19 @@ export default function MobileNav({
           <Plus aria-hidden="true" className={styles.fabIcon} />
         </button>
       </div>
+
       <Link
         to="/activity"
         className={`${styles.navItem} ${isActive('/activity') ? styles.navItemActive : ''}`}
+        aria-current={
+          isActive('/activity') ? 'page' : undefined
+        }
       >
-        <History className={styles.navIcon} />
+        <History
+          className={styles.navIcon}
+          aria-hidden="true"
+        />
         <span className={styles.navLabel}>Activity</span>
-      </Link>
-      <Link
-        to="/admin"
-        className={`${styles.navItem} ${isActive('/admin') ? styles.navItemActive : ''}`}
-      >
-        <Settings className={styles.navIcon} />
-        <span className={styles.navLabel}>Admin</span>
       </Link>
     </nav>
   )
