@@ -1,3 +1,7 @@
+/* ------------------------------------------------------------------ */
+/* Existing (preserved)                                                */
+/* ------------------------------------------------------------------ */
+
 .loaderContainer {
   display: flex;
   justify-content: center;
@@ -39,7 +43,239 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  position: relative;
 }
+
+.actionIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* New activity pill                                                   */
+/* ------------------------------------------------------------------ */
+
+.newActivityPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  align-self: center;
+  padding: 0.375rem 0.875rem;
+  border-radius: 9999px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  box-shadow: 
+    0 2px 6px hsl(from var(--sea-ink) h s l / 0.06),
+    inset 0 1px 0 hsl(from var(--sea-ink) h s l / 0.04);
+  cursor: pointer;
+  color: var(--sea-ink);
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  min-height: 44px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.newActivityPill:hover {
+  box-shadow:
+    0 4px 12px hsl(from var(--sea-ink) h s l / 0.1),
+    inset 0 1px 0 hsl(from var(--sea-ink) h s l / 0.06);
+  transform: translateY(-1px);
+}
+
+.newActivityPill:active {
+  transform: translateY(0);
+  box-shadow:
+    0 1px 3px hsl(from var(--sea-ink) h s l / 0.06),
+    inset 0 1px 0 hsl(from var(--sea-ink) h s l / 0.04);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .newActivityPill {
+    transition: none;
+  }
+  .newActivityPill:hover {
+    transform: none;
+  }
+}
+
+.newActivityPillDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--accent-coral);
+  flex-shrink: 0;
+}
+
+.newActivityPillText {
+  color: var(--sea-ink);
+}
+
+/* ------------------------------------------------------------------ */
+/* Date groups                                                         */
+/* ------------------------------------------------------------------ */
+
+.dateGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.dateGroupHeader {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sea-ink-soft);
+  background: hsl(from var(--bg) h s l / 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: 0.625rem;
+  border: 1px solid hsl(from var(--line) h s l / 0.6);
+  box-shadow:
+    inset 0 1px 0 hsl(from var(--sea-ink) h s l / 0.03);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* ------------------------------------------------------------------ */
+/* Entry list                                                          */
+/* ------------------------------------------------------------------ */
+
+.entryList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Entry row                                                           */
+/* ------------------------------------------------------------------ */
+
+.entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid var(--line);
+  min-height: 44px;
+  animation: fadeIn 150ms both;
+}
+
+.entry:last-child {
+  border-bottom: none;
+}
+
+.entryIcon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+}
+
+.entryContent {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.entryText {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--sea-ink);
+  word-break: break-word;
+}
+
+.entryText strong {
+  font-weight: 600;
+}
+
+.entryMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+}
+
+.relativeTime {
+  font-size: 0.6875rem;
+  color: var(--sea-ink-soft);
+  flex-shrink: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Restore button                                                      */
+/* ------------------------------------------------------------------ */
+
+.restoreBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  border: 1px solid var(--line);
+  border-radius: 9999px;
+  background: var(--bg);
+  color: var(--lagoon);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 28px;
+  box-shadow:
+    0 1px 3px hsl(from var(--sea-ink) h s l / 0.04),
+    inset 0 1px 0 hsl(from var(--sea-ink) h s l / 0.03);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  white-space: nowrap;
+}
+
+.restoreBtn:hover {
+  background: hsl(from var(--lagoon) h s l / 0.08);
+  box-shadow:
+    0 2px 6px hsl(from var(--sea-ink) h s l / 0.08),
+    inset 0 1px 0 hsl(from var(--sea-ink) h s l / 0.05);
+  transform: translateY(-1px);
+}
+
+.restoreBtn:active {
+  transform: translateY(0);
+  box-shadow:
+    0 1px 2px hsl(from var(--sea-ink) h s l / 0.04),
+    inset 0 1px 0 hsl(from var(--sea-ink) h s l / 0.03);
+}
+
+.restoreBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.restoreIcon {
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .restoreBtn {
+    transition: none;
+  }
+  .restoreBtn:hover {
+    transform: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Legacy classes (kept for backward compatibility)                    */
+/* ------------------------------------------------------------------ */
 
 .logItem {
   display: flex;
@@ -85,10 +321,47 @@
   flex-shrink: 0;
 }
 
-.actionIcon {
-  width: 1rem;
-  height: 1rem;
+/* ------------------------------------------------------------------ */
+/* Dark mode overrides                                                 */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-color-scheme: dark) {
+  .dateGroupHeader {
+    background: hsl(from var(--bg) h s l / 0.85);
+    border-color: hsl(from var(--line) h s l / 0.4);
+  }
+
+  .newActivityPill {
+    background: var(--bg);
+    border-color: hsl(from var(--line) h s l / 0.5);
+    box-shadow:
+      0 2px 6px hsl(from var(--sea-ink) h s l / 0.12),
+      inset 0 1px 0 hsl(from var(--sea-ink) h s l / 0.06);
+  }
+
+  .newActivityPill:hover {
+    box-shadow:
+      0 4px 12px hsl(from var(--sea-ink) h s l / 0.18),
+      inset 0 1px 0 hsl(from var(--sea-ink) h s l / 0.08);
+  }
+
+  .restoreBtn {
+    box-shadow:
+      0 1px 3px hsl(from var(--sea-ink) h s l / 0.08),
+      inset 0 1px 0 hsl(from var(--sea-ink) h s l / 0.04);
+  }
+
+  .restoreBtn:hover {
+    background: hsl(from var(--lagoon) h s l / 0.12);
+    box-shadow:
+      0 2px 8px hsl(from var(--sea-ink) h s l / 0.14),
+      inset 0 1px 0 hsl(from var(--sea-ink) h s l / 0.06);
+  }
 }
+
+/* ------------------------------------------------------------------ */
+/* Keyframes                                                          */
+/* ------------------------------------------------------------------ */
 
 @keyframes spin {
   from { transform: rotate(0deg); }

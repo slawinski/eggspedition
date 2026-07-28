@@ -7,6 +7,9 @@ export const Route = createFileRoute('/activity')({
     if (!context.session) {
       throw redirect({ to: '/login' })
     }
+    if (!context.session.householdId) {
+      throw redirect({ to: '/onboarding/household' })
+    }
   },
   component: ActivityPage,
 })
