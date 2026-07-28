@@ -1,0 +1,56 @@
+/* ═══════════════════════════════════════════════════════
+   OfflineBanner — Amber-toned offline indicator
+   ═══════════════════════════════════════════════════════ */
+
+.banner {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 49;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+
+  background: color-mix(in oklab, var(--sand) 82%, var(--accent-coral) 18%);
+  border-bottom: 1px solid color-mix(in oklab, var(--palm) 40%, var(--accent-coral));
+  color: var(--sea-ink);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.4;
+
+  box-shadow:
+    0 6px 12px var(--clay-shadow-outer),
+    inset 0 2px 4px var(--clay-shadow-inner-light);
+}
+
+.icon {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  color: var(--palm);
+}
+
+/* ── Compact on mobile ── */
+.compactLabel {
+  display: inline;
+}
+
+.fullLabel {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .compactLabel {
+    display: none;
+  }
+  .fullLabel {
+    display: inline;
+  }
+
+  .banner {
+    padding: 0.625rem 1.5rem;
+    font-size: 0.875rem;
+  }
+}

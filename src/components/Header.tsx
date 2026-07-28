@@ -2,7 +2,8 @@ import { Link, useRouter } from '@tanstack/react-router'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import ThemeToggle from './ThemeToggle'
 import { ShoppingBasket, LogOut, User, ChevronDown, SlidersHorizontal, Share2, UserPlus, Check, LogIn } from 'lucide-react'
-import SyncIndicator from './SyncIndicator'
+import SyncStatusButton from './ui/SyncStatusButton'
+import { useOnlineStatus } from '../hooks/useOnlineStatus'
 import { logoutServerFn } from '../services/auth.api'
 import { joinHouseholdFn } from '../services/grocery.api'
 import { Route as rootRoute } from '../routes/__root'
@@ -14,6 +15,7 @@ export default function Header() {
   const { session } = rootRoute.useRouteContext()
   const router = useRouter()
   const queryClient = useQueryClient()
+  const { isOnline } = useOnlineStatus()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [showJoin, setShowJoin] = useState(false)
   const [joinId, setJoinId] = useState('')
@@ -34,7 +36,15 @@ export default function Header() {
   const handleLogout = async () => {
     await logoutServerFn()
     queryClient.clear()
-    localStorage.clear()
+    // Only clear app-specific keys, not the entire localStorage
+    const keysToRemove: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && (key.startsWith('eggspedition:') || key.startsWith('REACT_QUERY'))) {
+        keysToRemove.push(key)
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key))
     router.invalidate()
   }
 
@@ -79,7 +89,13 @@ export default function Header() {
 
         {session && (
           <div className={styles.actions}>
-            <SyncIndicator />
+            <SyncStatusButton
+              isOnline={isOnline}
+              pendingMutations={[]}
+              failedMutations={[]}
+              onRetry={() => {}}
+              onDiscard={() => {}}
+            />
             <ThemeToggle />
 
             <div className={styles.userMenu} ref={dropdownRef}>

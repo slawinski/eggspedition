@@ -8,6 +8,8 @@ export const Route = createFileRoute('/api/auth/verify')({
     returnTo: search.returnTo as string | undefined,
     name: search.name as string | undefined,
     quantity: search.quantity as string | undefined,
+    category: search.category as string | undefined,
+    store: search.store as string | undefined,
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ deps: search }) => {
@@ -15,11 +17,16 @@ export const Route = createFileRoute('/api/auth/verify')({
     
     if (success) {
       if (search.returnTo) {
+        // When deep-link params are present, open the add composer
+        const hasDeepLinkParams = search.name || search.quantity || search.category || search.store
         throw redirect({ 
           to: search.returnTo as any,
           search: {
+            ...(hasDeepLinkParams ? { add: 'item' as const } : {}),
             name: search.name,
             quantity: search.quantity,
+            category: search.category,
+            store: search.store,
           } as any
         })
       }

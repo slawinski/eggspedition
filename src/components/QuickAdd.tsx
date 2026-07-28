@@ -1,23 +1,18 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   getFrequentItemsFn,
   getQuickAddItemsFn,
   getGroceryItemsFn,
 } from '../services/grocery.api'
-import { useAddGroceryItem } from '../hooks/useAddGroceryItem'
-import { Zap, Plus, Check } from 'lucide-react'
+import { useQuickAddAccumulator } from '../hooks/useQuickAddAccumulator'
+import { getQuickAddKey } from '../lib/quickAddKey'
+import QuickAddTimer from './QuickAddTimer'
+import { Zap, Plus } from 'lucide-react'
 import { Route as rootRoute } from '../routes/__root'
 import styles from './QuickAdd.module.css'
 
-const SETTLE_DURATION = 1000 // 1 second
-const DISAPPEAR_DURATION = 400 // ms for exit animation
-
-interface SettleState {
-  progress: number // 0 to 1
-  lastUpdated: number
-  isDone?: boolean
-}
+const REPEAT_WINDOW_MS = 1000
 
 export interface QuickAddProps {
   variant?: 'standalone' | 'sheet'
@@ -31,15 +26,10 @@ export default function QuickAdd({
   onItemAdded,
 }: QuickAddProps) {
   const { session } = rootRoute.useRouteContext()
-  const [settling, setSettling] = useState<Record<string, SettleState>>({})
-  const [disappearing, setDisappearing] = useState<Record<string, boolean>>({})
-  const [pendingNames, setPendingNames] = useState<Set<string>>(
-    () => new Set(),
-  )
   const [expanded, setExpanded] = useState(false)
-  const rafRef = useRef<number | null>(null)
-  const timeoutIdsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set())
   const isSheet = variant === 'sheet'
+
+  // ── Data queries ──────────────────────────────────────────────────────────────
 
   const { data: groceryItems = [] } = useQuery({
     queryKey: ['grocery-items', session?.householdId],
@@ -59,105 +49,18 @@ export default function QuickAdd({
     enabled: !!session?.householdId,
   })
 
-  // Animation loop for smooth countdown (standalone mode only)
-  useEffect(() => {
-    if (isSheet) return
+  // ── Accumulator hook (replaces settling / disappearing / pendingNames) ────────
 
-    const updateProgress = () => {
-      const now = Date.now()
-      setSettling((prev) => {
-        const next = { ...prev }
-        let changed = false
-
-        Object.keys(next).forEach((name) => {
-          const state = next[name]
-          if (state.isDone) return
-
-          const elapsed = now - state.lastUpdated
-          const newProgress = Math.max(
-            0,
-            1 - elapsed / SETTLE_DURATION,
-          )
-
-          if (newProgress <= 0) {
-            next[name] = { ...state, progress: 0, isDone: true }
-            setDisappearing((d) => ({ ...d, [name]: true }))
-
-            const tid = setTimeout(() => {
-              setSettling((current) => {
-                const updated = { ...current }
-                delete updated[name]
-                return updated
-              })
-              setDisappearing((current) => {
-                const updated = { ...current }
-                delete updated[name]
-                return updated
-              })
-            }, DISAPPEAR_DURATION)
-            timeoutIdsRef.current.add(tid)
-
-            changed = true
-          } else if (
-            Math.abs(newProgress - state.progress) > 0.005
-          ) {
-            next[name] = { ...state, progress: newProgress }
-            changed = true
-          }
-        })
-
-        return changed ? next : prev
-      })
-      rafRef.current = requestAnimationFrame(updateProgress)
-    }
-
-    rafRef.current = requestAnimationFrame(updateProgress)
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current)
-      timeoutIdsRef.current.forEach(clearTimeout)
-      timeoutIdsRef.current.clear()
-    }
-  }, [isSheet])
-
-  const mutation = useAddGroceryItem({
-    onSuccess: (_result, variables) => {
-      setPendingNames((prev) => {
-        const next = new Set(prev)
-        next.delete(variables.name)
-        return next
-      })
-
-      onItemAdded?.(variables.name)
-
-      if (isSheet) {
-        // Brief success flash — remove pending after a short delay
-        setTimeout(() => {
-          setSettling((prev) => {
-            const next = { ...prev }
-            delete next[variables.name]
-            return next
-          })
-        }, 600)
-      }
-    },
-    onError: (_error: Error, variables) => {
-      // Clear only the failed item's pending state
-      if (variables?.name) {
-        setPendingNames((prev) => {
-          const next = new Set(prev)
-          next.delete(variables.name)
-          return next
-        })
-        if (!isSheet) {
-          setSettling((prev) => {
-            const next = { ...prev }
-            delete next[variables.name]
-            return next
-          })
-        }
-      }
+  const accumulator = useQuickAddAccumulator({
+    session,
+    onMutationSettled: () => {
+      // All pending syncs have completed. The displayItems filter below
+      // already handles hiding items outside their repeat window — no
+      // explicit state removal is needed for correct UX behaviour.
     },
   })
+
+  // ── Item tap handler ──────────────────────────────────────────────────────────
 
   const handleItemClick = useCallback(
     (item: {
@@ -166,47 +69,27 @@ export default function QuickAdd({
       categoryId?: string | null
       storeId?: string | null
     }) => {
-      // Prevent duplicate clicks for same item
-      if (pendingNames.has(item.name)) return
-
-      setPendingNames((prev) => new Set(prev).add(item.name))
-
-      if (isSheet) {
-        // In sheet mode: simple disabled state, brief success
-        setSettling((prev) => ({
-          ...prev,
-          [item.name]: { progress: 1, lastUpdated: Date.now(), isDone: false },
-        }))
-      } else {
-        // Standalone: start settle timer
-        setSettling((prev) => ({
-          ...prev,
-          [item.name]: {
-            progress: 1,
-            lastUpdated: Date.now(),
-            isDone: false,
-          },
-        }))
-        setDisappearing((prev) => {
-          const next = { ...prev }
-          delete next[item.name]
-          return next
-        })
-      }
-
-      mutation.mutate({
+      const key = getQuickAddKey({
+        templateId: item.id,
         name: item.name,
-        quantity: '1',
-        categoryId: item.categoryId || undefined,
-        storeId: item.storeId || undefined,
+        categoryId: item.categoryId ?? undefined,
+        storeId: item.storeId ?? undefined,
       })
+
+      accumulator.tap({
+        key,
+        name: item.name,
+        categoryId: item.categoryId,
+        storeId: item.storeId,
+      })
+      onItemAdded?.(item.name)
     },
-    [pendingNames, isSheet, mutation],
+    [accumulator, onItemAdded],
   )
 
-  const uncheckedItems = groceryItems.filter(
-    (i) => i.checked === 'false',
-  )
+  // ── Display items ─────────────────────────────────────────────────────────────
+
+  const uncheckedItems = groceryItems.filter((i) => i.checked === 'false')
   const uncheckedNames = new Set(uncheckedItems.map((i) => i.name))
 
   const hasTemplates = quickAddItems && quickAddItems.length > 0
@@ -217,36 +100,44 @@ export default function QuickAdd({
         name: i.name,
         categoryId: i.categoryId,
         storeId: i.storeId,
-        type: 'template',
+        type: 'template' as const,
       }))
     : frequentItems.map((i) => ({
         id: i.name,
         name: i.name,
         categoryId: null as string | null,
         storeId: null as string | null,
-        type: 'frequent',
+        type: 'frequent' as const,
       }))
 
-  // In standalone mode: hide items already in the unchecked list (unless settling/disappearing)
-  // In sheet mode: show all items, show quantity badges
+  // Filter: sheet shows all, standalone hides items already in the unchecked
+  // list UNLESS they are still within the repeat window.
   const displayItems = allPossibleItems.filter((item) => {
+    const key = getQuickAddKey({
+      templateId: item.type === 'template' ? item.id : undefined,
+      name: item.name,
+      categoryId: item.categoryId ?? undefined,
+      storeId: item.storeId ?? undefined,
+    })
+
     if (isSheet) return true
+
     return (
       !uncheckedNames.has(item.name) ||
-      settling[item.name] ||
-      disappearing[item.name]
+      accumulator.isInRepeatWindow(key)
     )
   })
 
   if (displayItems.length === 0) return null
 
-  // Apply limit in sheet mode
   const visibleItems =
     isSheet && limit && !expanded
       ? displayItems.slice(0, limit)
       : displayItems
 
   const hasMore = isSheet && limit && displayItems.length > limit
+
+  // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
     <div
@@ -269,59 +160,78 @@ export default function QuickAdd({
         className={`${styles.buttonList} ${isSheet ? styles.buttonListSheet : ''}`}
       >
         {visibleItems.map((item) => {
-          const inList = uncheckedItems.find(
-            (i) => i.name === item.name,
-          )
-          const settleState = settling[item.name]
-          const isSettling = !!settleState
-          const isDone = settleState?.isDone
-          const isDisappearing = disappearing[item.name]
+          const key = getQuickAddKey({
+            templateId: item.type === 'template' ? item.id : undefined,
+            name: item.name,
+            categoryId: item.categoryId ?? undefined,
+            storeId: item.storeId ?? undefined,
+          })
+          const state = accumulator.getState(key)
+          const inList = uncheckedItems.find((i) => i.name === item.name)
           const quantity = inList ? parseInt(inList.quantity) : 0
-          const isPending = pendingNames.has(item.name)
+
+          // When the accumulator has an optimistic quantity, layer it on top
+          // of the server quantity so the badge reflects all pending taps.
+          const displayedQuantity =
+            state.optimisticQuantity > 0
+              ? quantity + state.optimisticQuantity
+              : quantity
+
+          const isInRepeatWindow = accumulator.isInRepeatWindow(key)
+          const progress =
+            isInRepeatWindow &&
+            state.phase === 'active' &&
+            state.repeatWindowEndsAt > 0
+              ? Math.max(
+                  0,
+                  (state.repeatWindowEndsAt - Date.now()) / REPEAT_WINDOW_MS,
+                )
+              : 0
+
+          const showTimer =
+            isInRepeatWindow && !isSheet && state.phase === 'active'
+          const isSyncing = state.phase === 'syncing'
 
           return (
             <button
-              key={`${item.type}-${item.id}`}
+              key={key}
               onClick={(e) => {
                 e.stopPropagation()
                 handleItemClick(item)
               }}
-              disabled={isPending || (isDone && !isSheet)}
+              disabled={state.phase === 'failed'}
               className={`
                 ${styles.addButton}
-                ${isSettling ? styles.settling : ''}
-                ${isDone && !isSheet ? styles.settled : ''}
-                ${isDisappearing ? styles.disappearing : ''}
+                ${showTimer ? styles.settling : ''}
                 ${isSheet ? styles.addButtonSheet : ''}
-                ${isSheet && isDone ? styles.addButtonSheetDone : ''}
+                ${isSyncing ? styles.syncing : ''}
               `}
+              aria-label={`Add ${item.name} to the list`}
+              aria-busy={isSyncing}
             >
-              {isSettling && !isDone && !isSheet && (
-                <div
-                  className={styles.timerProgress}
-                  style={{
-                    transform: `scaleX(${settleState.progress})`,
-                  }}
-                />
+              {/* Visual repeat-window indicator (standalone only) */}
+              {showTimer && (
+                <QuickAddTimer progress={progress} isActive={true} />
               )}
-              {isDone ? (
-                <Check
-                  className={
-                    isSheet
-                      ? styles.checkIconSheet
-                      : styles.checkIcon
-                  }
-                />
+
+              {/* Icon: spinner while syncing, plus otherwise */}
+              {isSyncing && !isSheet ? (
+                <span className={styles.miniSpinner} aria-hidden="true" />
               ) : (
                 <Plus className={styles.plusIcon} />
               )}
+
               {item.name}
-              {quantity > 1 && !isDone && (
+
+              {/* Quantity badge (shown when > 1) */}
+              {displayedQuantity > 1 && (
                 <span className={styles.quantityBadge}>
-                  {quantity}
+                  &times;{displayedQuantity}
                 </span>
               )}
-              {isSheet && isPending && (
+
+              {/* Sheet mode: syncing indicator */}
+              {isSheet && isSyncing && (
                 <span className={styles.pendingSpinner} />
               )}
             </button>

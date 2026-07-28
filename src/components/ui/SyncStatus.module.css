@@ -1,0 +1,266 @@
+/* ═══════════════════════════════════════════════════════
+   SyncStatus — Styles for the sync button & panel
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Wrapper for relative positioning ── */
+.wrapper {
+  position: relative;
+}
+
+/* ── Sync status button ── */
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius-base) * 0.9);
+  background: var(--chip-bg);
+  color: var(--sea-ink-soft);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+
+  box-shadow:
+    6px 6px 12px var(--clay-shadow-outer),
+    inset 2px 2px 4px var(--clay-shadow-inner-light),
+    inset -2px -2px 4px var(--clay-shadow-inner-dark);
+
+  transition:
+    transform 0.15s var(--ease-out-quint),
+    box-shadow 0.15s var(--ease-out-quint),
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.button:active {
+  transform: scale(0.95);
+}
+
+/* ── Online + no pending → hidden / minimal by default ── */
+.onlineClean {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  .onlineClean {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* ── Offline state ── */
+.offline {
+  color: var(--sea-ink-soft);
+}
+
+.offlineQueued {
+  color: var(--sea-ink);
+  background: color-mix(in oklab, var(--sand) 60%, var(--foam));
+  border-color: var(--palm);
+}
+
+/* ── Attention / failed state ── */
+.attention {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: var(--danger-soft);
+  animation: attentionPulse 2s ease-in-out infinite;
+}
+
+@keyframes attentionPulse {
+  0%, 100% { border-color: var(--danger); }
+  50%      { border-color: var(--accent-coral); }
+}
+
+.buttonIcon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+/* ── Badge ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: var(--accent-coral);
+  color: white;
+  font-size: 0.625rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* ── Panel (dropdown) ── */
+.panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  width: 18rem;
+  max-height: 22rem;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-base);
+  background: var(--surface-card);
+  z-index: 60;
+
+  box-shadow:
+    20px 20px 40px var(--clay-shadow-outer),
+    inset 6px 6px 10px var(--clay-shadow-inner-light),
+    inset -6px -6px 10px var(--clay-shadow-inner-dark);
+
+  animation: panelIn 0.18s var(--ease-out-expo) both;
+  transform-origin: top right;
+}
+
+@keyframes panelIn {
+  from { opacity: 0; transform: scale(0.95) translateY(-0.25rem); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    animation: none;
+  }
+  .attention {
+    animation: none;
+  }
+}
+
+.panelHeader {
+  padding: 0.75rem 1rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--sea-ink-soft);
+  border-bottom: 1px solid var(--line);
+}
+
+.panelEmpty {
+  padding: 1.5rem 1rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--sea-ink-soft);
+  font-weight: 500;
+}
+
+/* ── Household grouping ── */
+.householdGroup {
+  border-bottom: 1px solid var(--line);
+}
+
+.householdGroup:last-child {
+  border-bottom: none;
+}
+
+.householdLabel {
+  padding: 0.5rem 1rem;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sea-ink-soft);
+  opacity: 0.7;
+  background: var(--bg-base);
+}
+
+/* ── Operation row ── */
+.operation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.8125rem;
+}
+
+.operationInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.operationType {
+  font-weight: 700;
+  color: var(--sea-ink);
+  text-transform: capitalize;
+}
+
+.operationTime {
+  font-size: 0.6875rem;
+  color: var(--sea-ink-soft);
+  margin-top: 0.125rem;
+}
+
+/* ── Operation actions ── */
+.operationActions {
+  display: flex;
+  gap: 0.375rem;
+  flex-shrink: 0;
+}
+
+.operationAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius-base) * 0.5);
+  background: var(--chip-bg);
+  color: var(--sea-ink-soft);
+  cursor: pointer;
+
+  box-shadow:
+    4px 4px 8px var(--clay-shadow-outer),
+    inset 1px 1px 3px var(--clay-shadow-inner-light),
+    inset -1px -1px 3px var(--clay-shadow-inner-dark);
+
+  transition:
+    transform 0.15s var(--ease-out-quint),
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.operationAction:hover {
+  transform: translateY(-1px);
+  color: var(--lagoon);
+}
+
+.operationActionDiscard:hover {
+  color: var(--danger);
+}
+
+.operationAction svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+/* ── Label text (hidden on mobile, shown on desktop) ── */
+.label {
+  display: none;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+@media (min-width: 768px) {
+  .label {
+    display: inline-block;
+  }
+}

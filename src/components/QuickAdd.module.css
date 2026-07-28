@@ -333,3 +333,30 @@
   outline: 2px solid var(--lagoon);
   outline-offset: 2px;
 }
+
+/* ---- Syncing state ---- */
+.addButton.syncing {
+  border-color: var(--lagoon);
+  background-color: color-mix(
+    in srgb,
+    var(--lagoon) 6%,
+    var(--surface-card)
+  );
+  color: var(--lagoon-deep);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--lagoon) 20%, transparent),
+    inset 4px 4px 8px var(--clay-shadow-inner-light),
+    inset -4px -4px 8px var(--clay-shadow-inner-dark);
+}
+
+/* ---- Mini spinner (standalone syncing indicator) ---- */
+.miniSpinner {
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 2px solid color-mix(in srgb, var(--lagoon) 25%, transparent);
+  border-top-color: var(--lagoon);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}

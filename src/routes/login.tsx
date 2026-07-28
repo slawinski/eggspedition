@@ -12,6 +12,8 @@ export const Route = createFileRoute('/login')({
     returnTo: z.string().optional(),
     name: z.string().optional(),
     quantity: z.string().optional(),
+    category: z.string().optional(),
+    store: z.string().optional(),
   }),
   component: LoginComponent,
 })
@@ -29,14 +31,16 @@ function LoginComponent() {
     setError(null)
     
     try {
-      await login({ 
-        data: { 
-          email, 
-          returnTo: search.returnTo,
-          name: search.name,
-          quantity: search.quantity
-        } 
-      })
+        await login({ 
+          data: { 
+            email, 
+            returnTo: search.returnTo,
+            name: search.name,
+            quantity: search.quantity,
+            category: search.category,
+            store: search.store,
+          } 
+        })
       setSent(true)
     } catch (err: any) {
       setError(err.message || 'Something went wrong. Please try again.')

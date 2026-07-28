@@ -18,12 +18,14 @@ export const loginServerFn = createServerFn({ method: 'POST' })
         returnTo: z.string().optional(),
         name: z.string().optional(),
         quantity: z.string().optional(),
+        category: z.string().optional(),
+        store: z.string().optional(),
       })
     )
   )
   .handler(async ({ data }) => {
     const { sendMagicLink } = await import('./auth.service')
-    await sendMagicLink(data.email, data.returnTo, { name: data.name, quantity: data.quantity })
+    await sendMagicLink(data.email, data.returnTo, { name: data.name, quantity: data.quantity, category: data.category, store: data.store })
     return { success: true }
   })
 

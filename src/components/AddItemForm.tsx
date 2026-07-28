@@ -28,6 +28,10 @@ export interface AddItemFormProps {
   variant?: 'inline' | 'sheet'
   autoFocus?: boolean
   onItemAdded?: (result: { name: string; quantity: string }) => void
+  initialName?: string
+  initialQuantity?: string
+  initialCategory?: string
+  initialStore?: string
 }
 
 type Suggestion = {
@@ -46,9 +50,13 @@ export default function AddItemForm({
   variant = 'inline',
   autoFocus = false,
   onItemAdded,
+  initialName,
+  initialQuantity,
+  initialCategory,
+  initialStore,
 }: AddItemFormProps) {
   const { session } = useRouteContext({ from: '__root__' })
-  const [inputValue, setInputValue] = useState('')
+  const [inputValue, setInputValue] = useState(initialName ?? '')
   const [cursorPosition, setCursorPosition] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -57,12 +65,14 @@ export default function AddItemForm({
   const [activePicker, setActivePicker] = useState<
     'quantity' | 'category' | 'store' | null
   >(null)
-  const [explicitQuantity, setExplicitQuantity] = useState('1')
+  const [explicitQuantity, setExplicitQuantity] = useState(
+    initialQuantity ?? '1',
+  )
   const [explicitCategory, setExplicitCategory] = useState<
     string | null
-  >(null)
+  >(initialCategory ?? null)
   const [explicitStore, setExplicitStore] = useState<string | null>(
-    null,
+    initialStore ?? null,
   )
   const [pickerSearch, setPickerSearch] = useState('')
 

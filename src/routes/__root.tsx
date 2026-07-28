@@ -18,6 +18,10 @@ import AddItemSheet from '../components/AddItemSheet'
 import styles from './__root.module.css'
 import { useEffect, useState, useRef } from 'react'
 import { z } from 'zod'
+import { UndoProvider } from '../hooks/useUndo'
+import ToastViewport from '../components/ui/ToastViewport'
+import OfflineBanner from '../components/ui/OfflineBanner'
+import { useUndoToast } from '../hooks/useUndoToast'
 
 import appCss from '../styles.css?url'
 
@@ -28,6 +32,10 @@ const SW_REGISTER_SCRIPT = `(function(){var isDev=window.location.hostname.inclu
 const rootSearchSchema = z
   .object({
     add: z.literal('item').optional().catch(undefined),
+    name: z.string().optional().catch(undefined),
+    quantity: z.string().optional().catch(undefined),
+    category: z.string().optional().catch(undefined),
+    store: z.string().optional().catch(undefined),
   })
   .passthrough()
 
@@ -198,10 +206,22 @@ function RootComponent() {
   return (
     <div className={styles.layout}>
       {session && <Signals />}
+      <OfflineBanner />
       <Header />
-      <div className={styles.main}>
-        <Outlet />
-      </div>
+      {session ? (
+        <UndoProvider householdId={session.householdId}>
+          <div className={styles.main}>
+            <Outlet />
+          </div>
+          <ToastViewport>
+            <UndoToastRenderer />
+          </ToastViewport>
+        </UndoProvider>
+      ) : (
+        <div className={styles.main}>
+          <Outlet />
+        </div>
+      )}
       {session && (
         <MobileNav
           fabRef={fabRef}
@@ -214,6 +234,10 @@ function RootComponent() {
           isOpen={isAddItemSheetOpen}
           onClose={closeAddItemSheet}
           triggerRef={fabRef}
+          initialName={search.name}
+          initialQuantity={search.quantity}
+          initialCategory={search.category}
+          initialStore={search.store}
         />
       )}
     </div>
@@ -244,6 +268,70 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <Scripts />
       </body>
     </html>
+  )
+}
+
+function UndoToastRenderer() {
+  const toast = useUndoToast()
+
+  if (!toast.visible) return null
+
+  return (
+    <div
+      role={toast.role}
+      aria-live={toast.role === 'status' ? 'polite' : 'assertive'}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '0.75rem',
+        padding: '0.75rem 1rem',
+        background: 'var(--surface-card)',
+        borderRadius: '1rem',
+        boxShadow: '0 4px 24px var(--shadow-color)',
+        fontSize: '0.875rem',
+        fontWeight: 600,
+        color: 'var(--sea-ink)',
+        border: '1px solid var(--line)',
+      }}
+    >
+      <span>{toast.message}</span>
+      <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+        {!toast.isUndone && (
+          <button
+            onClick={toast.onUndo}
+            style={{
+              padding: '0.375rem 0.875rem',
+              borderRadius: '0.75rem',
+              border: 'none',
+              background: 'var(--accent-lavender)',
+              color: 'white',
+              fontWeight: 700,
+              fontSize: '0.8125rem',
+              cursor: 'pointer',
+            }}
+          >
+            Undo
+          </button>
+        )}
+        <button
+          onClick={toast.onDismiss}
+          aria-label="Dismiss"
+          style={{
+            padding: '0.375rem 0.875rem',
+            borderRadius: '0.75rem',
+            border: '1px solid var(--line)',
+            background: 'transparent',
+            color: 'var(--sea-ink-soft)',
+            fontWeight: 700,
+            fontSize: '0.8125rem',
+            cursor: 'pointer',
+          }}
+        >
+          {toast.isUndone ? 'OK' : '✕'}
+        </button>
+      </div>
+    </div>
   )
 }
 

@@ -1,16 +1,35 @@
 import { useState, useEffect } from 'react'
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { getGroceryItemsGroupedFn, updateGroceryItemFn, deleteGroceryItemFn, getStoresFn, getCategoriesFn } from '../services/grocery.api'
 import clay from '../styles/clay.module.css'
 import styles from './SmartView.module.css'
-import { Tag, Store as StoreIcon, CheckCircle2, Circle, Trash2 } from 'lucide-react'
+import { Tag, Store as StoreIcon } from 'lucide-react'
 import type { GroceryItem, Session } from '../lib/schemas'
+import { useOptimisticMutation } from '../hooks/useOptimisticMutation'
+import { createCompleteCommand, createRestoreCommand, createDeleteCommand } from '../lib/mutation-commands'
+import ItemRow from './ItemRow'
+import InlineError from './ui/InlineError'
+import EmptyState from './ui/EmptyState'
+import Skeleton from './ui/Skeleton'
+
+// ── helpers ──────────────────────────────────────────────────
+
+function findItemById(
+  id: string,
+  groupedData: Record<string, { items: GroceryItem[] }> | undefined,
+): GroceryItem | undefined {
+  if (!groupedData) return undefined
+  for (const group of Object.values(groupedData)) {
+    const found = group.items.find((i: GroceryItem) => i.id === id)
+    if (found) return found
+  }
+  return undefined
+}
+
+// ── component ────────────────────────────────────────────────
 
 export default function SmartView({ session }: { session: Session | null }) {
-  const queryClient = useQueryClient()
   const [groupBy, setGroupBy] = useState<'category' | 'store'>('category')
-  const [finishing, setFinishing] = useState<Record<string, boolean>>({})
-  const [deleting, setDeleting] = useState<Record<string, boolean>>({})
 
   const { data: groupedData, isLoading } = useQuery({
     queryKey: ['grocery-items-grouped', groupBy, session?.householdId],
@@ -30,33 +49,70 @@ export default function SmartView({ session }: { session: Session | null }) {
     enabled: !!session?.householdId,
   })
 
-  const updateMutation = useMutation({
+  // ── Complete / Restore mutation ────────────────────────────
+
+  const completeMutation = useOptimisticMutation({
     mutationFn: (vars: { id: string; checked: 'true' | 'false' }) =>
       updateGroceryItemFn({ data: { id: vars.id, data: { checked: vars.checked } } }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['grocery-items'] })
-      queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'] })
-      queryClient.invalidateQueries({ queryKey: ['household-logs'] })
-      queryClient.invalidateQueries({ queryKey: ['frequent-items'] })
-    }
+    invalidationKeys: [
+      ['grocery-items', session?.householdId ?? ''],
+      ['grocery-items-grouped', session?.householdId ?? ''],
+      ['household-logs', session?.householdId ?? ''],
+      ['frequent-items', session?.householdId ?? ''],
+    ],
+    commandFactory: (result, vars) => {
+      // result is the updated GroceryItem
+      if (vars.checked === 'true') {
+        return createCompleteCommand(result as GroceryItem, session?.householdId ?? '')
+      } else {
+        return createRestoreCommand(result as GroceryItem, session?.householdId ?? '')
+      }
+    },
   })
 
-  const deleteMutation = useMutation({
+  // ── Delete mutation ────────────────────────────────────────
+
+  const deleteMutation = useOptimisticMutation({
     mutationFn: (id: string) => deleteGroceryItemFn({ data: id }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['grocery-items'] })
-      queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'] })
-      queryClient.invalidateQueries({ queryKey: ['household-logs'] })
-      queryClient.invalidateQueries({ queryKey: ['frequent-items'] })
-    }
+    invalidationKeys: [
+      ['grocery-items', session?.householdId ?? ''],
+      ['grocery-items-grouped', session?.householdId ?? ''],
+      ['household-logs', session?.householdId ?? ''],
+      ['frequent-items', session?.householdId ?? ''],
+      ['quick-add-items', session?.householdId ?? ''],
+    ],
+    commandFactory: (_, id) => {
+      const item = findItemById(id as string, groupedData as Record<string, { items: GroceryItem[] }> | undefined)
+      if (!item) return null
+      return createDeleteCommand(item, session?.householdId ?? '')
+    },
   })
+
+  // ── Handlers ───────────────────────────────────────────────
 
   const handleToggle = (newGroupBy: 'category' | 'store') => {
     if (newGroupBy === groupBy) return
     setGroupBy(newGroupBy)
   }
 
-  // Responsive column count logic
+  const handleComplete = (item: GroceryItem) => {
+    if (item.checked === 'false') {
+      completeMutation.mutate({ id: item.id, checked: 'true' })
+    } else {
+      completeMutation.mutate({ id: item.id, checked: 'false' })
+    }
+  }
+
+  const handleDelete = (item: GroceryItem) => {
+    deleteMutation.mutate(item.id)
+  }
+
+  const handleEdit = (_item: GroceryItem) => {
+    // placeholder for UX-005
+  }
+
+  // ── Responsive column count ────────────────────────────────
+
   const [columnCount, setColumnCount] = useState(3)
   useEffect(() => {
     const updateCount = () => {
@@ -70,31 +126,70 @@ export default function SmartView({ session }: { session: Session | null }) {
     return () => window.removeEventListener('resize', updateCount)
   }, [])
 
-  if (isLoading && !groupedData) return <div className={styles.loading}>Organizing your list...</div>
+  // ── Loading state ──────────────────────────────────────────
+
+  if (isLoading && !groupedData) {
+    return (
+      <div className={styles.masonryGrid}>
+        {[1, 2, 3].map((col) => (
+          <div key={col} className={styles.masonryColumn}>
+            <Skeleton variant="card" />
+            <Skeleton variant="card" height="90px" />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   if (!groupedData) return null
 
-  const filteredData = Object.entries(groupedData).reduce((acc: any, [id, group]: [string, any]) => {
-    const visibleItems = group.items.filter((item: GroceryItem) => (item.checked === 'false' || finishing[item.id]))
-    
-    if (visibleItems.length > 0) {
-      acc[id] = { ...group, items: visibleItems }
-    }
-    return acc
-  }, {})
+  // ── Filter empty groups only (keep checked items for restore) ──
+
+  const visibleData = Object.entries(groupedData).reduce(
+    (acc: Record<string, { items: GroceryItem[]; category?: { name: string }; store?: { name: string } }>, [id, group]: [string, any]) => {
+      if (group.items.length > 0) {
+        acc[id] = group
+      }
+      return acc
+    },
+    {},
+  )
+
+  const allEntries = Object.entries(visibleData)
 
   // Distribute items into stable columns for masonry effect
-  const columnData: any[][] = Array.from({ length: columnCount }, () => [])
-  Object.entries(filteredData).forEach((entry, index) => {
+  const columnData: [string, any][][] = Array.from({ length: columnCount }, () => [])
+  allEntries.forEach((entry, index) => {
     columnData[index % columnCount].push(entry)
   })
 
+  // ── Render ──────────────────────────────────────────────────
+
   return (
     <div className={styles.container}>
+      {/* ── Mutation errors ── */}
+      {completeMutation.isError && completeMutation.error instanceof Error && (
+        <InlineError
+          message="Couldn't update item."
+          onRetry={() => completeMutation.variables && completeMutation.mutate(completeMutation.variables as any)}
+          variant="banner"
+        />
+      )}
+      {deleteMutation.isError && deleteMutation.error instanceof Error && (
+        <InlineError
+          message="Couldn't delete item."
+          variant="banner"
+        />
+      )}
+
+      {/* ── Group-by toggle ── */}
       <div className={styles.toggleWrapper}>
-        <div className={`
-          ${styles.toggleSlider} 
-          ${groupBy === 'category' ? styles.toggleSliderCategory : styles.toggleSliderStore}
-        `} />
+        <div
+          className={`
+            ${styles.toggleSlider}
+            ${groupBy === 'category' ? styles.toggleSliderCategory : styles.toggleSliderStore}
+          `}
+        />
         <button
           onClick={() => handleToggle('category')}
           className={`${styles.toggleButton} ${groupBy === 'category' ? styles.toggleActive : ''}`}
@@ -109,107 +204,49 @@ export default function SmartView({ session }: { session: Session | null }) {
         </button>
       </div>
 
+      {/* ── Masonry grid ── */}
       <div className={styles.masonryGrid}>
-        {Object.entries(filteredData).length === 0 ? (
-          <div className={styles.emptyState}>
-            Your list is clear!
-          </div>
+        {allEntries.length === 0 ? (
+          <EmptyState
+            title="Your list is clear!"
+            body="Add some items from the Quick Add bar below to get started."
+          />
         ) : (
           columnData.map((columnEntries, colIdx) => (
             <div key={`col-${colIdx}`} className={styles.masonryColumn}>
               {columnEntries.map(([id, group]: [string, any]) => {
-                const label = groupBy === 'category' 
-                  ? (group.category?.name || 'Uncategorized')
-                  : (group.store?.name || 'Any Store');
-                const Icon = groupBy === 'category' ? Tag : StoreIcon;
-                
+                const label =
+                  groupBy === 'category'
+                    ? group.category?.name || 'Uncategorized'
+                    : group.store?.name || 'Any Store'
+                const Icon = groupBy === 'category' ? Tag : StoreIcon
+
                 return (
-                  <div 
-                    key={id} 
-                    className={`${clay.card} ${styles.groupCard}`}
-                  >
+                  <div key={id} className={`${clay.card} ${styles.groupCard}`}>
                     <h3 className={styles.groupHeader}>
-                      <div className={`${styles.groupIconWrapper} ${groupBy === 'category' ? styles.groupIconWrapperCategory : styles.groupIconWrapperStore}`}>
+                      <div
+                        className={`${styles.groupIconWrapper} ${groupBy === 'category' ? styles.groupIconWrapperCategory : styles.groupIconWrapperStore}`}
+                      >
                         <Icon className={styles.groupIcon} />
                       </div>
                       <span className={styles.groupHeaderLabel}>{label}</span>
-                    </h3>                    <div className={styles.itemList}>
+                    </h3>
+                    <div className={styles.itemList}>
                       {group.items.map((item: GroceryItem) => (
-                        <div 
-                          key={item.id} 
-                          className={styles.itemRow}
-                        >
-                          <div className={styles.itemMain}>
-                            <button
-                              onClick={() => {
-                                setFinishing(prev => ({ ...prev, [item.id]: true }))
-                                setTimeout(() => {
-                                  updateMutation.mutate({ id: item.id, checked: 'true' })
-                                  setFinishing(prev => {
-                                    const next = { ...prev }
-                                    delete next[item.id]
-                                    return next
-                                  })
-                                }, 300)
-                              }}
-                              className={styles.checkButton}
-                            >
-                              {finishing[item.id] ? (
-                                <CheckCircle2 className={styles.checkIcon} />
-                              ) : (
-                                <Circle className={styles.uncheckIcon} />
-                              )}
-                            </button>
-                            <div className={styles.itemInfo}>
-                              <span className={styles.itemName}>
-                                {item.name}
-                              </span>
-                              <div className={styles.itemSubInfo}>
-                                {groupBy === 'category' && item.storeId && (
-                                  <span className={`${styles.subInfoTag} ${styles.subInfoTagStore}`}>
-                                    <StoreIcon className={styles.subInfoIcon} />
-                                    {stores?.find((s: any) => s.id === item.storeId)?.name}
-                                  </span>
-                                )}
-                                {groupBy === 'store' && item.categoryId && (
-                                  <span className={`${styles.subInfoTag} ${styles.subInfoTagCategory}`}>
-                                    <Tag className={styles.subInfoIcon} />
-                                    {categories?.find((c: any) => c.id === item.categoryId)?.name}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          <div className={styles.itemActions}>
-                            {item.quantity !== '1' && (
-                              <span className={styles.quantityBadge}>
-                                x{item.quantity}
-                              </span>
-                            )}
-                            <button
-                              onClick={() => {
-                                setDeleting(prev => ({ ...prev, [item.id]: true }))
-                                setTimeout(() => {
-                                  deleteMutation.mutate(item.id)
-                                  setDeleting(prev => {
-                                    const next = { ...prev }
-                                    delete next[item.id]
-                                    return next
-                                  })
-                                }, 300)
-                              }}
-                              className={styles.deleteButton}
-                              title="Delete item"
-                              aria-label="Delete item"
-                            >
-                              <Trash2 className={`${styles.deleteIcon} ${deleting[item.id] ? styles.deleteIconActive : ''}`} />
-                            </button>
-                          </div>
-                        </div>
+                        <ItemRow
+                          key={item.id}
+                          item={item}
+                          groupBy={groupBy}
+                          stores={stores}
+                          categories={categories}
+                          onComplete={handleComplete}
+                          onDelete={handleDelete}
+                          onEdit={handleEdit}
+                        />
                       ))}
                     </div>
                   </div>
-                );
+                )
               })}
             </div>
           ))

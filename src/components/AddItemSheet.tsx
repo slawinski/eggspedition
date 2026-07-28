@@ -9,12 +9,20 @@ interface AddItemSheetProps {
   isOpen: boolean
   onClose: () => void
   triggerRef?: RefObject<HTMLButtonElement | null>
+  initialName?: string
+  initialQuantity?: string
+  initialCategory?: string
+  initialStore?: string
 }
 
 export default function AddItemSheet({
   isOpen,
   onClose,
   triggerRef,
+  initialName,
+  initialQuantity,
+  initialCategory,
+  initialStore,
 }: AddItemSheetProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const [statusMessage, setStatusMessage] = useState('')
@@ -145,11 +153,18 @@ export default function AddItemSheet({
 
         {/* Composer: input + Add button */}
         <div className={styles.composer}>
+        {isOpen && (
           <AddItemForm
             variant="sheet"
             autoFocus
             onItemAdded={handleItemAdded}
+            initialName={initialName}
+            initialQuantity={initialQuantity}
+            initialCategory={initialCategory}
+            initialStore={initialStore}
+            key={initialName ?? 'default'}
           />
+        )}
         </div>
 
         {/* Status area */}

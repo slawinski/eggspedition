@@ -1,0 +1,53 @@
+/* ═══════════════════════════════════════════════════════
+   Skeleton — Clay-styled loading placeholders
+   ═══════════════════════════════════════════════════════ */
+
+.skeleton {
+  --skel-shimmer-from: color-mix(in oklab, var(--surface-card) 60%, var(--clay-shadow-outer));
+  --skel-shimmer-to:   color-mix(in oklab, var(--surface-card) 85%, var(--bg-base));
+
+  display: block;
+  border-radius: calc(var(--radius-base) * 0.8);
+  background: var(--surface-card);
+
+  box-shadow:
+    8px 8px 16px var(--clay-shadow-outer),
+    inset 3px 3px 6px var(--clay-shadow-inner-light),
+    inset -3px -3px 6px var(--clay-shadow-inner-dark);
+
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+/* ── Variants ── */
+.text {
+  height: 1em;
+  border-radius: calc(var(--radius-base) * 0.4);
+}
+
+.card {
+  min-height: 120px;
+  border-radius: calc(var(--radius-base) * 1.2);
+}
+
+.circle {
+  border-radius: 50%;
+}
+
+.chip {
+  height: 2rem;
+  border-radius: 2rem;
+}
+
+/* ── Shimmer keyframe ── */
+@keyframes shimmer {
+  0%   { background: linear-gradient(110deg, var(--skel-shimmer-from) 30%, var(--skel-shimmer-to) 50%, var(--skel-shimmer-from) 70%); background-size: 200% 100%; }
+  100% { background: linear-gradient(110deg, var(--skel-shimmer-from) 30%, var(--skel-shimmer-to) 50%, var(--skel-shimmer-from) 70%); background-size: 200% 100%; background-position: -200% 0; }
+}
+
+/* ── Reduced motion: static ── */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background: var(--bg-base);
+  }
+}
