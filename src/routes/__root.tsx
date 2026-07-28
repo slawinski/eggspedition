@@ -16,6 +16,8 @@ import Header from '../components/Header'
 import MobileNav from '../components/MobileNav'
 import Signals from '../components/Signals'
 import AddItemSheet from '../components/AddItemSheet'
+import NotFound from '../components/ui/NotFound'
+import RouteError from '../components/ui/RouteError'
 import styles from './__root.module.css'
 import { useEffect, useState, useRef } from 'react'
 import { z } from 'zod'
@@ -67,21 +69,17 @@ export const Route = createRootRouteWithContext<{
     return { session }
   },
   validateSearch: (search) => rootSearchSchema.parse(search) as z.infer<typeof rootSearchSchema>,
-  notFoundComponent: () => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '1rem', padding: '2rem', textAlign: 'center' }}>
-      <h1 style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--sea-ink)' }}>404</h1>
-      <p style={{ color: 'var(--sea-ink-soft)', fontSize: '1rem' }}>This page doesn't exist or has been moved.</p>
-      <a href="/" style={{ color: 'var(--lagoon-deep)', fontWeight: 600 }}>Back to home</a>
-    </div>
-  ),
-  errorComponent: ({ error }) => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '1rem', padding: '2rem', textAlign: 'center' }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--danger)' }}>Something went wrong</h1>
-      <p style={{ color: 'var(--sea-ink-soft)', fontSize: '0.9375rem', maxWidth: 480 }}>{error?.message || 'An unexpected error occurred.'}</p>
-      <a href="/" style={{ color: 'var(--lagoon-deep)', fontWeight: 600 }}>Back to home</a>
-    </div>
+  notFoundComponent: () => {
+    const { session } = Route.useRouteContext()
+    return <NotFound isLoggedIn={!!session} />
+  },
+  errorComponent: ({ error, reset }) => (
+    <RouteError error={error} reset={reset} />
   ),
   head: () => ({
+    // NOTE: The root <title> provides a sensible default. Individual routes
+    // should set their own title (and optionally other head metadata) via the
+    // `head` export on each file route for more specific page titles.
     meta: [
       {
         charSet: 'utf-8',
@@ -355,6 +353,9 @@ function UndoToastRenderer() {
 }
 
 function Devtools() {
+  // Never render devtools in production builds
+  if (!import.meta.env.DEV) return null
+
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
   if (!mounted) return null

@@ -26,14 +26,29 @@
 
 /* ── Public navigation (unauthenticated) ── */
 .publicNav {
-  display: none;
+  display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 @media (min-width: 768px) {
   .publicNav {
-    display: flex;
+    gap: 1.25rem;
+  }
+}
+
+/* Collapse secondary links on very small screens */
+@media (max-width: 480px) {
+  .publicNavLink {
+    display: none;
+  }
+
+  .publicPrimaryLink {
+    display: none;
+  }
+
+  .publicNav {
+    gap: 0.5rem;
   }
 }
 
@@ -55,6 +70,12 @@
   color: var(--sea-ink-soft);
   text-decoration: none;
   transition: color 0.15s ease;
+  /* Ensure minimum tap target */
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .publicLoginLink:hover {
@@ -76,6 +97,7 @@
     6px 6px 12px var(--clay-shadow-outer),
     inset 2px 2px 4px var(--inset-glint);
   transition: transform 0.12s var(--ease-out-quint);
+  min-height: 44px;
 }
 
 .publicPrimaryLink:hover {
@@ -144,6 +166,8 @@
   border: 1px solid var(--line);
   background: var(--chip-bg);
   cursor: pointer;
+  min-height: 44px;
+  min-width: 44px;
   box-shadow: 
     8px 8px 16px var(--clay-shadow-outer),
     inset 3px 3px 5px var(--clay-shadow-inner-light),

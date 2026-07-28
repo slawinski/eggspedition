@@ -111,7 +111,7 @@ function HouseholdOnboarding() {
   }
 
   return (
-    <div className={styles.page}>
+    <main id="main-content" className={styles.page}>
       <div className={styles.container}>
         <OnboardingProgress currentStep={1} totalSteps={2} />
 
@@ -162,6 +162,6 @@ function HouseholdOnboarding() {
           </div>
         )}
       </div>
-    </div>
+    </main>
   )
 }

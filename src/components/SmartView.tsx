@@ -43,6 +43,8 @@ interface SmartViewProps {
 
 export default function SmartView({ session, mode: initialMode, storeId: initialStoreId }: SmartViewProps) {
   const [groupBy, setGroupBy] = useState<'category' | 'store'>('category')
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
   // ── Shopping mode state machine ───────────────────────────
   const [shoppingMode, setShoppingMode] = useState<'planning' | 'selecting-store' | 'shopping'>('planning')
@@ -382,8 +384,8 @@ export default function SmartView({ session, mode: initialMode, storeId: initial
         />
       )}
 
-      {/* ── Start Shopping button ── */}
-      {activeItemCount > 0 && (
+      {/* ── Start Shopping button (client-only — depends on query data) ── */}
+      {mounted && activeItemCount > 0 && (
         <div className={styles.shoppingCta}>
           <button
             type="button"

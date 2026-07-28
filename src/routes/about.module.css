@@ -13,11 +13,10 @@
 }
 
 @media (min-width: 768px) {
-  .about {
-    padding: 1.5rem;
+  .shell {
+    padding: 2rem;
   }
 }
-
 
 .kicker {
   letter-spacing: 0.16em;
@@ -39,6 +38,35 @@
   margin: 0;
   max-width: 48rem;
   font-size: 1rem;
-  line-height: 2;
+  line-height: 1.7;
   color: var(--sea-ink-soft);
+}
+
+.divider {
+  margin: 1.25rem 0;
+  border: none;
+  border-top: 1px solid var(--line);
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.metaLine {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--sea-ink-soft);
+  line-height: 1.5;
+}
+
+.link {
+  color: var(--lagoon-deep);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
 }

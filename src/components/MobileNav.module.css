@@ -85,8 +85,9 @@
 
 .navItemActive {
   color: var(--lagoon);
-  background: var(--chip-bg);
+  background: rgba(79, 184, 178, 0.12);
   border-color: var(--line);
+  border-bottom: 2px solid var(--lagoon);
   box-shadow:
     6px 6px 12px var(--clay-shadow-outer),
     inset 2px 2px 4px var(--clay-shadow-inner-light),
@@ -100,11 +101,11 @@
 }
 
 .navLabel {
-  font-size: 0.625rem;
+  font-size: 0.6875rem;
   line-height: 1;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.02em;
   white-space: nowrap;
 }
 

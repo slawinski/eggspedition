@@ -17,7 +17,11 @@ export default function MobileNav({
   const state = useRouterState()
   const pathname = state.location.pathname
 
-  const isActive = (path: string) => pathname === path
+  const isActive = (path: string) => {
+    // Exact match for root to avoid matching everything
+    if (path === '/') return pathname === '/'
+    return pathname.startsWith(path)
+  }
 
   return (
     <nav

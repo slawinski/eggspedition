@@ -16,6 +16,7 @@ import { Route as AddRouteImport } from './routes/add'
 import { Route as ActivityRouteImport } from './routes/activity'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SettingsQuickAddRouteImport } from './routes/settings/quick-add'
 import { Route as SettingsHouseholdRouteImport } from './routes/settings/household'
 import { Route as OnboardingHouseholdRouteImport } from './routes/onboarding/household'
 import { Route as JoinTokenRouteImport } from './routes/join/$token'
@@ -56,6 +57,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsQuickAddRoute = SettingsQuickAddRouteImport.update({
+  id: '/settings/quick-add',
+  path: '/settings/quick-add',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsHouseholdRoute = SettingsHouseholdRouteImport.update({
   id: '/settings/household',
   path: '/settings/household',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/join/$token': typeof JoinTokenRoute
   '/onboarding/household': typeof OnboardingHouseholdRoute
   '/settings/household': typeof SettingsHouseholdRoute
+  '/settings/quick-add': typeof SettingsQuickAddRoute
   '/api/auth/verify': typeof ApiAuthVerifyRoute
 }
 export interface FileRoutesByTo {
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/join/$token': typeof JoinTokenRoute
   '/onboarding/household': typeof OnboardingHouseholdRoute
   '/settings/household': typeof SettingsHouseholdRoute
+  '/settings/quick-add': typeof SettingsQuickAddRoute
   '/api/auth/verify': typeof ApiAuthVerifyRoute
 }
 export interface FileRoutesById {
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/join/$token': typeof JoinTokenRoute
   '/onboarding/household': typeof OnboardingHouseholdRoute
   '/settings/household': typeof SettingsHouseholdRoute
+  '/settings/quick-add': typeof SettingsQuickAddRoute
   '/api/auth/verify': typeof ApiAuthVerifyRoute
 }
 export interface FileRouteTypes {
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/join/$token'
     | '/onboarding/household'
     | '/settings/household'
+    | '/settings/quick-add'
     | '/api/auth/verify'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/join/$token'
     | '/onboarding/household'
     | '/settings/household'
+    | '/settings/quick-add'
     | '/api/auth/verify'
   id:
     | '__root__'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/join/$token'
     | '/onboarding/household'
     | '/settings/household'
+    | '/settings/quick-add'
     | '/api/auth/verify'
   fileRoutesById: FileRoutesById
 }
@@ -170,6 +182,7 @@ export interface RootRouteChildren {
   JoinTokenRoute: typeof JoinTokenRoute
   OnboardingHouseholdRoute: typeof OnboardingHouseholdRoute
   SettingsHouseholdRoute: typeof SettingsHouseholdRoute
+  SettingsQuickAddRoute: typeof SettingsQuickAddRoute
   ApiAuthVerifyRoute: typeof ApiAuthVerifyRoute
 }
 
@@ -224,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/quick-add': {
+      id: '/settings/quick-add'
+      path: '/settings/quick-add'
+      fullPath: '/settings/quick-add'
+      preLoaderRoute: typeof SettingsQuickAddRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings/household': {
       id: '/settings/household'
       path: '/settings/household'
@@ -266,6 +286,7 @@ const rootRouteChildren: RootRouteChildren = {
   JoinTokenRoute: JoinTokenRoute,
   OnboardingHouseholdRoute: OnboardingHouseholdRoute,
   SettingsHouseholdRoute: SettingsHouseholdRoute,
+  SettingsQuickAddRoute: SettingsQuickAddRoute,
   ApiAuthVerifyRoute: ApiAuthVerifyRoute,
 }
 export const routeTree = rootRouteImport

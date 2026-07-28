@@ -114,17 +114,17 @@ function HouseholdSettings() {
 
   if (!householdId) {
     return (
-      <div className={styles.page}>
+    <main id="main-content" className={styles.page}>
         <div className={styles.loading}>
           <Loader2 size={20} className="animate-spin" aria-hidden="true" />
           <span>Loading...</span>
         </div>
-      </div>
+      </main>
     )
   }
 
   return (
-    <div className={styles.page}>
+    <main id="main-content" className={styles.page}>
       <Link to="/" className={styles.backLink}>
         <ArrowLeft size={16} aria-hidden="true" />
         Back to list
@@ -240,6 +240,6 @@ function HouseholdSettings() {
           <p className={styles.emptyText}>No active invites yet. Create one to share with your household.</p>
         )}
       </div>
-    </div>
+    </main>
   )
 }

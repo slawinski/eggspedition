@@ -71,7 +71,7 @@ function Home() {
   }
 
   return (
-    <main className={`${styles.main} ${styles.mainAuth}`}>
+    <main id="main-content" className={`${styles.main} ${styles.mainAuth}`}>
       <div className={styles.dashboardContent}>
         <header className={styles.dashboardHeader}>
           <div className={styles.headerTop}>

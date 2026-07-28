@@ -62,6 +62,9 @@
   --accent-mint: #84fab0;
   --accent-mint-soft: rgba(132, 250, 176, 0.1);
 
+  /* ── Brand identity ── */
+  --brand-egg: #f5c842;
+
   /* ── Destructive ── */
   --danger: #ff4d4d;
   --danger-soft: rgba(255, 77, 77, 0.1);
@@ -113,6 +116,43 @@
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-quart: cubic-bezier(0.77, 0, 0.175, 1);
 
+  /* ── Semantic elevation ── */
+  --elevation-flat: none;
+  --elevation-surface: 0 1px 3px var(--shadow-color);
+  --elevation-raised: 4px 4px 12px var(--clay-shadow-outer),
+                      inset 1px 1px 2px var(--clay-shadow-inner-light),
+                      inset -1px -1px 2px var(--clay-shadow-inner-dark);
+  --elevation-pressed: inset 2px 2px 6px var(--clay-shadow-outer),
+                       inset -1px -1px 2px var(--clay-shadow-inner-light);
+  --elevation-overlay: 0 8px 32px var(--shadow-color-strong);
+  --focus-ring: 0 0 0 3px var(--accent-coral);
+  --border-subtle: 1px solid var(--line);
+  --border-strong: 1px solid var(--chip-line);
+
+  /* ── Spacing scale ── */
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-5: 1.5rem;   /* 24px */
+  --space-6: 2rem;     /* 32px */
+
+  /* ── Typography roles ── */
+  --text-body: 1rem;       /* 16px — main body */
+  --text-body-sm: 0.875rem; /* 14px */
+  --text-label: 0.75rem;   /* 12px — labels, metadata */
+  --text-heading: 1.25rem;  /* 20px — section titles */
+  --text-display: 2rem;     /* 32px — page titles */
+
+  /* ── Motion ── */
+  --duration-instant: 80ms;
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
   /* ── Scaling (mobile-first) ── */
   --ui-scale: 0.88;
   --spacing-base: 0.875rem;
@@ -155,6 +195,7 @@
 /* ═══════════════════════════════════════════════════════
    DARK THEME — Complete Rewrite
    ═══════════════════════════════════════════════════════ */
+:root.dark,
 :root[data-theme="dark"] {
   /* ── Core palette ── */
   --sea-ink: #fafafa;
@@ -211,6 +252,9 @@
   --accent-mint: #6ee7b7;
   --accent-mint-soft: rgba(110, 231, 183, 0.12);
 
+  /* ── Brand identity ── */
+  --brand-egg: #f5c842;
+
   /* ── Destructive ── */
   --danger: #ff6b6b;
   --danger-soft: rgba(255, 107, 107, 0.12);
@@ -256,84 +300,6 @@
   --overlay-spot-palm: rgba(74, 222, 128, 0.06);
   --overlay-grid-line: rgba(255, 255, 255, 0.03);
   --overlay-grid-cross: rgba(255, 255, 255, 0.02);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --sea-ink: #fafafa;
-    --sea-ink-soft: #a1a1aa;
-    --lagoon: #4fd3c4;
-    --lagoon-deep: #26a69a;
-    --palm: #4ade80;
-    --sand: #1c1c23;
-    --foam: #13131a;
-    --surface: rgba(28, 28, 35, 0.8);
-    --surface-strong: rgba(36, 36, 44, 0.92);
-    --surface-card: #1c1c23;
-    --bg-base: #111118;
-    --clay-bg: #111118;
-    --header-bg: rgba(17, 17, 24, 0.88);
-    --chip-bg: rgba(36, 36, 44, 0.9);
-    --line: rgba(255, 255, 255, 0.08);
-    --chip-line: rgba(255, 255, 255, 0.08);
-    --inset-glint: rgba(255, 255, 255, 0.06);
-    --link-bg-hover: rgba(36, 36, 44, 0.6);
-    --kicker: #a1a1aa;
-    --hero-a: rgba(79, 211, 196, 0.12);
-    --hero-b: rgba(74, 222, 128, 0.08);
-    --shadow-color: rgba(0, 0, 0, 0.35);
-    --shadow-color-strong: rgba(0, 0, 0, 0.45);
-    --clay-shadow-outer: rgba(0, 0, 0, 0.35);
-    --clay-shadow-inner-light: rgba(255, 255, 255, 0.04);
-    --clay-shadow-inner-dark: rgba(0, 0, 0, 0.25);
-    --accent-coral: #ff7b82;
-    --accent-coral-soft: rgba(255, 123, 130, 0.12);
-    --accent-coral-muted: rgba(255, 123, 130, 0.18);
-    --accent-coral-glow: rgba(255, 123, 130, 0.35);
-    --accent-coral-strong: rgba(255, 123, 130, 0.55);
-    --accent-lavender: #b8a4e6;
-    --accent-lavender-soft: rgba(184, 164, 230, 0.12);
-    --accent-lavender-muted: rgba(184, 164, 230, 0.18);
-    --accent-lavender-glow: rgba(184, 164, 230, 0.35);
-    --accent-mint: #6ee7b7;
-    --accent-mint-soft: rgba(110, 231, 183, 0.12);
-    --danger: #ff6b6b;
-    --danger-soft: rgba(255, 107, 107, 0.12);
-    --success: #4ade80;
-    --grad-logo-from: #ff7b82;
-    --grad-logo-to: #b8a4e6;
-    --grad-fab-from: #ff7b82;
-    --grad-fab-to: #b8a4e6;
-    --grad-avatar-from: #ff7b82;
-    --grad-avatar-to: #fecfef;
-    --grad-sun-from: #f6d365;
-    --grad-sun-to: #fda085;
-    --grad-moon-from: #b8a4e6;
-    --grad-moon-to: #fbc2eb;
-    --admin-bg: #1c1c23;
-    --admin-bg-alt: #22222b;
-    --admin-bg-hover: #22222b;
-    --admin-border: rgba(255, 255, 255, 0.08);
-    --admin-text: #fafafa;
-    --admin-text-muted: #a1a1aa;
-    --admin-text-dim: #71717a;
-    --admin-tag-coral-bg: rgba(255, 123, 130, 0.15);
-    --admin-tag-coral-text: #ff7b82;
-    --admin-tag-lavender-bg: rgba(184, 164, 230, 0.15);
-    --admin-tag-lavender-text: #b8a4e6;
-    --admin-danger-bg: rgba(255, 107, 107, 0.12);
-    --admin-danger-text: #ff6b6b;
-    --admin-save-bg: rgba(110, 231, 183, 0.12);
-    --admin-save-text: #6ee7b7;
-    --admin-edit-bg: rgba(79, 211, 196, 0.1);
-    --admin-shimmer-from: #22222b;
-    --admin-shimmer-to: #2a2a34;
-    --overlay-spot-light: rgba(79, 211, 196, 0.06);
-    --overlay-spot-lagoon: rgba(79, 211, 196, 0.1);
-    --overlay-spot-palm: rgba(74, 222, 128, 0.06);
-    --overlay-grid-line: rgba(255, 255, 255, 0.03);
-    --overlay-grid-cross: rgba(255, 255, 255, 0.02);
-  }
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -546,9 +512,8 @@ a {
 
 /* ── Keyboard focus (accessible navigation) ── */
 :focus-visible {
-  outline: 2px solid var(--lagoon);
+  outline: 2px solid var(--accent-coral);
   outline-offset: 2px;
-  border-radius: 4px;
 }
 
 :focus:not(:focus-visible) {
@@ -642,6 +607,13 @@ a {
 @media (max-width: 768px) {
   .nav-link::after {
     bottom: -4px;
+  }
+}
+
+/* ── iOS input zoom fix ── */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important; /* Prevent iOS zoom on focus */
   }
 }
 

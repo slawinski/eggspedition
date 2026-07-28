@@ -36,12 +36,12 @@ function JoinHousehold() {
   // Loading state (while preview is being fetched on client navigation)
   if (!preview) {
     return (
-      <div className={styles.page}>
+      <main id="main-content" className={styles.page}>
         <div className={styles.loading}>
           <Loader2 size={24} className="animate-spin" aria-hidden="true" />
           <span>Loading invite...</span>
         </div>
-      </div>
+      </main>
     )
   }
 
@@ -66,7 +66,7 @@ function JoinHousehold() {
   // Error states for invalid/expired/revoked/redeemed invites
   if (preview.status !== 'valid') {
     return (
-      <div className={styles.page}>
+      <main id="main-content" className={styles.page}>
         <div className={styles.container}>
           <div className={styles.errorCard}>
             <h2 className={styles.errorTitle}>
@@ -92,13 +92,13 @@ function JoinHousehold() {
             </Link>
           </div>
         </div>
-      </div>
+      </main>
     )
   }
 
   // Valid invite
   return (
-    <div className={styles.page}>
+    <main id="main-content" className={styles.page}>
       <div className={styles.container}>
         <InvitePreview
           householdName={preview.householdName}
@@ -109,6 +109,6 @@ function JoinHousehold() {
           error={acceptError}
         />
       </div>
-    </div>
+    </main>
   )
 }

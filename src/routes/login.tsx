@@ -48,7 +48,7 @@ function LoginComponent() {
   }
 
   return (
-    <div className={styles.page}>
+    <main id="main-content" className={styles.page}>
       <div className={`${clay.card} ${styles.cardContent}`}>
         <h1 className={`${clay.puffyText} ${styles.title}`}>
           Welcome Home! 🥚
@@ -81,6 +81,6 @@ function LoginComponent() {
           </form>
         )}
       </div>
-    </div>
+    </main>
   )
 }

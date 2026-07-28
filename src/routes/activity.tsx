@@ -16,7 +16,7 @@ export const Route = createFileRoute('/activity')({
 
 function ActivityPage() {
   return (
-    <main className={styles.main}>
+    <main id="main-content" className={styles.main}>
       <div className={styles.dashboardContent}>
         <header className={styles.dashboardHeader} style={{ display: 'flex' }}>
           <h2 className={styles.headerTitle}>Household Activity</h2>
