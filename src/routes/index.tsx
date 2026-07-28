@@ -9,8 +9,6 @@ import styles from './index.module.css'
 
 export const Route = createFileRoute('/')({
   validateSearch: z.object({
-    mode: z.enum(['shopping', 'planning']).optional().catch(undefined),
-    store: z.string().optional().catch(undefined),
     add: z.literal('item').optional().catch(undefined),
     name: z.string().optional().catch(undefined),
     quantity: z.string().optional().catch(undefined),
@@ -64,7 +62,6 @@ export const Route = createFileRoute('/')({
 
 function Home() {
   const { session } = Route.useRouteContext()
-  const search = Route.useSearch()
 
   if (!session) {
     return <LandingPage />
@@ -89,8 +86,6 @@ function Home() {
         
         <SmartView
           session={session}
-          mode={search.mode}
-          storeId={search.store}
         />
       </div>
     </main>

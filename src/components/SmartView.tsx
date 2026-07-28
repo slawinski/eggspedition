@@ -1,10 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useRouter } from '@tanstack/react-router'
 import { getGroceryItemsGroupedFn, updateGroceryItemFn, deleteGroceryItemFn, getStoresFn, getCategoriesFn } from '../services/grocery.api'
 import clay from '../styles/clay.module.css'
 import styles from './SmartView.module.css'
-import { Tag, Store as StoreIcon, ShoppingCart } from 'lucide-react'
+import { Tag, Store as StoreIcon } from 'lucide-react'
 import type { GroceryItem, Session } from '../lib/schemas'
 import { useOptimisticMutation } from '../hooks/useOptimisticMutation'
 import { createCompleteCommand, createRestoreCommand, createDeleteCommand } from '../lib/mutation-commands'
@@ -12,13 +11,7 @@ import ItemRow from './ItemRow'
 import InlineError from './ui/InlineError'
 import EmptyState from './ui/EmptyState'
 import Skeleton from './ui/Skeleton'
-import ShoppingMode from './ShoppingMode'
-import StorePicker from './StorePicker'
 import ItemEditor from './ItemEditor'
-
-// ── Constants ─────────────────────────────────────────────────
-
-const STORE_PREF_PREFIX = 'eggspedition:last-store:'
 
 // ── helpers ──────────────────────────────────────────────────
 
@@ -36,64 +29,17 @@ function findItemById(
 
 // ── component ────────────────────────────────────────────────
 
-interface SmartViewProps {
-  session: Session | null
-  mode?: 'shopping' | 'planning'
-  storeId?: string
-}
-
-export default function SmartView({ session, mode: initialMode, storeId: initialStoreId }: SmartViewProps) {
+export default function SmartView({ session }: { session: Session | null }) {
   const [groupBy, setGroupBy] = useState<'category' | 'store'>('category')
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
 
-  // ── Shopping mode state machine ───────────────────────────
-  const [shoppingMode, setShoppingMode] = useState<'planning' | 'selecting-store' | 'shopping'>('planning')
-  const [shoppingStoreId, setShoppingStoreId] = useState<string | 'all'>('all')
-  const router = useRouter()
   const queryClient = useQueryClient()
 
   // ── Item editor state ─────────────────────────────────────
   const [editingItem, setEditingItem] = useState<GroceryItem | null>(null)
 
-  // Initialize from URL search params on mount
-  useEffect(() => {
-    if (initialMode === 'shopping') {
-      if (initialStoreId) {
-        setShoppingStoreId(initialStoreId)
-        setShoppingMode('shopping')
-      } else {
-        // Need to pick a store first
-        setShoppingMode('selecting-store')
-      }
-    }
-  }, [initialMode, initialStoreId])
-
-  // Restore last store preference from localStorage
-  useEffect(() => {
-    if (!session?.householdId) return
-    const key = `${STORE_PREF_PREFIX}${session.householdId}`
-    try {
-      const saved = localStorage.getItem(key)
-      if (saved === 'all' || saved) {
-        setShoppingStoreId(saved as string | 'all')
-      }
-    } catch {
-      // localStorage unavailable
-    }
-  }, [session?.householdId])
-
   const { data: groupedData, isLoading } = useQuery({
     queryKey: ['grocery-items-grouped', groupBy, session?.householdId],
     queryFn: () => getGroceryItemsGroupedFn({ data: groupBy }),
-    enabled: !!session?.householdId,
-  })
-
-  // Fetch store-grouped data even when showing by category —
-  // needed so StorePicker & ShoppingMode can see all items by store.
-  const { data: groupedByStore } = useQuery({
-    queryKey: ['grocery-items-grouped', 'store', session?.householdId],
-    queryFn: () => getGroceryItemsGroupedFn({ data: 'store' }),
     enabled: !!session?.householdId,
   })
 
@@ -271,98 +217,6 @@ export default function SmartView({ session, mode: initialMode, storeId: initial
     setEditingItem(null)
   }
 
-  // ── Shopping mode: URL management ─────────────────────────
-
-  type SearchParams = Record<string, string | undefined> & { mode?: 'shopping' | 'planning'; store?: string }
-
-  const updateShoppingUrl = (mode: 'shopping' | null, store?: string | 'all') => {
-    router.navigate({
-      search: (prev: SearchParams) => {
-        const next = { ...prev }
-        if (mode === 'shopping') {
-          next.mode = 'shopping'
-          next.store = store || undefined
-        } else {
-          delete next.mode
-          delete next.store
-        }
-        return next
-      },
-      replace: true,
-    } as any)
-  }
-
-  const handleEnterShopping = () => {
-    // Check if there are stores with items
-    if (!groupedByStore) return
-
-    const storesWithItems = Object.entries(groupedByStore).filter(
-      ([, group]: [string, any]) => group.items.some((item: GroceryItem) => item.checked !== 'true'),
-    )
-
-    if (storesWithItems.length > 1) {
-      // Show store picker
-      setShoppingMode('selecting-store')
-    } else if (storesWithItems.length === 1) {
-      // Exactly one store has items — go directly to shopping with that store
-      const singleStoreId = storesWithItems[0][0]
-      if (session?.householdId) {
-        try {
-          localStorage.setItem(`${STORE_PREF_PREFIX}${session.householdId}`, singleStoreId)
-        } catch { /* ignore */ }
-      }
-      setShoppingStoreId(singleStoreId)
-      setShoppingMode('shopping')
-      updateShoppingUrl('shopping', singleStoreId)
-    } else {
-      // No stores have items — shouldn't happen since button is hidden,
-      // but go to 'all' mode as fallback
-      setShoppingStoreId('all')
-      setShoppingMode('shopping')
-      updateShoppingUrl('shopping', 'all')
-    }
-  }
-
-  const handleStoreSelect = (storeId: string | 'all') => {
-    setShoppingStoreId(storeId)
-    setShoppingMode('shopping')
-    updateShoppingUrl('shopping', storeId)
-  }
-
-  const handleExitShopping = () => {
-    setShoppingMode('planning')
-    updateShoppingUrl(null)
-  }
-
-  const handleChangeStore = (storeId: string | 'all') => {
-    // Persist preference
-    if (session?.householdId) {
-      try {
-        localStorage.setItem(`${STORE_PREF_PREFIX}${session.householdId}`, storeId)
-      } catch { /* ignore */ }
-    }
-    setShoppingStoreId(storeId)
-    setShoppingMode('shopping')
-    updateShoppingUrl('shopping', storeId)
-  }
-
-  const handleOpenStorePicker = () => {
-    setShoppingMode('selecting-store')
-  }
-
-  // ── Compute active item count for "Start shopping" button ──
-
-  const activeItemCount = (() => {
-    if (!groupedByStore) return 0
-    let count = 0
-    for (const group of Object.values(groupedByStore)) {
-      for (const item of (group as any).items as GroceryItem[]) {
-        if (item.checked !== 'true') count++
-      }
-    }
-    return count
-  })()
-
   // ── Responsive column count ────────────────────────────────
 
   const [columnCount, setColumnCount] = useState(3)
@@ -394,62 +248,6 @@ export default function SmartView({ session, mode: initialMode, storeId: initial
   }
 
   if (!groupedData) return null
-
-  // ── Store picker sheet ─────────────────────────────────────
-
-  if (shoppingMode === 'selecting-store') {
-    return (
-      <StorePicker
-        session={session}
-        groupedData={groupedByStore as any}
-        stores={stores}
-        selectedStoreId={shoppingStoreId}
-        onSelect={handleStoreSelect}
-        onCancel={() => {
-          setShoppingMode('planning')
-          updateShoppingUrl(null)
-        }}
-      />
-    )
-  }
-
-  // ── Shopping mode view ─────────────────────────────────────
-
-  if (shoppingMode === 'shopping' && groupedByStore) {
-    return (
-      <>
-        {/* Mutation errors */}
-        {completeMutation.isError && completeMutation.error instanceof Error && (
-          <InlineError
-            message="Couldn't update item."
-            onRetry={() => completeMutation.variables && completeMutation.mutate(completeMutation.variables as any)}
-            variant="banner"
-          />
-        )}
-        {deleteMutation.isError && deleteMutation.error instanceof Error && (
-          <InlineError
-            message="Couldn't delete item."
-            variant="banner"
-          />
-        )}
-
-        <ShoppingMode
-          session={session}
-          selectedStoreId={shoppingStoreId}
-          groupedData={groupedByStore as any}
-          stores={stores}
-          categories={categories}
-          onExit={handleExitShopping}
-          onChangeStore={handleChangeStore}
-          onPickNewStore={handleOpenStorePicker}
-          onComplete={handleComplete}
-          onDelete={handleDelete}
-        />
-      </>
-    )
-  }
-
-  // ── Planning mode ──────────────────────────────────────────
 
   // Filter empty groups only (keep checked items for restore)
   const visibleData = Object.entries(groupedData).reduce(
@@ -487,20 +285,6 @@ export default function SmartView({ session, mode: initialMode, storeId: initial
           message="Couldn't delete item."
           variant="banner"
         />
-      )}
-
-      {/* ── Start Shopping button (client-only — depends on query data) ── */}
-      {mounted && activeItemCount > 0 && (
-        <div className={styles.shoppingCta}>
-          <button
-            type="button"
-            className={`${clay.button} ${clay.buttonCoral} ${styles.shoppingCtaButton}`}
-            onClick={handleEnterShopping}
-          >
-            <ShoppingCart className={styles.shoppingCtaIcon} aria-hidden="true" />
-            {activeItemCount} item{activeItemCount !== 1 ? 's' : ''} to buy — Start shopping
-          </button>
-        </div>
       )}
 
       {/* ── Group-by toggle ── */}

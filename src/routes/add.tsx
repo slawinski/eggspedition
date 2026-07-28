@@ -6,7 +6,6 @@ export const Route = createFileRoute('/add')({
     name: z.string().optional().catch(undefined),
     quantity: z.string().optional().catch(undefined),
     category: z.string().optional().catch(undefined),
-    store: z.string().optional().catch(undefined),
   }),
   beforeLoad: ({ context, search }) => {
     if (!context.session) {
@@ -18,7 +17,6 @@ export const Route = createFileRoute('/add')({
           name: search.name,
           quantity: search.quantity,
           category: search.category,
-          store: search.store,
         },
         replace: true,
       })
@@ -30,7 +28,6 @@ export const Route = createFileRoute('/add')({
         name: search.name,
         quantity: search.quantity,
         category: search.category,
-        store: search.store,
       },
       replace: true,
     })
