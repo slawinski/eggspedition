@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getHouseholdLogsFn, addGroceryItemFn } from '../services/grocery.api'
 import { useRouteContext, useNavigate } from '@tanstack/react-router'
@@ -143,6 +143,8 @@ export default function HouseholdActivityFeed() {
   const { session } = useRouteContext({ from: '__root__' })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
   const { data: logs, isLoading, error, refetch } = useQuery({
     queryKey: ['household-logs', session?.householdId],
@@ -175,6 +177,18 @@ export default function HouseholdActivityFeed() {
   // ------------------------------------------------------------------
   // Render states
   // ------------------------------------------------------------------
+
+  // Defer rendering until hydration to avoid SSR data mismatch
+  if (!mounted) {
+    return (
+      <div role="status" aria-label="Loading activity">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <Skeleton key={i} variant="text" height="48px" />
+        ))}
+        <span className="sr-only">Loading activity...</span>
+      </div>
+    )
+  }
 
   // Loading
   if (isLoading) {

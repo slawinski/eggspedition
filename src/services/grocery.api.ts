@@ -30,6 +30,7 @@ export const addGroceryItemFn = createServerFn({ method: 'POST' })
         storeId: z.string().uuid().optional(),
         categoryName: z.string().optional().nullable(),
         storeName: z.string().optional().nullable(),
+        operationId: z.string().optional(),
       })
     )
   )
@@ -58,7 +59,7 @@ export const updateGroceryItemFn = createServerFn({ method: 'POST' })
   .middleware([protectedMiddleware])
   .handler(async ({ data, context }) => {
     const { updateGroceryItem } = await import('./grocery.service')
-    return await updateGroceryItem(data.id, context.session.userId, data.data)
+    return await updateGroceryItem(data.id, context.session.householdId, context.session.userId, data.data)
   })
 
 export const deleteGroceryItemFn = createServerFn({ method: 'POST' })
@@ -66,7 +67,7 @@ export const deleteGroceryItemFn = createServerFn({ method: 'POST' })
   .middleware([protectedMiddleware])
   .handler(async ({ data: id, context }) => {
     const { deleteGroceryItem } = await import('./grocery.service')
-    return await deleteGroceryItem(id, context.session.userId)
+    return await deleteGroceryItem(id, context.session.householdId, context.session.userId)
   })
 
 export const getCategoriesFn = createServerFn({ method: 'GET' })
@@ -152,17 +153,17 @@ export const updateQuickAddItemFn = createServerFn({ method: 'POST' })
     )
   )
   .middleware([protectedMiddleware])
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { updateQuickAddItem } = await import('./grocery.service')
-    return await updateQuickAddItem(data.id, data.data)
+    return await updateQuickAddItem(data.id, context.session.householdId, data.data)
   })
 
 export const deleteQuickAddItemFn = createServerFn({ method: 'POST' })
   .inputValidator(zodValidator(z.string().uuid()))
   .middleware([protectedMiddleware])
-  .handler(async ({ data: id }) => {
+  .handler(async ({ data: id, context }) => {
     const { deleteQuickAddItem } = await import('./grocery.service')
-    return await deleteQuickAddItem(id)
+    return await deleteQuickAddItem(id, context.session.householdId)
   })
 
 export const joinHouseholdFn = createServerFn({ method: 'POST' })

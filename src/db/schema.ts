@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, uniqueIndex } from 'drizzle-orm/pg-core'
+import { pgTable, text, timestamp, uuid, uniqueIndex, integer } from 'drizzle-orm/pg-core'
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -53,6 +53,7 @@ export const groceryItems = pgTable('grocery_items', {
   householdId: uuid('household_id').notNull().references(() => households.id),
   userId: uuid('user_id').notNull().references(() => users.id),
   checked: text('checked').notNull().default('false'), // Using text for boolean-ish behavior if preferred, but boolean is better in PG. SPEC says "checked/unchecked"
+  version: integer('version').notNull().default(1),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
@@ -84,5 +85,15 @@ export const invites = pgTable('invites', {
   expiresAt: timestamp('expires_at'),
   redeemedAt: timestamp('redeemed_at'),
   revokedAt: timestamp('revoked_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
+export const appliedOperations = pgTable('applied_operations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  operationId: text('operation_id').notNull().unique(),
+  householdId: uuid('household_id').notNull(),
+  operationType: text('operation_type').notNull(),
+  entityId: uuid('entity_id'),
+  result: text('result'), // JSON string
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })

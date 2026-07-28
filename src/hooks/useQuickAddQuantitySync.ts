@@ -68,11 +68,12 @@ export function useQuickAddQuantitySync(
             quantity: String(delta),
             categoryId: itemIdentity.categoryId ?? undefined,
             storeId: itemIdentity.storeId ?? undefined,
+            operationId,
           },
         })
 
-        // The server returns a GroceryItem with the updated quantity
-        const resultingQuantity = parseInt(result.quantity, 10) || delta
+        // The server returns a GroceryItem with the updated quantity (may be null if idempotent)
+        const resultingQuantity = result ? parseInt(result.quantity, 10) || delta : delta
 
         // Invalidate caches so the list refreshes with the new quantity
         queryClient.invalidateQueries({ queryKey: ['grocery-items'] })

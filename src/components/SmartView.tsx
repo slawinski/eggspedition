@@ -126,19 +126,63 @@ export default function SmartView({ session, mode: initialMode, storeId: initial
   const completeMutation = useOptimisticMutation({
     mutationFn: (vars: { id: string; checked: 'true' | 'false' }) =>
       updateGroceryItemFn({ data: { id: vars.id, data: { checked: vars.checked } } }),
+    optimisticUpdate: (vars) => {
+      const hhId = session?.householdId ?? ''
+      return [
+        {
+          queryKey: ['grocery-items', hhId] as string[],
+          previousData: undefined,
+          patch: (_prev: unknown) => {
+            // Transform the cache optimistically: update the item's checked state
+            if (!_prev || !Array.isArray(_prev)) return _prev
+            return (_prev as any[]).map((i: any) =>
+              i.id === vars.id ? { ...i, checked: vars.checked } : i,
+            )
+          },
+        },
+        {
+          queryKey: ['grocery-items-grouped', hhId] as string[],
+          previousData: undefined,
+          patch: (_prev: unknown) => {
+            if (!_prev || typeof _prev !== 'object' || _prev === null) return _prev
+            const result = { ...(_prev as Record<string, any>) }
+            for (const key of Object.keys(result)) {
+              if (result[key]?.items) {
+                result[key] = {
+                  ...result[key],
+                  items: result[key].items.map((i: any) =>
+                    i.id === vars.id ? { ...i, checked: vars.checked } : i,
+                  ),
+                }
+              }
+            }
+            return result
+          },
+        },
+      ]
+    },
     invalidationKeys: [
       ['grocery-items', session?.householdId ?? ''],
       ['grocery-items-grouped', session?.householdId ?? ''],
       ['household-logs', session?.householdId ?? ''],
       ['frequent-items', session?.householdId ?? ''],
     ],
-    commandFactory: (result, vars) => {
-      // result is the updated GroceryItem
+    commandFactory: (_, vars) => {
+      const item = findItemById(
+        vars.id,
+        groupedData as Record<string, { items: GroceryItem[] }> | undefined,
+      )
+      if (!item) return null
       if (vars.checked === 'true') {
-        return createCompleteCommand(result as GroceryItem, session?.householdId ?? '')
+        return createCompleteCommand(item, session?.householdId ?? '')
       } else {
-        return createRestoreCommand(result as GroceryItem, session?.householdId ?? '')
+        return createRestoreCommand(item, session?.householdId ?? '')
       }
+    },
+    undoRollback: async (vars) => {
+      await updateGroceryItemFn({
+        data: { id: vars.id, data: { checked: vars.checked === 'true' ? 'false' : 'true' } },
+      })
     },
   })
 
@@ -146,6 +190,37 @@ export default function SmartView({ session, mode: initialMode, storeId: initial
 
   const deleteMutation = useOptimisticMutation({
     mutationFn: (id: string) => deleteGroceryItemFn({ data: id }),
+    optimisticUpdate: (id: string) => {
+      const hhId = session?.householdId ?? ''
+      return [
+        {
+          queryKey: ['grocery-items', hhId] as string[],
+          previousData: undefined,
+          patch: (_prev: unknown) => {
+            // Optimistically remove the item from the cache
+            if (!_prev || !Array.isArray(_prev)) return _prev
+            return (_prev as any[]).filter((i: any) => i.id !== id)
+          },
+        },
+        {
+          queryKey: ['grocery-items-grouped', hhId] as string[],
+          previousData: undefined,
+          patch: (_prev: unknown) => {
+            if (!_prev || typeof _prev !== 'object' || _prev === null) return _prev
+            const result = { ...(_prev as Record<string, any>) }
+            for (const key of Object.keys(result)) {
+              if (result[key]?.items) {
+                result[key] = {
+                  ...result[key],
+                  items: result[key].items.filter((i: any) => i.id !== id),
+                }
+              }
+            }
+            return result
+          },
+        },
+      ]
+    },
     invalidationKeys: [
       ['grocery-items', session?.householdId ?? ''],
       ['grocery-items-grouped', session?.householdId ?? ''],
@@ -157,6 +232,10 @@ export default function SmartView({ session, mode: initialMode, storeId: initial
       const item = findItemById(id as string, groupedData as Record<string, { items: GroceryItem[] }> | undefined)
       if (!item) return null
       return createDeleteCommand(item, session?.householdId ?? '')
+    },
+    undoRollback: async (id) => {
+      // Undo a delete by restoring the item (unchecking it)
+      await updateGroceryItemFn({ data: { id: id as string, data: { checked: 'false' } } })
     },
   })
 

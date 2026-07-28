@@ -7,6 +7,7 @@ import type { GroceryItem } from './schemas'
 import {
   toItemSnapshot,
   type ReversibleCommand,
+  type CachePatch,
 } from './commands'
 
 // ── internal helpers ─────────────────────────────────────────
@@ -52,6 +53,40 @@ export function buildCachePatches(
   })
 }
 
+// ── Real cache patch helpers (for optimisticUpdate callbacks) ─
+
+export function patchCompleteInCache(
+  item: GroceryItem,
+  householdId: string,
+): CachePatch[] {
+  const itemId = item.id
+  return [
+    { queryKey: ['grocery-items', householdId], operation: 'update' as const, data: { id: itemId, checked: 'true' as const } },
+    { queryKey: ['grocery-items-grouped', householdId], operation: 'update' as const, data: { id: itemId, checked: 'true' as const } },
+  ]
+}
+
+export function patchDeleteFromCache(
+  item: GroceryItem,
+  householdId: string,
+): CachePatch[] {
+  return [
+    { queryKey: ['grocery-items', householdId], operation: 'remove' as const, data: { id: item.id } },
+    { queryKey: ['grocery-items-grouped', householdId], operation: 'remove' as const, data: { id: item.id } },
+  ]
+}
+
+export function patchRestoreInCache(
+  item: GroceryItem,
+  householdId: string,
+): CachePatch[] {
+  const itemId = item.id
+  return [
+    { queryKey: ['grocery-items', householdId], operation: 'update' as const, data: { id: itemId, checked: 'false' as const } },
+    { queryKey: ['grocery-items-grouped', householdId], operation: 'update' as const, data: { id: itemId, checked: 'false' as const } },
+  ]
+}
+
 // ── command factories ────────────────────────────────────────
 
 export function createCompleteCommand(
@@ -64,9 +99,9 @@ export function createCompleteCommand(
     type: 'completeItem',
     householdId,
     itemId: item.id,
-    itemSnapshot: { ...previousSnapshot, checked: 'true' },
-    previousSnapshot,
-    optimisticCachePatches: emptyCachePatches(householdId),
+    itemSnapshot: toItemSnapshot({ ...item, checked: 'true' }), // after state
+    previousSnapshot, // before state
+    optimisticCachePatches: patchRestoreInCache(item, householdId), // undo → restore to unchecked
     userMessage: `${item.quantity !== '1' ? `${item.quantity}× ` : ''}${item.name} completed`,
     expiryTimestamp: Date.now() + 5_000,
   }
@@ -81,9 +116,9 @@ export function createDeleteCommand(
     type: 'deleteItem',
     householdId,
     itemId: item.id,
-    itemSnapshot: toItemSnapshot(item),
+    itemSnapshot: toItemSnapshot(item), // before state (for restoration)
     previousSnapshot: toItemSnapshot(item),
-    optimisticCachePatches: emptyCachePatches(householdId),
+    optimisticCachePatches: emptyCachePatches(householdId), // undo → invalidate and refetch
     userMessage: `${item.quantity !== '1' ? `${item.quantity}× ` : ''}${item.name} deleted`,
     expiryTimestamp: Date.now() + 5_000,
   }
@@ -99,9 +134,9 @@ export function createRestoreCommand(
     type: 'restoreItem',
     householdId,
     itemId: item.id,
-    itemSnapshot: { ...previousSnapshot, checked: 'false' },
+    itemSnapshot: toItemSnapshot({ ...item, checked: 'false' }), // after state
     previousSnapshot,
-    optimisticCachePatches: emptyCachePatches(householdId),
+    optimisticCachePatches: patchCompleteInCache(item, householdId), // undo → mark checked again
     userMessage: `${item.quantity !== '1' ? `${item.quantity}× ` : ''}${item.name} restored`,
     expiryTimestamp: Date.now() + 5_000,
   }
@@ -117,7 +152,7 @@ export function createQuickAddCommand(
     householdId,
     itemId: item.id,
     itemSnapshot: toItemSnapshot(item),
-    optimisticCachePatches: emptyCachePatches(householdId),
+    optimisticCachePatches: emptyCachePatches(householdId), // undo → invalidate
     userMessage: `${item.quantity !== '1' ? `${item.quantity}× ` : ''}${item.name} added`,
     expiryTimestamp: Date.now() + 5_000,
   }

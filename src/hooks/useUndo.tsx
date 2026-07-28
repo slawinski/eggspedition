@@ -19,9 +19,70 @@ import {
   type ReactNode,
 } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import type { ReversibleCommand, CommandType } from '../lib/commands'
+import type { ReversibleCommand, CachePatch, CommandType } from '../lib/commands'
 
 // ── public context shape ─────────────────────────────────────
+
+// ── cache patch applicator ───────────────────────────────────
+
+function applyCachePatch(queryClient: ReturnType<typeof useQueryClient>, patch: CachePatch) {
+  if (patch.operation === 'set') {
+    queryClient.setQueryData(patch.queryKey, patch.data)
+    return
+  }
+
+  if (patch.operation === 'remove') {
+    queryClient.setQueryData(patch.queryKey, (old: unknown) => {
+      if (!old) return old
+      const id = (patch.data as { id: string })?.id
+      if (!id) return old
+      if (Array.isArray(old)) {
+        return old.filter((i: any) => i.id !== id)
+      }
+      if (typeof old === 'object' && old !== null) {
+        const result = { ...(old as Record<string, any>) }
+        for (const key of Object.keys(result)) {
+          if (result[key]?.items) {
+            result[key] = {
+              ...result[key],
+              items: result[key].items.filter((i: any) => i.id !== id),
+            }
+          }
+        }
+        return result
+      }
+      return old
+    })
+    return
+  }
+
+  if (patch.operation === 'update') {
+    queryClient.setQueryData(patch.queryKey, (old: unknown) => {
+      if (!old) return old
+      const updateData = patch.data as { id: string;[key: string]: unknown }
+      if (!updateData?.id) return old
+      if (Array.isArray(old)) {
+        return old.map((i: any) => (i.id === updateData.id ? { ...i, ...updateData } : i))
+      }
+      if (typeof old === 'object' && old !== null) {
+        const result = { ...(old as Record<string, any>) }
+        for (const key of Object.keys(result)) {
+          if (result[key]?.items) {
+            result[key] = {
+              ...result[key],
+              items: result[key].items.map((i: any) =>
+                i.id === updateData.id ? { ...i, ...updateData } : i,
+              ),
+            }
+          }
+        }
+        return result
+      }
+      return old
+    })
+    return
+  }
+}
 
 export interface UndoContext {
   /** Push a new reversible command (starts the 5 s undo timer).
@@ -31,10 +92,10 @@ export interface UndoContext {
   pushCommand: (command: ReversibleCommand, rollback?: () => Promise<void>) => void
 
   /** Execute undo for a specific command by id. */
-  undoCommand: (commandId: string) => void
+  undoCommand: (commandId: string) => Promise<void>
 
   /** Undo all recent commands of a given type (bulk undo for aggregation). */
-  undoAll: (type: CommandType) => void
+  undoAll: (type: CommandType) => Promise<void>
 
   /** Current active undoable command for toast display. */
   activeUndo: {
@@ -296,9 +357,7 @@ export function UndoProvider({
 
         // Restore each cache key's previous data
         for (const patch of qc.command.optimisticCachePatches) {
-          if (patch.operation === 'set' && patch.data !== undefined) {
-            queryClient.setQueryData(patch.queryKey, patch.data)
-          }
+          applyCachePatch(queryClient, patch)
         }
 
         // Remove from queue
@@ -400,9 +459,7 @@ export function UndoProvider({
       targets.forEach((qc, i) => {
         if (results[i].status === 'fulfilled') {
           for (const patch of qc.command.optimisticCachePatches) {
-            if (patch.operation === 'set' && patch.data !== undefined) {
-              queryClient.setQueryData(patch.queryKey, patch.data)
-            }
+            applyCachePatch(queryClient, patch)
           }
           queueRef.current = queueRef.current.filter(
             (q) => q.command.id !== qc.command.id,

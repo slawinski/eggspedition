@@ -183,15 +183,31 @@ export function useOptimisticMutation<TData, TVariables>(
       const snapshots = buildRollbackContext(vars)
       applyOptimistic(snapshots)
 
-      return { snapshots, vars }
+      // Build optimistic command and push to undo queue immediately
+      let optimisticCommand: ReversibleCommand | null = null
+      if (configRef.current.commandFactory) {
+        optimisticCommand = configRef.current.commandFactory(null as any, vars)
+        if (optimisticCommand) {
+          const rollbackFn = configRef.current.undoRollback
+            ? () => configRef.current.undoRollback!(vars)
+            : undefined
+          undo.pushCommand(optimisticCommand, rollbackFn)
+        }
+      }
+
+      return { snapshots, vars, optimisticCommand }
     },
 
     onError: (error: Error, vars: TVariables, context: unknown) => {
       const ctx = context as
-        | { snapshots: ReturnType<typeof buildRollbackContext>; vars: TVariables }
+        | { snapshots: ReturnType<typeof buildRollbackContext>; vars: TVariables; optimisticCommand?: ReversibleCommand | null }
         | undefined
       if (ctx?.snapshots?.length) {
         rollbackOptimistic(ctx.snapshots)
+      }
+      // Remove the optimistic command from the undo queue since mutation failed
+      if (ctx?.optimisticCommand) {
+        undo.undoCommand(ctx.optimisticCommand.id).catch(() => {})
       }
       configRef.current.onError?.(error, vars)
     },
@@ -200,17 +216,7 @@ export function useOptimisticMutation<TData, TVariables>(
       // Invalidate affected keys so TanStack refetches fresh data
       await invalidateOnSuccess()
 
-      // Build and push an undo command if a factory was supplied
-      if (configRef.current.commandFactory) {
-        const cmd = configRef.current.commandFactory(data, vars)
-        if (cmd) {
-          const rollbackFn = configRef.current.undoRollback
-            ? () => configRef.current.undoRollback!(vars)
-            : undefined
-
-          undo.pushCommand(cmd, rollbackFn)
-        }
-      }
+      // Command was already pushed to undo queue in onMutate — no need to push again
 
       configRef.current.onSuccess?.(data, vars)
     },

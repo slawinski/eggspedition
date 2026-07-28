@@ -36,7 +36,9 @@ export function useAddGroceryItem(options?: UseAddGroceryItemOptions) {
       queryClient.invalidateQueries({ queryKey: ['household-logs'] })
       queryClient.invalidateQueries({ queryKey: ['frequent-items'] })
       queryClient.invalidateQueries({ queryKey: ['quick-add-items'] })
-      options?.onSuccess?.(result, variables)
+      if (result) {
+        options?.onSuccess?.(result, variables)
+      }
     },
     onError: (error: Error, variables) => {
       options?.onError?.(error, variables)

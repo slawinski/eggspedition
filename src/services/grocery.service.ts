@@ -1,6 +1,6 @@
 import { db } from '../db'
 import { users, groceryItems, categories, stores, householdLogs, memberships, quickAddItems } from '../db/schema'
-import { eq, desc, and, count } from 'drizzle-orm'
+import { eq, desc, and, count, sql } from 'drizzle-orm'
 import type { GroceryItem, Category, Store } from '../lib/schemas'
 import { insertGroceryItemSchema, insertCategorySchema, insertStoreSchema, insertQuickAddItemSchema } from '../lib/schemas'
 import { notifyHousehold } from '../lib/signals'
@@ -63,7 +63,7 @@ export async function getGroceryItemsGrouped(householdId: string, groupBy: 'cate
 export async function addGroceryItem(
   householdId: string,
   userId: string,
-  input: { name: string; quantity?: string; categoryId?: string; storeId?: string; categoryName?: string | null; storeName?: string | null }
+  input: { name: string; quantity?: string; categoryId?: string; storeId?: string; categoryName?: string | null; storeName?: string | null; operationId?: string }
 ) {
   // Resolve names to IDs if provided
   const resolvedCategoryId = input.categoryId || (input.categoryName ? await resolveCategoryId(householdId, input.categoryName) : undefined)
@@ -83,19 +83,23 @@ export async function addGroceryItem(
     .limit(1)
 
   if (existing) {
-    // Increment quantity
-    const currentQty = parseInt(existing.quantity) || 1
-    const newQty = (currentQty + (parseInt(input.quantity || '1') || 1)).toString()
-    
+    // Atomic SQL increment — avoids read-modify-write race
+    const delta = parseInt(input.quantity || '1') || 1
+
     const [updated] = await db
       .update(groceryItems)
-      .set({ 
-        quantity: newQty,
+      .set({
+        quantity: sql`${groceryItems.quantity} + ${delta}`,
         ...(resolvedCategoryId && { categoryId: resolvedCategoryId }),
         ...(resolvedStoreId && { storeId: resolvedStoreId }),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
-      .where(eq(groceryItems.id, existing.id))
+      .where(
+        and(
+          eq(groceryItems.id, existing.id),
+          eq(groceryItems.householdId, householdId),
+        ),
+      )
       .returning()
 
     await db.insert(householdLogs).values({
@@ -107,6 +111,7 @@ export async function addGroceryItem(
 
     console.log(`[Service] Item quantity incremented, notifying household: ${householdId}`)
     await notifyHousehold(householdId, 'update')
+
     return updated
   }
 
@@ -160,16 +165,31 @@ export async function addGroceryItem(
 
 export async function updateGroceryItem(
   itemId: string,
+  householdId: string,
   userId: string,
-  input: Partial<Omit<GroceryItem, 'id' | 'householdId' | 'userId' | 'createdAt'>>
+  input: Partial<Omit<GroceryItem, 'id' | 'householdId' | 'userId' | 'createdAt'>>,
 ) {
-  const [existing] = await db.select().from(groceryItems).where(eq(groceryItems.id, itemId)).limit(1)
+  const [existing] = await db
+    .select()
+    .from(groceryItems)
+    .where(
+      and(
+        eq(groceryItems.id, itemId),
+        eq(groceryItems.householdId, householdId),
+      ),
+    )
+    .limit(1)
   if (!existing) throw new Error('Item not found')
 
   const [updated] = await db
     .update(groceryItems)
     .set({ ...input, updatedAt: new Date() })
-    .where(eq(groceryItems.id, itemId))
+    .where(
+      and(
+        eq(groceryItems.id, itemId),
+        eq(groceryItems.householdId, householdId),
+      ),
+    )
     .returning()
 
   let action = 'update'
@@ -190,11 +210,27 @@ export async function updateGroceryItem(
   return updated
 }
 
-export async function deleteGroceryItem(itemId: string, userId: string) {
-  const [existing] = await db.select().from(groceryItems).where(eq(groceryItems.id, itemId)).limit(1)
+export async function deleteGroceryItem(itemId: string, householdId: string, userId: string) {
+  const [existing] = await db
+    .select()
+    .from(groceryItems)
+    .where(
+      and(
+        eq(groceryItems.id, itemId),
+        eq(groceryItems.householdId, householdId),
+      ),
+    )
+    .limit(1)
   if (!existing) throw new Error('Item not found')
 
-  await db.delete(groceryItems).where(eq(groceryItems.id, itemId))
+  await db
+    .delete(groceryItems)
+    .where(
+      and(
+        eq(groceryItems.id, itemId),
+        eq(groceryItems.householdId, householdId),
+      ),
+    )
 
   await db.insert(householdLogs).values({
     householdId: existing.householdId,
@@ -346,8 +382,21 @@ export async function addQuickAddItem(householdId: string, input: { name: string
   return item
 }
 
-export async function updateQuickAddItem(id: string, input: { name?: string; categoryName?: string | null; storeName?: string | null }) {
-  const [existing] = await db.select().from(quickAddItems).where(eq(quickAddItems.id, id)).limit(1)
+export async function updateQuickAddItem(
+  id: string,
+  householdId: string,
+  input: { name?: string; categoryName?: string | null; storeName?: string | null },
+) {
+  const [existing] = await db
+    .select()
+    .from(quickAddItems)
+    .where(
+      and(
+        eq(quickAddItems.id, id),
+        eq(quickAddItems.householdId, householdId),
+      ),
+    )
+    .limit(1)
   if (!existing) throw new Error('Item not found')
 
   const categoryId = input.categoryName !== undefined ? await resolveCategoryId(existing.householdId, input.categoryName) : undefined
@@ -360,7 +409,12 @@ export async function updateQuickAddItem(id: string, input: { name?: string; cat
       ...(categoryId !== undefined && { categoryId }),
       ...(storeId !== undefined && { storeId }),
     })
-    .where(eq(quickAddItems.id, id))
+    .where(
+      and(
+        eq(quickAddItems.id, id),
+        eq(quickAddItems.householdId, householdId),
+      ),
+    )
     .returning()
 
   // Propagate changes to existing grocery items with the same name in this household
@@ -388,10 +442,26 @@ export async function updateQuickAddItem(id: string, input: { name?: string; cat
   return updated
 }
 
-export async function deleteQuickAddItem(id: string) {
-  const [existing] = await db.select().from(quickAddItems).where(eq(quickAddItems.id, id)).limit(1)
+export async function deleteQuickAddItem(id: string, householdId: string) {
+  const [existing] = await db
+    .select()
+    .from(quickAddItems)
+    .where(
+      and(
+        eq(quickAddItems.id, id),
+        eq(quickAddItems.householdId, householdId),
+      ),
+    )
+    .limit(1)
   if (!existing) return
 
-  await db.delete(quickAddItems).where(eq(quickAddItems.id, id))
+  await db
+    .delete(quickAddItems)
+    .where(
+      and(
+        eq(quickAddItems.id, id),
+        eq(quickAddItems.householdId, householdId),
+      ),
+    )
   await notifyHousehold(existing.householdId, 'quick-add-update')
 }
