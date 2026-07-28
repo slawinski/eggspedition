@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { CloudOff } from 'lucide-react'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import styles from './OfflineBanner.module.css'
@@ -7,16 +8,16 @@ import styles from './OfflineBanner.module.css'
  * or browser is offline.
  *
  * Self-contained: reads online status internally via useOnlineStatus.
- * Returns null when the device is online; shows the banner when offline.
- *
- * Compact copy on mobile ("You're offline"), fuller message on
- * desktop.  Uses `role="status"` because offline is informational,
- * not an error — the user doesn't need to take immediate action.
+ * Returns null when SSR, mounted-but-online, or not yet hydrated.
+ * Uses `role="status"` because offline is informational, not an error.
  */
 export default function OfflineBanner() {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
   const { isOnline } = useOnlineStatus()
 
-  if (isOnline) return null
+  // Never render on server or before hydration to avoid SSR mismatch
+  if (!mounted || isOnline) return null
 
   return (
     <div className={styles.banner} role="status">

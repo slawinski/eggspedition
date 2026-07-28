@@ -39,18 +39,18 @@ export const verifyMagicLinkServerFn = createServerFn({ method: 'GET' })
   .inputValidator(zodValidator(z.string()))
   .handler(async ({ data: token }) => {
     const { verifyMagicLink } = await import('./auth.service')
-    const sessionToken = await verifyMagicLink(token)
+    const result = await verifyMagicLink(token)
     
-    if (sessionToken) {
-      setCookie('session_token', sessionToken, {
+    if (result) {
+      setCookie('session_token', result.sessionToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         path: '/',
         maxAge: 30 * 24 * 60 * 60, // 30 days sticky sessions
       })
-      return { success: true }
+      return { success: true as const, hasHousehold: result.hasHousehold }
     }
     
-    return { success: false }
+    return { success: false as const, hasHousehold: false }
   })

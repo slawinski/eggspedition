@@ -1,0 +1,119 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem;
+  border-radius: calc(var(--radius-base) * 1.5);
+  border: 1px solid var(--line);
+  background: var(--surface-card);
+  gap: 1rem;
+  box-shadow:
+    14px 14px 28px var(--clay-shadow-outer),
+    inset 6px 6px 10px var(--clay-shadow-inner-light),
+    inset -6px -6px 10px var(--clay-shadow-inner-dark);
+  animation: riseIn 0.4s var(--ease-out-expo);
+}
+
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--accent-coral);
+  filter: drop-shadow(0 2px 4px var(--accent-coral-glow));
+}
+
+.heading {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--sea-ink);
+  margin: 0;
+}
+
+.householdName {
+  font-weight: 800;
+  color: var(--lagoon-deep);
+}
+
+.subtext {
+  font-size: 0.8125rem;
+  color: var(--sea-ink-soft);
+  margin: 0;
+}
+
+.inviter {
+  font-weight: 700;
+  color: var(--sea-ink);
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.acceptBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: calc(var(--radius-base) * 1.1);
+  border: 1px solid var(--line);
+  background: var(--lagoon);
+  color: white;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  box-shadow:
+    8px 8px 16px var(--clay-shadow-outer),
+    inset 3px 3px 6px var(--clay-shadow-inner-light),
+    inset -3px -3px 6px var(--clay-shadow-inner-dark);
+  transition: transform 0.15s var(--ease-out-quint), filter 0.15s ease;
+}
+
+.acceptBtn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.acceptBtn:active {
+  transform: scale(0.95);
+}
+
+.acceptBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}
+
+.declineBtn {
+  padding: 0.75rem 1.5rem;
+  border-radius: calc(var(--radius-base) * 1.1);
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--sea-ink-soft);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.declineBtn:hover {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+@media (min-width: 768px) {
+  .card {
+    padding: 2rem;
+  }
+  .heading {
+    font-size: 1.25rem;
+  }
+}

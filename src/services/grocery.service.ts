@@ -1,5 +1,5 @@
 import { db } from '../db'
-import { users, groceryItems, categories, stores, householdLogs, households, memberships, quickAddItems } from '../db/schema'
+import { users, groceryItems, categories, stores, householdLogs, memberships, quickAddItems } from '../db/schema'
 import { eq, desc, and, count } from 'drizzle-orm'
 import type { GroceryItem, Category, Store } from '../lib/schemas'
 import { insertGroceryItemSchema, insertCategorySchema, insertStoreSchema, insertQuickAddItemSchema } from '../lib/schemas'
@@ -16,23 +16,8 @@ export async function getOrCreateDefaultHousehold(userId: string) {
     return existingMembership.householdId
   }
 
-  // Create default household
-  const [newHousehold] = await db
-    .insert(households)
-    .values({ name: 'My Household' })
-    .returning()
-
-  if (!newHousehold) {
-    throw new Error('Failed to create default household')
-  }
-
-  await db.insert(memberships).values({
-    userId,
-    householdId: newHousehold.id,
-    role: 'admin',
-  })
-
-  return newHousehold.id
+  // No longer auto-create — returns null so callers can trigger onboarding
+  return null
 }
 
 export async function getGroceryItems(householdId: string) {

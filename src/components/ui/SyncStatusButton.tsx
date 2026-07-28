@@ -36,6 +36,9 @@ export default function SyncStatusButton({
 }: SyncStatusButtonProps) {
   const [panelOpen, setPanelOpen] = useState(false)
   const wrapperRef = useRef<HTMLDivElement>(null)
+  // Defer rendering until after hydration to avoid SSR mismatch
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -48,6 +51,21 @@ export default function SyncStatusButton({
       return () => document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [panelOpen])
+
+  // During SSR / before hydration, render a neutral placeholder
+  if (!mounted) {
+    return (
+      <div className={styles.wrapper} ref={wrapperRef} style={{ position: 'relative' }}>
+        <button
+          type="button"
+          className={`${styles.button} ${styles.onlineClean}`}
+          aria-label="Sync status"
+          aria-haspopup="true"
+          aria-expanded={false}
+        />
+      </div>
+    )
+  }
 
   const hasPending = pendingMutations.length > 0
   const hasFailed = failedMutations.length > 0

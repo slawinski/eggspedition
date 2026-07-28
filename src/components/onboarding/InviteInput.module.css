@@ -1,0 +1,87 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.inputGroup {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.field {
+  flex: 1;
+  min-width: 0;
+  padding: 0.8rem 1rem;
+  border-radius: calc(var(--radius-base) * 1.2);
+  border: 1px solid var(--line);
+  background: var(--surface-card);
+  color: var(--sea-ink);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  outline: none;
+  box-shadow:
+    inset 4px 4px 8px var(--clay-shadow-outer),
+    inset -4px -4px 8px var(--clay-shadow-inner-light);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.field::placeholder {
+  color: var(--sea-ink-soft);
+  opacity: 0.5;
+}
+
+.field:focus {
+  border-color: var(--lagoon);
+  box-shadow:
+    inset 4px 4px 8px var(--clay-shadow-outer),
+    inset -4px -4px 8px var(--clay-shadow-inner-light),
+    0 0 0 3px var(--accent-lavender-soft);
+}
+
+.submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1.25rem;
+  border-radius: calc(var(--radius-base) * 1.2);
+  border: 1px solid var(--line);
+  background: var(--lagoon);
+  color: white;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  box-shadow:
+    8px 8px 16px var(--clay-shadow-outer),
+    inset 3px 3px 6px var(--clay-shadow-inner-light),
+    inset -3px -3px 6px var(--clay-shadow-inner-dark);
+  transition: transform 0.15s var(--ease-out-quint), filter 0.15s ease;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.submit:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.submit:active {
+  transform: scale(0.95);
+}
+
+.submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}
+
+.error {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--danger);
+  padding-left: 0.5rem;
+  margin: 0;
+}

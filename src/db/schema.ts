@@ -74,3 +74,15 @@ export const householdLogs = pgTable('household_logs', {
   itemName: text('item_name').notNull(),
   timestamp: timestamp('timestamp').notNull().defaultNow(),
 })
+
+export const invites = pgTable('invites', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  householdId: uuid('household_id').notNull().references(() => households.id),
+  token: text('token').notNull().unique(),
+  createdBy: uuid('created_by').notNull().references(() => users.id),
+  redeemedBy: uuid('redeemed_by').references(() => users.id),
+  expiresAt: timestamp('expires_at'),
+  redeemedAt: timestamp('redeemed_at'),
+  revokedAt: timestamp('revoked_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})

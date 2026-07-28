@@ -5,6 +5,7 @@ import {
   Outlet,
   useNavigate,
   useRouter,
+  redirect,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
@@ -29,25 +30,43 @@ const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getIte
 
 const SW_REGISTER_SCRIPT = `(function(){var isDev=window.location.hostname.includes('localhost')||window.location.hostname.includes('127.0.0.1');if(isDev){navigator.serviceWorker.getRegistrations().then(function(regs){regs.forEach(function(r){r.unregister()})});return}if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(function(e){console.warn('SW registration failed:',e)})}})()`
 
-const rootSearchSchema = z
-  .object({
-    add: z.literal('item').optional().catch(undefined),
-    name: z.string().optional().catch(undefined),
-    quantity: z.string().optional().catch(undefined),
-    category: z.string().optional().catch(undefined),
-    store: z.string().optional().catch(undefined),
-  })
-  .passthrough()
+const rootSearchSchema = z.object({
+  add: z.literal('item').optional().catch(undefined),
+  name: z.string().optional().catch(undefined),
+  quantity: z.string().optional().catch(undefined),
+  category: z.string().optional().catch(undefined),
+  store: z.string().optional().catch(undefined),
+})
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
   session: Session | null
 }>()({
-  beforeLoad: async () => {
+  beforeLoad: async (opts) => {
     const session = await getSessionServerFn()
+
+    // Authenticated users without a household must complete onboarding first
+    const pathname = opts.location?.pathname ?? ''
+    const publicPaths = ['/login', '/about']
+    const isPublicPath = publicPaths.includes(pathname)
+    const isOnboardingPath = pathname.startsWith('/onboarding')
+    const isJoinPath = pathname.startsWith('/join')
+    const isVerifyPath = pathname.startsWith('/api/auth')
+
+    if (
+      session &&
+      !session.householdId &&
+      !isPublicPath &&
+      !isOnboardingPath &&
+      !isJoinPath &&
+      !isVerifyPath
+    ) {
+      throw redirect({ to: '/onboarding/household' })
+    }
+
     return { session }
   },
-  validateSearch: (search) => rootSearchSchema.parse(search),
+  validateSearch: (search) => rootSearchSchema.parse(search) as z.infer<typeof rootSearchSchema>,
   notFoundComponent: () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '1rem', padding: '2rem', textAlign: 'center' }}>
       <h1 style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--sea-ink)' }}>404</h1>
@@ -158,7 +177,7 @@ export const Route = createRootRouteWithContext<{
 
 function RootComponent() {
   const { session } = Route.useRouteContext()
-  const search = Route.useSearch()
+  const search = Route.useSearch() as z.infer<typeof rootSearchSchema>
   const navigate = useNavigate()
   const router = useRouter()
   const fabRef = useRef<HTMLButtonElement>(null)
@@ -196,7 +215,7 @@ function RootComponent() {
         to: currentPathname,
         replace: true,
         search: (previous) => {
-          const { add: _add, ...rest } = previous
+          const { add: _add, ...rest } = previous as z.infer<typeof rootSearchSchema>
           return rest
         },
       })

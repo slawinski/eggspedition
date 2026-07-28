@@ -16,6 +16,9 @@ import { Route as AddRouteImport } from './routes/add'
 import { Route as ActivityRouteImport } from './routes/activity'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SettingsHouseholdRouteImport } from './routes/settings/household'
+import { Route as OnboardingHouseholdRouteImport } from './routes/onboarding/household'
+import { Route as JoinTokenRouteImport } from './routes/join/$token'
 import { Route as ApiAuthVerifyRouteImport } from './routes/api/auth/verify'
 
 const QuickAddRoute = QuickAddRouteImport.update({
@@ -53,6 +56,21 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsHouseholdRoute = SettingsHouseholdRouteImport.update({
+  id: '/settings/household',
+  path: '/settings/household',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingHouseholdRoute = OnboardingHouseholdRouteImport.update({
+  id: '/onboarding/household',
+  path: '/onboarding/household',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinTokenRoute = JoinTokenRouteImport.update({
+  id: '/join/$token',
+  path: '/join/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthVerifyRoute = ApiAuthVerifyRouteImport.update({
   id: '/api/auth/verify',
   path: '/api/auth/verify',
@@ -67,6 +85,9 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/quick-add': typeof QuickAddRoute
+  '/join/$token': typeof JoinTokenRoute
+  '/onboarding/household': typeof OnboardingHouseholdRoute
+  '/settings/household': typeof SettingsHouseholdRoute
   '/api/auth/verify': typeof ApiAuthVerifyRoute
 }
 export interface FileRoutesByTo {
@@ -77,6 +98,9 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/quick-add': typeof QuickAddRoute
+  '/join/$token': typeof JoinTokenRoute
+  '/onboarding/household': typeof OnboardingHouseholdRoute
+  '/settings/household': typeof SettingsHouseholdRoute
   '/api/auth/verify': typeof ApiAuthVerifyRoute
 }
 export interface FileRoutesById {
@@ -88,6 +112,9 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/quick-add': typeof QuickAddRoute
+  '/join/$token': typeof JoinTokenRoute
+  '/onboarding/household': typeof OnboardingHouseholdRoute
+  '/settings/household': typeof SettingsHouseholdRoute
   '/api/auth/verify': typeof ApiAuthVerifyRoute
 }
 export interface FileRouteTypes {
@@ -100,6 +127,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/login'
     | '/quick-add'
+    | '/join/$token'
+    | '/onboarding/household'
+    | '/settings/household'
     | '/api/auth/verify'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -110,6 +140,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/login'
     | '/quick-add'
+    | '/join/$token'
+    | '/onboarding/household'
+    | '/settings/household'
     | '/api/auth/verify'
   id:
     | '__root__'
@@ -120,6 +153,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/login'
     | '/quick-add'
+    | '/join/$token'
+    | '/onboarding/household'
+    | '/settings/household'
     | '/api/auth/verify'
   fileRoutesById: FileRoutesById
 }
@@ -131,6 +167,9 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   LoginRoute: typeof LoginRoute
   QuickAddRoute: typeof QuickAddRoute
+  JoinTokenRoute: typeof JoinTokenRoute
+  OnboardingHouseholdRoute: typeof OnboardingHouseholdRoute
+  SettingsHouseholdRoute: typeof SettingsHouseholdRoute
   ApiAuthVerifyRoute: typeof ApiAuthVerifyRoute
 }
 
@@ -185,6 +224,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/household': {
+      id: '/settings/household'
+      path: '/settings/household'
+      fullPath: '/settings/household'
+      preLoaderRoute: typeof SettingsHouseholdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding/household': {
+      id: '/onboarding/household'
+      path: '/onboarding/household'
+      fullPath: '/onboarding/household'
+      preLoaderRoute: typeof OnboardingHouseholdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join/$token': {
+      id: '/join/$token'
+      path: '/join/$token'
+      fullPath: '/join/$token'
+      preLoaderRoute: typeof JoinTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/verify': {
       id: '/api/auth/verify'
       path: '/api/auth/verify'
@@ -203,6 +263,9 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   LoginRoute: LoginRoute,
   QuickAddRoute: QuickAddRoute,
+  JoinTokenRoute: JoinTokenRoute,
+  OnboardingHouseholdRoute: OnboardingHouseholdRoute,
+  SettingsHouseholdRoute: SettingsHouseholdRoute,
   ApiAuthVerifyRoute: ApiAuthVerifyRoute,
 }
 export const routeTree = rootRouteImport

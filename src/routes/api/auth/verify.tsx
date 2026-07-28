@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { verifyMagicLinkServerFn } from '../../../services/auth.api'
+import { resolvePostAuthDestination } from '../../../lib/post-auth-router'
 import styles from './verify.module.css'
 
 export const Route = createFileRoute('/api/auth/verify')({
@@ -10,27 +11,27 @@ export const Route = createFileRoute('/api/auth/verify')({
     quantity: search.quantity as string | undefined,
     category: search.category as string | undefined,
     store: search.store as string | undefined,
+    invite: search.invite as string | undefined,
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ deps: search }) => {
-    const { success } = await verifyMagicLinkServerFn({ data: search.token })
+    const result = await verifyMagicLinkServerFn({ data: search.token })
     
-    if (success) {
-      if (search.returnTo) {
-        // When deep-link params are present, open the add composer
-        const hasDeepLinkParams = search.name || search.quantity || search.category || search.store
-        throw redirect({ 
-          to: search.returnTo as any,
-          search: {
-            ...(hasDeepLinkParams ? { add: 'item' as const } : {}),
-            name: search.name,
-            quantity: search.quantity,
-            category: search.category,
-            store: search.store,
-          } as any
-        })
-      }
-      throw redirect({ to: '/' })
+    if (result.success) {
+      const destination = resolvePostAuthDestination({
+        returnTo: search.returnTo,
+        invite: search.invite,
+        name: search.name,
+        quantity: search.quantity,
+        category: search.category,
+        store: search.store,
+        hasHousehold: result.hasHousehold,
+      })
+      throw redirect({
+        to: destination.to as any,
+        search: destination.search as any,
+        replace: true,
+      })
     }
     
     return { error: 'Invalid or expired magic link.' }
@@ -44,9 +45,12 @@ function VerifyComponent() {
   return (
     <div className={styles.page}>
       <div className={styles.card}>
-        <h2 className={styles.title}>Oops! 🥚</h2>
+        <h2 className={styles.title}>This link has expired</h2>
         <p className={styles.message}>{error}</p>
-        <a href="/login" className={styles.link}>Try logging in again</a>
+        <p className={styles.hint}>
+          Sign-in links are valid for 15 minutes. Request a new one to continue.
+        </p>
+        <a href="/login" className={styles.actionButton}>Send a new link</a>
       </div>
     </div>
   )

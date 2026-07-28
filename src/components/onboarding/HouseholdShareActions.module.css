@@ -1,0 +1,99 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+.urlRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.urlChip {
+  flex: 1;
+  min-width: 0;
+  padding: 0.75rem 1rem;
+  border-radius: calc(var(--radius-base) * 1);
+  border: 1px solid var(--line);
+  background: var(--chip-bg);
+  color: var(--sea-ink);
+  font-size: 0.8125rem;
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-shadow:
+    inset 3px 3px 6px var(--clay-shadow-outer),
+    inset -2px -2px 4px var(--clay-shadow-inner-light);
+}
+
+.copyBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.625rem 1rem;
+  border-radius: calc(var(--radius-base) * 1);
+  border: 1px solid var(--line);
+  background: var(--surface-card);
+  color: var(--sea-ink);
+  font-weight: 700;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow:
+    6px 6px 12px var(--clay-shadow-outer),
+    inset 2px 2px 4px var(--clay-shadow-inner-light),
+    inset -2px -2px 4px var(--clay-shadow-inner-dark);
+  transition: transform 0.15s var(--ease-out-quint), color 0.15s ease;
+  min-height: 44px;
+}
+
+.copyBtn:hover {
+  transform: translateY(-1px);
+}
+
+.copyBtn:active {
+  transform: scale(0.96);
+}
+
+.copiedLabel {
+  color: var(--success);
+}
+
+.shareBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: calc(var(--radius-base) * 1.1);
+  border: 1px solid var(--line);
+  background: var(--lagoon);
+  color: white;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  box-shadow:
+    8px 8px 16px var(--clay-shadow-outer),
+    inset 3px 3px 6px var(--clay-shadow-inner-light),
+    inset -3px -3px 6px var(--clay-shadow-inner-dark);
+  transition: transform 0.15s var(--ease-out-quint), filter 0.15s ease;
+}
+
+.shareBtn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.shareBtn:active {
+  transform: scale(0.95);
+}
+
+@media (min-width: 768px) {
+  .urlChip {
+    font-size: 0.875rem;
+  }
+}
