@@ -184,11 +184,13 @@ export default function AddItemSheet({
 
         {/* Scrollable content: QuickAdd */}
         <div className={styles.scrollContent}>
-          <QuickAdd
-            variant="sheet"
-            limit={8}
-            onItemAdded={handleQuickAddItem}
-          />
+          {isOpen && (
+            <QuickAdd
+              variant="sheet"
+              limit={8}
+              onItemAdded={handleQuickAddItem}
+            />
+          )}
         </div>
 
         {/* Footer safe area */}

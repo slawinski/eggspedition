@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useState, useEffect, useMemo } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from '@tanstack/react-router'
 import { getGroceryItemsGroupedFn, updateGroceryItemFn, deleteGroceryItemFn, getStoresFn, getCategoriesFn } from '../services/grocery.api'
 import clay from '../styles/clay.module.css'
@@ -14,6 +14,7 @@ import EmptyState from './ui/EmptyState'
 import Skeleton from './ui/Skeleton'
 import ShoppingMode from './ShoppingMode'
 import StorePicker from './StorePicker'
+import ItemEditor from './ItemEditor'
 
 // ── Constants ─────────────────────────────────────────────────
 
@@ -50,6 +51,10 @@ export default function SmartView({ session, mode: initialMode, storeId: initial
   const [shoppingMode, setShoppingMode] = useState<'planning' | 'selecting-store' | 'shopping'>('planning')
   const [shoppingStoreId, setShoppingStoreId] = useState<string | 'all'>('all')
   const router = useRouter()
+  const queryClient = useQueryClient()
+
+  // ── Item editor state ─────────────────────────────────────
+  const [editingItem, setEditingItem] = useState<GroceryItem | null>(null)
 
   // Initialize from URL search params on mount
   useEffect(() => {
@@ -103,6 +108,18 @@ export default function SmartView({ session, mode: initialMode, storeId: initial
     queryFn: () => getStoresFn(),
     enabled: !!session?.householdId,
   })
+
+  // ── Active items for merge detection ──────────────────────
+  const activeItems = useMemo<GroceryItem[]>(() => {
+    if (!groupedData) return []
+    const items: GroceryItem[] = []
+    for (const group of Object.values(groupedData)) {
+      for (const item of (group as any).items ?? []) {
+        if (item.checked === 'false') items.push(item)
+      }
+    }
+    return items
+  }, [groupedData])
 
   // ── Complete / Restore mutation ────────────────────────────
 
@@ -162,8 +179,17 @@ export default function SmartView({ session, mode: initialMode, storeId: initial
     deleteMutation.mutate(item.id)
   }
 
-  const handleEdit = (_item: GroceryItem) => {
-    // placeholder for UX-005
+  const handleEdit = (item: GroceryItem) => {
+    setEditingItem(item)
+  }
+
+  const handleEditorClose = () => {
+    setEditingItem(null)
+  }
+
+  const handleEditorSaved = () => {
+    queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'] })
+    setEditingItem(null)
   }
 
   // ── Shopping mode: URL management ─────────────────────────
@@ -468,6 +494,20 @@ export default function SmartView({ session, mode: initialMode, storeId: initial
           ))
         )}
       </div>
+
+      {/* ── Item Editor (rendered as dialog outside the grid) ── */}
+      {editingItem && (
+        <ItemEditor
+          key={editingItem.id}
+          isOpen={editingItem !== null}
+          onClose={handleEditorClose}
+          item={editingItem}
+          categories={categories}
+          stores={stores}
+          activeItems={activeItems}
+          onSaved={handleEditorSaved}
+        />
+      )}
     </div>
   )
 }

@@ -45,7 +45,7 @@
 
 .title {
   margin: 0;
-  font-family: "Fraunces", Georgia, serif;
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--sea-ink);

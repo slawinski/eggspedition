@@ -24,11 +24,11 @@ function useHouseholdSignals() {
           const chunk = decoder.decode(value)
           if (chunk.includes('data:')) {
             // Invalidate all relevant grocery and log queries
-            queryClient.invalidateQueries({ queryKey: ['grocery-items'] })
-            queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'] })
-            queryClient.invalidateQueries({ queryKey: ['household-logs'] })
-            queryClient.invalidateQueries({ queryKey: ['quick-add-items'] })
-            queryClient.invalidateQueries({ queryKey: ['frequent-items'] })
+            queryClient.invalidateQueries({ queryKey: ['grocery-items'], exact: false })
+            queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'], exact: false })
+            queryClient.invalidateQueries({ queryKey: ['household-logs'], exact: false })
+            queryClient.invalidateQueries({ queryKey: ['quick-add-items'], exact: false })
+            queryClient.invalidateQueries({ queryKey: ['frequent-items'], exact: false })
           }
         }
       } catch (err) {

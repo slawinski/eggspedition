@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getHouseholdLogsFn, addGroceryItemFn } from '../services/grocery.api'
 import { useRouteContext, useNavigate } from '@tanstack/react-router'
@@ -148,43 +148,11 @@ export default function HouseholdActivityFeed() {
     queryKey: ['household-logs', session?.householdId],
     queryFn: () => getHouseholdLogsFn(),
     enabled: !!session?.householdId,
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
 
-  // Track newest log id to detect real-time additions
-  const latestLogIdRef = useRef<string | null>(null)
-  const [hasNewActivity, setHasNewActivity] = useState(false)
-  const isInitialLoad = useRef(true)
-
   const typedLogs = (logs ?? []) as HouseholdLog[]
-
-  // Detect new activity when logs update after initial load
-  useEffect(() => {
-    if (typedLogs.length === 0) return
-
-    const newest = typedLogs[0].id
-
-    if (isInitialLoad.current) {
-      // First load — just seed the ref, no pill
-      latestLogIdRef.current = newest
-      isInitialLoad.current = false
-      return
-    }
-
-    if (latestLogIdRef.current && latestLogIdRef.current !== newest) {
-      // Newer entries arrived (SSE / refetch)
-      setHasNewActivity(true)
-    }
-
-    latestLogIdRef.current = newest
-  }, [typedLogs])
-
-  function dismissNewActivity() {
-    setHasNewActivity(false)
-    // Persist the current latest so we only catch future waves
-    if (typedLogs.length > 0) {
-      latestLogIdRef.current = typedLogs[0].id
-    }
-  }
 
   // Restore mutation — re-add a deleted item by name
   const restoreMutation = useMutation({
@@ -250,19 +218,6 @@ export default function HouseholdActivityFeed() {
 
   return (
     <div className={styles.feedContainer}>
-      {/* New activity pill */}
-      {hasNewActivity && (
-        <button
-          type="button"
-          className={styles.newActivityPill}
-          onClick={dismissNewActivity}
-          aria-label="New activity available, tap to dismiss"
-        >
-          <span className={styles.newActivityPillDot} aria-hidden="true" />
-          <span className={styles.newActivityPillText}>New activity</span>
-        </button>
-      )}
-
       {groups.map((group) => (
         <section key={group.label} className={styles.dateGroup}>
           <h3 className={styles.dateGroupHeader}>{group.label}</h3>
