@@ -249,11 +249,12 @@ export default function SmartView({ session }: { session: Session | null }) {
 
   if (!groupedData) return null
 
-  // Filter empty groups only (keep checked items for restore)
+  // Filter out completed items and empty groups
   const visibleData = Object.entries(groupedData).reduce(
     (acc: Record<string, { items: GroceryItem[]; category?: { name: string }; store?: { name: string } }>, [id, group]: [string, any]) => {
-      if (group.items.length > 0) {
-        acc[id] = group
+      const activeItems = group.items.filter((i: GroceryItem) => i.checked === 'false')
+      if (activeItems.length > 0) {
+        acc[id] = { ...group, items: activeItems }
       }
       return acc
     },
