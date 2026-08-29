@@ -98,7 +98,8 @@ function groupByDate(logs: HouseholdLog[]): DateGroup[] {
     groups[label].push(log)
   }
 
-  // Respect insertion order: Today → Yesterday → rest (oldest to newest)
+  // Section order stays as-is: Today → Yesterday → remaining dates (API order).
+  // Entries within each section are sorted newest first ("just now" at top).
   return Object.entries(groups)
     .sort(([a], [b]) => {
       if (a === 'Today') return -1
@@ -107,7 +108,12 @@ function groupByDate(logs: HouseholdLog[]): DateGroup[] {
       if (b === 'Yesterday') return 1
       return 0
     })
-    .map(([label, entries]) => ({ label, entries: entries.reverse() }))
+    .map(([label, entries]) => ({
+      label,
+      entries: [...entries].sort(
+        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      ),
+    }))
 }
 
 function getActionIcon(action: ActivityAction): React.ReactNode {
