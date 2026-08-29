@@ -26,9 +26,12 @@
     0 -0.5rem 1.5rem var(--shadow-color);
 }
 
+/* NOTE: no backdrop-filter on ::backdrop — on iOS Safari, combining it with
+   the dialog's transform animation can prevent the dialog content from
+   painting (backdrop shows, sheet stays invisible). Slightly stronger dim
+   compensates for the missing blur. */
 .dialog::backdrop {
-  background: rgba(10, 24, 28, 0.34);
-  backdrop-filter: blur(3px);
+  background: rgba(10, 24, 28, 0.4);
 }
 
 /* Open animation */

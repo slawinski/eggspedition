@@ -629,6 +629,8 @@ export default function ItemEditor({
 
   // ── render ─────────────────────────────────────────────────
 
+  if (!isOpen) return null
+
   return (
     <dialog
       ref={dialogRef}
