@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1290 2796">
+  <!-- iOS launch splash: brand gradient + centred egg mark.
+       Composition mirrors the in-app splash overlay (__root.tsx) and the
+       body background so the handoff is seamless. -->
+
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e7f0e8"/>
+      <stop offset="44%" stop-color="#f3faf5"/>
+      <stop offset="100%" stop-color="#e7f3ec"/>
+    </linearGradient>
+
+    <radialGradient id="glowA" gradientUnits="userSpaceOnUse"
+                    cx="-103" cy="-280" r="620"
+                    gradientTransform="scale(1.774 1)">
+      <stop offset="0%" stop-color="rgba(79,184,178,0.36)"/>
+      <stop offset="100%" stop-color="rgba(79,184,178,0)"/>
+    </radialGradient>
+
+    <radialGradient id="glowB" gradientUnits="userSpaceOnUse"
+                    cx="1445" cy="-335" r="620"
+                    gradientTransform="scale(1.694 1)">
+      <stop offset="0%" stop-color="rgba(47,106,74,0.2)"/>
+      <stop offset="100%" stop-color="rgba(47,106,74,0)"/>
+    </radialGradient>
+
+    <radialGradient id="glowC" gradientUnits="userSpaceOnUse"
+                    cx="645" cy="3215" r="380"
+                    gradientTransform="scale(1.895 1)">
+      <stop offset="0%" stop-color="rgba(79,184,178,0.1)"/>
+      <stop offset="68%" stop-color="rgba(79,184,178,0)"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1290" height="2796" fill="url(#base)"/>
+  <rect width="1290" height="2796" fill="url(#glowA)"/>
+  <rect width="1290" height="2796" fill="url(#glowB)"/>
+  <rect width="1290" height="2796" fill="url(#glowC)"/>
+
+  <!-- Centred egg mark (from egg-mark.svg, scaled 1.5x) -->
+  <g transform="translate(645 1398) scale(1.5) translate(-256 -256)">
+    <path
+      d="
+        M 256 107
+        C 190 107, 136 180, 136 260
+        C 136 340, 188 405, 256 405
+        C 324 405, 376 340, 376 260
+        C 376 180, 322 107, 256 107
+        Z
+      "
+      fill="#ffffff"
+    />
+    <ellipse cx="215" cy="210" rx="42" ry="55" fill="rgba(255,255,255,0.3)" />
+  </g>
+</svg>

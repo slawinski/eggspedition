@@ -32,6 +32,55 @@ const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getIte
 
 const SW_REGISTER_SCRIPT = `(function(){var isDev=window.location.hostname.includes('localhost')||window.location.hostname.includes('127.0.0.1');if(isDev){navigator.serviceWorker.getRegistrations().then(function(regs){regs.forEach(function(r){r.unregister()})});return}if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(function(e){console.warn('SW registration failed:',e)})}})()`
 
+// Splash overlay — inlined in the SSR document so it paints before the
+// stylesheet loads. Composition mirrors the iOS launch image (public/splash-*.png)
+// for a seamless handoff: static launch screen → breathing egg → app.
+const SPLASH_CSS = `
+#app-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(1100px 620px at -8% -10%, rgba(79, 184, 178, 0.36), transparent 58%),
+    radial-gradient(1050px 620px at 112% -12%, rgba(47, 106, 74, 0.2), transparent 62%),
+    radial-gradient(720px 380px at 50% 115%, rgba(79, 184, 178, 0.1), transparent 68%),
+    linear-gradient(180deg, #e7f0e8 0%, #f3faf5 44%, #e7f3ec 100%);
+  transition: opacity 0.3s ease;
+}
+#app-splash.app-splash-exit {
+  opacity: 0;
+  pointer-events: none;
+}
+#app-splash .app-splash-egg {
+  width: clamp(120px, 34vw, 220px);
+  height: auto;
+  filter: drop-shadow(0 18px 32px rgba(30, 90, 72, 0.16));
+  animation:
+    app-splash-egg-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both,
+    app-splash-egg-breathe 2.8s ease-in-out 0.6s infinite alternate;
+}
+@keyframes app-splash-egg-in {
+  0%   { opacity: 0; transform: scale(0.88); }
+  60%  { opacity: 1; transform: scale(1.06); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes app-splash-egg-breathe {
+  from { transform: scale(1); }
+  to   { transform: scale(1.04); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #app-splash { transition: none; }
+  #app-splash .app-splash-egg { animation: none; }
+}
+`
+
+// Failsafe: hide the splash if React never mounts (e.g. a JS error).
+// Only toggles display — React can still unmount the node safely.
+const SPLASH_FAILSAFE_SCRIPT = `(function(){var el=document.getElementById('app-splash');if(el){setTimeout(function(){el.style.display='none'},4000)}})()`
+
 const rootSearchSchema = z.object({
   add: z.literal('item').optional().catch(undefined),
   name: z.string().optional().catch(undefined),
@@ -167,6 +216,52 @@ export const Route = createRootRouteWithContext<{
         sizes: '180x180',
         href: '/apple-touch-icon-v2.png',
       },
+      // iOS standalone launch screens (portrait iPhone sizes)
+      {
+        rel: 'apple-touch-startup-image',
+        media: 'screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)',
+        href: '/splash-640x1136.png',
+      },
+      {
+        rel: 'apple-touch-startup-image',
+        media: 'screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)',
+        href: '/splash-750x1334.png',
+      },
+      {
+        rel: 'apple-touch-startup-image',
+        media: 'screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)',
+        href: '/splash-828x1792.png',
+      },
+      {
+        rel: 'apple-touch-startup-image',
+        media: 'screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)',
+        href: '/splash-1125x2436.png',
+      },
+      {
+        rel: 'apple-touch-startup-image',
+        media: 'screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)',
+        href: '/splash-1170x2532.png',
+      },
+      {
+        rel: 'apple-touch-startup-image',
+        media: 'screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)',
+        href: '/splash-1179x2556.png',
+      },
+      {
+        rel: 'apple-touch-startup-image',
+        media: 'screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)',
+        href: '/splash-1242x2688.png',
+      },
+      {
+        rel: 'apple-touch-startup-image',
+        media: 'screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)',
+        href: '/splash-1284x2778.png',
+      },
+      {
+        rel: 'apple-touch-startup-image',
+        media: 'screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)',
+        href: '/splash-1290x2796.png',
+      },
     ],
   }),
   component: RootComponent,
@@ -262,6 +357,9 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const [splashExiting, setSplashExiting] = useState(false)
+  const [splashRemoved, setSplashRemoved] = useState(false)
+
   useEffect(() => {
     // Update theme-color meta after hydration (avoids SSR mismatch)
     const stored = localStorage.getItem('theme')
@@ -269,6 +367,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     const mode = (stored === 'light' || stored === 'dark' || stored === 'auto') ? stored : 'auto'
     const resolved = mode === 'auto' ? (prefersDark ? 'dark' : 'light') : mode
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', resolved === 'dark' ? '#111118' : '#e7f3ec')
+
+    // Let the splash breathe briefly, then fade it out and unmount it
+    const exitTimer = window.setTimeout(() => setSplashExiting(true), 350)
+    const removeTimer = window.setTimeout(() => setSplashRemoved(true), 700)
+    return () => {
+      window.clearTimeout(exitTimer)
+      window.clearTimeout(removeTimer)
+    }
   }, [])
 
   return (
@@ -276,9 +382,38 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: SW_REGISTER_SCRIPT }} />
+        <style dangerouslySetInnerHTML={{ __html: SPLASH_CSS }} />
         <HeadContent />
       </head>
       <body className={styles.body} suppressHydrationWarning>
+        {!splashRemoved && (
+          <div
+            id="app-splash"
+            aria-hidden="true"
+            className={splashExiting ? 'app-splash-exit' : undefined}
+          >
+            <svg
+              className="app-splash-egg"
+              viewBox="0 0 512 512"
+              xmlns="http://www.w3.org/2000/svg"
+              focusable="false"
+            >
+              <path
+                d="
+                  M 256 107
+                  C 190 107, 136 180, 136 260
+                  C 136 340, 188 405, 256 405
+                  C 324 405, 376 340, 376 260
+                  C 376 180, 322 107, 256 107
+                  Z
+                "
+                fill="#ffffff"
+              />
+              <ellipse cx="215" cy="210" rx="42" ry="55" fill="rgba(255,255,255,0.3)" />
+            </svg>
+            <script dangerouslySetInnerHTML={{ __html: SPLASH_FAILSAFE_SCRIPT }} />
+          </div>
+        )}
         <a href="#main-content" className="skip-link">Skip to content</a>
         {children}
         <Devtools />

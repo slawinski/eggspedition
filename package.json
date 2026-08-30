@@ -13,6 +13,7 @@
     "preview": "varlock run -- vite preview",
     "test": "varlock run -- vitest run",
     "icons": "bun run scripts/generate-icons.ts",
+    "splash": "bun run scripts/generate-splash.ts",
     "icons:check": "bun run scripts/check-icons.ts"
   },
   "dependencies": {
