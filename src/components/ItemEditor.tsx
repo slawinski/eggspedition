@@ -343,6 +343,18 @@ export default function ItemEditor({
     commandFactory: () => {
       return createDeleteCommand(item, session?.householdId ?? '')
     },
+    undoRollback: async (_id, command) => {
+      // Undo a delete by re-adding the item with its original data
+      const snap = command.previousSnapshot ?? command.itemSnapshot
+      await addGroceryItemFn({
+        data: {
+          name: snap.name,
+          quantity: snap.quantity,
+          categoryId: snap.categoryId ?? undefined,
+          storeId: snap.storeId ?? undefined,
+        },
+      })
+    },
     onSuccess: () => {
       onClose()
     },

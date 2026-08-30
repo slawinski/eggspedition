@@ -67,10 +67,11 @@ export interface OptimisticMutationConfig<TData, TVariables> {
   /**
    * Custom rollback function for the undo system.
    * When provided, `commandFactory` must also be present.
-   * Receives the mutation variables so the undo path can
+   * Receives the mutation variables and the queued command (whose
+   * snapshots hold the pre-mutation item state) so the undo path can
    * call the inverse server endpoint.
    */
-  undoRollback?: (vars: TVariables) => Promise<void>
+  undoRollback?: (vars: TVariables, command: ReversibleCommand) => Promise<void>
 }
 
 // ── hook ─────────────────────────────────────────────────────
@@ -189,7 +190,7 @@ export function useOptimisticMutation<TData, TVariables>(
         optimisticCommand = configRef.current.commandFactory(null as any, vars)
         if (optimisticCommand) {
           const rollbackFn = configRef.current.undoRollback
-            ? () => configRef.current.undoRollback!(vars)
+            ? () => configRef.current.undoRollback!(vars, optimisticCommand)
             : undefined
           undo.pushCommand(optimisticCommand, rollbackFn)
         }
@@ -207,7 +208,7 @@ export function useOptimisticMutation<TData, TVariables>(
       }
       // Remove the optimistic command from the undo queue since mutation failed
       if (ctx?.optimisticCommand) {
-        undo.undoCommand(ctx.optimisticCommand.id).catch(() => {})
+        undo.removeCommand(ctx.optimisticCommand.id)
       }
       configRef.current.onError?.(error, vars)
     },

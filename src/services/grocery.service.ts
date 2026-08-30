@@ -107,6 +107,8 @@ export async function addGroceryItem(
       userId,
       action: 'update',
       itemName: updated.name,
+      categoryId: updated.categoryId ?? null,
+      storeId: updated.storeId ?? null,
     })
 
     console.log(`[Service] Item quantity incremented, notifying household: ${householdId}`)
@@ -155,6 +157,8 @@ export async function addGroceryItem(
     userId,
     action: 'add',
     itemName: item.name,
+    categoryId: item.categoryId ?? null,
+    storeId: item.storeId ?? null,
   })
 
   console.log(`[Service] Item added, notifying household: ${householdId}`)
@@ -202,6 +206,8 @@ export async function updateGroceryItem(
     userId,
     action,
     itemName: updated.name,
+    categoryId: updated.categoryId ?? null,
+    storeId: updated.storeId ?? null,
   })
 
   console.log(`[Service] Item updated, notifying household: ${existing.householdId}`)
@@ -237,6 +243,8 @@ export async function deleteGroceryItem(itemId: string, householdId: string, use
     userId,
     action: 'remove',
     itemName: existing.name,
+    categoryId: existing.categoryId ?? null,
+    storeId: existing.storeId ?? null,
   })
 
   console.log(`[Service] Item removed, notifying household: ${existing.householdId}`)
@@ -287,6 +295,8 @@ export async function getHouseholdLogs(householdId: string) {
       id: householdLogs.id,
       action: householdLogs.action,
       itemName: householdLogs.itemName,
+      categoryId: householdLogs.categoryId,
+      storeId: householdLogs.storeId,
       timestamp: householdLogs.timestamp,
       userName: users.name,
       userEmail: users.email,

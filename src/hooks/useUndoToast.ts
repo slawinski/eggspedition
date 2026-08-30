@@ -38,7 +38,7 @@ export interface UndoToastState {
 // ── hook ─────────────────────────────────────────────────────
 
 export function useUndoToast(): UndoToastState {
-  const { activeUndo, pendingCompletions, undoCommand, undoAll } = useUndo()
+  const { activeUndo, pendingCompletions, undoCommand, undoAll, dismissActive } = useUndo()
   const [undoneMessage, setUndoneMessage] = useState<string | null>(null)
   const undoneTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -50,21 +50,33 @@ export function useUndoToast(): UndoToastState {
     setUndoneMessage(null)
   }, [])
 
-  const handleUndo = useCallback(() => {
+  const handleUndo = useCallback(async () => {
     const cmdId = activeUndo?.commandId
     if (!cmdId) return
+
+    let ok = false
 
     // Aggregate completions: undoAll, show "Undone"
     if (pendingCompletions > 1) {
       const undoneCount = pendingCompletions
-      undoAll('completeItem')
-      setUndoneMessage(`${undoneCount} items restored`)
+      ok = await undoAll('completeItem')
+      if (ok) {
+        setUndoneMessage(`${undoneCount} items restored`)
+      }
     } else {
       // Single undo or non-completion type
-      undoCommand(cmdId)
       const msg = activeUndo?.message ?? 'Undone'
-      setUndoneMessage(msg.replace(/ completed$/, '').replace(/ deleted$/, '').replace(/ added$/, '') + ' undone')
+      ok = await undoCommand(cmdId)
+      if (ok) {
+        setUndoneMessage(
+          msg.replace(/ completed$/, '').replace(/ deleted$/, '').replace(/ added$/, '') + ' undone',
+        )
+      }
     }
+
+    // Only show the confirmation when the rollback succeeded.
+    // On failure the original toast stays visible (retry/dismiss).
+    if (!ok) return
 
     // Clear undone message after 2 s
     if (undoneTimerRef.current) clearTimeout(undoneTimerRef.current)
@@ -75,7 +87,8 @@ export function useUndoToast(): UndoToastState {
 
   const handleDismiss = useCallback(() => {
     clearUndone()
-  }, [clearUndone])
+    dismissActive()
+  }, [clearUndone, dismissActive])
 
   // Cleanup timer on unmount
   useEffect(() => {

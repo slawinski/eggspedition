@@ -18,6 +18,8 @@ interface HouseholdLog {
   id: string
   action: ActivityAction
   itemName: string
+  categoryId: string | null
+  storeId: string | null
   timestamp: string
   userName: string | null
   userEmail: string | null
@@ -162,10 +164,17 @@ export default function HouseholdActivityFeed() {
 
   const typedLogs = (logs ?? []) as HouseholdLog[]
 
-  // Restore mutation — re-add a deleted item by name
+  // Restore mutation — re-add a deleted item with its original category/store
   const restoreMutation = useMutation({
     mutationFn: (log: HouseholdLog) =>
-      addGroceryItemFn({ data: { name: log.itemName, quantity: '1' } }),
+      addGroceryItemFn({
+        data: {
+          name: log.itemName,
+          quantity: '1',
+          categoryId: log.categoryId ?? undefined,
+          storeId: log.storeId ?? undefined,
+        },
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['grocery-items', session?.householdId] })
       queryClient.invalidateQueries({ queryKey: ['household-logs', session?.householdId] })

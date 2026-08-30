@@ -310,6 +310,9 @@ function UndoToastRenderer() {
         fontWeight: 600,
         color: 'var(--sea-ink)',
         border: '1px solid var(--line)',
+        // The ToastViewport container sets pointer-events: none so the empty
+        // area doesn't block the page — the toast must re-enable its own.
+        pointerEvents: 'auto',
       }}
     >
       <span>{toast.message}</span>

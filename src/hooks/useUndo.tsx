@@ -91,11 +91,21 @@ export interface UndoContext {
    *  rollback simply invalidates all relevant query keys. */
   pushCommand: (command: ReversibleCommand, rollback?: () => Promise<void>) => void
 
-  /** Execute undo for a specific command by id. */
-  undoCommand: (commandId: string) => Promise<void>
+  /** Execute undo for a specific command by id.
+   *  Resolves to `true` when the rollback succeeded. */
+  undoCommand: (commandId: string) => Promise<boolean>
 
-  /** Undo all recent commands of a given type (bulk undo for aggregation). */
-  undoAll: (type: CommandType) => Promise<void>
+  /** Undo all recent commands of a given type (bulk undo for aggregation).
+   *  Resolves to `true` when every rollback succeeded. */
+  undoAll: (type: CommandType) => Promise<boolean>
+
+  /** Dismiss the currently displayed toast without undoing (discards the
+   *  undo window for its command). */
+  dismissActive: () => void
+
+  /** Silently drop a command from the queue without executing its rollback
+   *  (used when the original mutation failed on the server). */
+  removeCommand: (commandId: string) => void
 
   /** Current active undoable command for toast display. */
   activeUndo: {
@@ -340,23 +350,25 @@ export function UndoProvider({
   // ── undoCommand ───────────────────────────────────────────
 
   const undoCommand = useCallback(
-    async (commandId: string) => {
+    async (commandId: string): Promise<boolean> => {
       const idx = queueRef.current.findIndex(
         (qc) => qc.command.id === commandId,
       )
-      if (idx === -1) return
+      if (idx === -1) return false
 
       const qc = queueRef.current[idx]
-      if (qc.undone) return
+      if (qc.undone) return false
 
       qc.undone = true
       if (qc.timerId) clearTimeout(qc.timerId)
 
+      let succeeded = false
       try {
         await qc.rollback()
 
         // Restore each cache key's previous data
         for (const patch of qc.command.optimisticCachePatches) {
+          if (patch.data === undefined) continue // nothing to restore — refetch below
           applyCachePatch(queryClient, patch)
         }
 
@@ -366,9 +378,19 @@ export function UndoProvider({
         )
 
         onUndoComplete?.(qc.command.itemSnapshot.name)
+        succeeded = true
       } catch {
         // Rollback failed — keep in queue for manual retry
         qc.undone = false
+      }
+
+      // Reconcile caches with the server after a successful rollback
+      if (succeeded) {
+        await Promise.all(
+          qc.command.optimisticCachePatches.map((patch) =>
+            queryClient.invalidateQueries({ queryKey: patch.queryKey }),
+          ),
+        ).catch(() => {})
       }
 
       // Update toast state
@@ -431,6 +453,8 @@ export function UndoProvider({
       } else {
         setActiveUndo(null)
       }
+
+      return succeeded
     },
     [stopTimer, startTimer, queryClient, onUndoComplete],
   )
@@ -438,11 +462,11 @@ export function UndoProvider({
   // ── undoAll ───────────────────────────────────────────────
 
   const undoAll = useCallback(
-    async (type: CommandType) => {
+    async (type: CommandType): Promise<boolean> => {
       const targets = queueRef.current.filter(
         (qc) => qc.command.type === type && !qc.undone,
       )
-      if (targets.length === 0) return
+      if (targets.length === 0) return false
 
       // Mark all as undone first to prevent double-undo
       targets.forEach((qc) => {
@@ -496,9 +520,98 @@ export function UndoProvider({
         })
         startTimer(next.command.id, next.command.expiryTimestamp)
       }
+
+      return results.every((r) => r.status === 'fulfilled')
     },
     [stopTimer, startTimer, queryClient],
   )
+
+  // ── removeCommand ──────────────────────────────────────────
+
+  const removeCommand = useCallback(
+    (commandId: string) => {
+      queueRef.current = queueRef.current.filter(
+        (qc) => qc.command.id !== commandId,
+      )
+
+      setPendingCompletions(
+        queueRef.current.filter(
+          (qc) => qc.command.type === 'completeItem' && !qc.undone,
+        ).length,
+      )
+
+      // If the removed command was the active toast, promote the next one
+      if (activeUndo?.commandId !== commandId) return
+
+      stopTimer()
+      const next = queueRef.current.find(
+        (qc) => !qc.undone && qc.command.expiryTimestamp > Date.now(),
+      )
+      if (next) {
+        setActiveUndo({
+          message: next.command.userMessage,
+          remainingMs: Math.max(0, next.command.expiryTimestamp - Date.now()),
+          commandId: next.command.id,
+        })
+        startTimer(next.command.id, next.command.expiryTimestamp)
+      } else {
+        setActiveUndo(null)
+      }
+    },
+    [activeUndo, stopTimer, startTimer],
+  )
+
+  // ── dismissActive ──────────────────────────────────────────
+
+  const dismissActive = useCallback(() => {
+    stopTimer()
+
+    const activeId = activeUndo?.commandId
+    const activeCmd = queueRef.current.find(
+      (qc) => qc.command.id === activeId,
+    )
+
+    if (!activeCmd) {
+      setActiveUndo(null)
+      return
+    }
+
+    // Drop the active command (and, for aggregated completions, all
+    // pending completions) without undoing.
+    queueRef.current = queueRef.current.filter((qc) => {
+      const isTarget =
+        qc.command.id === activeId ||
+        (activeCmd.command.type === 'completeItem' &&
+          qc.command.type === 'completeItem')
+      if (isTarget && !qc.undone) {
+        qc.command.expiryTimestamp = 0
+        onCommandExpire?.(qc.command)
+        return false
+      }
+      return true
+    })
+
+    setPendingCompletions(
+      queueRef.current.filter(
+        (qc) => qc.command.type === 'completeItem' && !qc.undone,
+      ).length,
+    )
+
+    // Promote the next queued command, if any
+    const next = queueRef.current.find(
+      (qc) => !qc.undone && qc.command.expiryTimestamp > Date.now(),
+    )
+    if (next) {
+      setActiveUndo({
+        message: next.command.userMessage,
+        remainingMs: Math.max(0, next.command.expiryTimestamp - Date.now()),
+        commandId: next.command.id,
+      })
+      startTimer(next.command.id, next.command.expiryTimestamp)
+    } else {
+      setActiveUndo(null)
+    }
+  }, [activeUndo, stopTimer, startTimer, onCommandExpire])
 
   // ── public API (stable references) ────────────────────────
 
@@ -507,6 +620,8 @@ export function UndoProvider({
       pushCommand(command, rollback),
     undoCommand,
     undoAll,
+    dismissActive,
+    removeCommand,
     activeUndo,
     pendingCompletions,
   }

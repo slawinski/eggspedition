@@ -73,6 +73,8 @@ export const householdLogs = pgTable('household_logs', {
   userId: uuid('user_id').notNull().references(() => users.id),
   action: text('action').notNull(), // 'add', 'remove', 'check', 'uncheck'
   itemName: text('item_name').notNull(),
+  categoryId: uuid('category_id').references(() => categories.id),
+  storeId: uuid('store_id').references(() => stores.id),
   timestamp: timestamp('timestamp').notNull().defaultNow(),
 })
 

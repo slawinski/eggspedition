@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { getGroceryItemsGroupedFn, updateGroceryItemFn, deleteGroceryItemFn, getStoresFn, getCategoriesFn } from '../services/grocery.api'
+import { getGroceryItemsGroupedFn, updateGroceryItemFn, deleteGroceryItemFn, addGroceryItemFn, getStoresFn, getCategoriesFn } from '../services/grocery.api'
 import clay from '../styles/clay.module.css'
 import styles from './SmartView.module.css'
 import { Tag, Store as StoreIcon } from 'lucide-react'
@@ -179,9 +179,17 @@ export default function SmartView({ session }: { session: Session | null }) {
       if (!item) return null
       return createDeleteCommand(item, session?.householdId ?? '')
     },
-    undoRollback: async (id) => {
-      // Undo a delete by restoring the item (unchecking it)
-      await updateGroceryItemFn({ data: { id: id as string, data: { checked: 'false' } } })
+    undoRollback: async (_id, command) => {
+      // Undo a delete by re-adding the item with its original data
+      const snap = command.previousSnapshot ?? command.itemSnapshot
+      await addGroceryItemFn({
+        data: {
+          name: snap.name,
+          quantity: snap.quantity,
+          categoryId: snap.categoryId ?? undefined,
+          storeId: snap.storeId ?? undefined,
+        },
+      })
     },
   })
 
