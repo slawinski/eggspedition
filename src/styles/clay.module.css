@@ -18,9 +18,11 @@
   box-shadow: 10px 10px 20px var(--clay-shadow-outer);
 }
 
-.card:hover {
-  will-change: transform, box-shadow;
-}
+/* NOTE: no will-change on :hover — it promoted every hovered card to its
+   own stacking context, which trapped z-indexed children (e.g. the item
+   overflow menu) beneath later sibling cards. There is no hover transform
+   to optimise anyway. */
+
 
 .button {
   background: var(--lagoon);

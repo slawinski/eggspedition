@@ -196,6 +196,14 @@
   width: 100%;
 }
 
+/* Keep the card containing an open item menu above sibling cards.
+   The menu is absolutely positioned; without this its z-index can be
+   trapped by an ancestor stacking context. */
+.groupCard:has(:global(.ItemRow-module_menuDropdown)) {
+  position: relative;
+  z-index: 10;
+}
+
 @media (min-width: 768px) {
   .groupCard {
     gap: 1rem;
