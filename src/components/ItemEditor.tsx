@@ -264,7 +264,8 @@ export default function ItemEditor({
   function emptyCachePatches(): ReversibleCommand['optimisticCachePatches'] {
     const keys = [
       ['grocery-items', session?.householdId ?? ''],
-      ['grocery-items-grouped', session?.householdId ?? ''],
+      // Bare grouped key — prefix-matches both dimension variants
+      ['grocery-items-grouped'],
       ['household-logs', session?.householdId ?? ''],
       ['frequent-items', session?.householdId ?? ''],
     ]
@@ -284,7 +285,7 @@ export default function ItemEditor({
     mutationFn: (vars) => updateGroceryItemFn({ data: vars }),
     invalidationKeys: [
       ['grocery-items', session?.householdId ?? ''],
-      ['grocery-items-grouped', session?.householdId ?? ''],
+      ['grocery-items-grouped'],
       ['household-logs', session?.householdId ?? ''],
       ['frequent-items', session?.householdId ?? ''],
     ],
@@ -335,7 +336,7 @@ export default function ItemEditor({
     mutationFn: (id) => deleteGroceryItemFn({ data: id }),
     invalidationKeys: [
       ['grocery-items', session?.householdId ?? ''],
-      ['grocery-items-grouped', session?.householdId ?? ''],
+      ['grocery-items-grouped'],
       ['household-logs', session?.householdId ?? ''],
       ['frequent-items', session?.householdId ?? ''],
       ['quick-add-items', session?.householdId ?? ''],
@@ -463,7 +464,7 @@ export default function ItemEditor({
       // 3. Invalidate all caches
       const keys = [
         ['grocery-items', session?.householdId ?? ''],
-        ['grocery-items-grouped', session?.householdId ?? ''],
+        ['grocery-items-grouped'],
         ['household-logs', session?.householdId ?? ''],
         ['frequent-items', session?.householdId ?? ''],
         ['quick-add-items', session?.householdId ?? ''],

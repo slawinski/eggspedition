@@ -1,13 +1,27 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  DndContext,
+  DragOverlay,
+  TouchSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  useDraggable,
+  closestCorners,
+  type DragStartEvent,
+  type DragEndEvent,
+} from '@dnd-kit/core'
 import { getGroceryItemsGroupedFn, updateGroceryItemFn, deleteGroceryItemFn, addGroceryItemFn, getStoresFn, getCategoriesFn } from '../services/grocery.api'
-import clay from '../styles/clay.module.css'
 import styles from './SmartView.module.css'
-import { Tag, Store as StoreIcon } from 'lucide-react'
+import rowStyles from './ItemRow.module.css'
+import { Tag, Store as StoreIcon, Circle, MoreHorizontal } from 'lucide-react'
 import type { GroceryItem, Session } from '../lib/schemas'
 import { useOptimisticMutation } from '../hooks/useOptimisticMutation'
 import { createCompleteCommand, createRestoreCommand, createDeleteCommand } from '../lib/mutation-commands'
+import { moveItemBetweenGroups, updateItemInList, type ItemMoveVars } from '../lib/grouped-cache'
 import ItemRow from './ItemRow'
+import GroupCard from './GroupCard'
 import InlineError from './ui/InlineError'
 import EmptyState from './ui/EmptyState'
 import Skeleton from './ui/Skeleton'
@@ -74,9 +88,13 @@ export default function SmartView({ session }: { session: Session | null }) {
       updateGroceryItemFn({ data: { id: vars.id, data: { checked: vars.checked } } }),
     optimisticUpdate: (vars) => {
       const hhId = session?.householdId ?? ''
-      return [
+      const patches: {
+        queryKey: string[]
+        previousData: undefined
+        patch: (prev: unknown) => unknown
+      }[] = [
         {
-          queryKey: ['grocery-items', hhId] as string[],
+          queryKey: ['grocery-items', hhId],
           previousData: undefined,
           patch: (_prev: unknown) => {
             // Transform the cache optimistically: update the item's checked state
@@ -86,8 +104,13 @@ export default function SmartView({ session }: { session: Session | null }) {
             )
           },
         },
-        {
-          queryKey: ['grocery-items-grouped', hhId] as string[],
+      ]
+
+      // The grouped query key is ['grocery-items-grouped', groupBy, hhId] —
+      // patch both dimension variants (at most one is cached).
+      for (const dimension of ['category', 'store'] as const) {
+        patches.push({
+          queryKey: ['grocery-items-grouped', dimension, hhId],
           previousData: undefined,
           patch: (_prev: unknown) => {
             if (!_prev || typeof _prev !== 'object' || _prev === null) return _prev
@@ -104,12 +127,14 @@ export default function SmartView({ session }: { session: Session | null }) {
             }
             return result
           },
-        },
-      ]
+        })
+      }
+
+      return patches
     },
     invalidationKeys: [
       ['grocery-items', session?.householdId ?? ''],
-      ['grocery-items-grouped', session?.householdId ?? ''],
+      ['grocery-items-grouped'],
       ['household-logs', session?.householdId ?? ''],
       ['frequent-items', session?.householdId ?? ''],
     ],
@@ -138,9 +163,13 @@ export default function SmartView({ session }: { session: Session | null }) {
     mutationFn: (id: string) => deleteGroceryItemFn({ data: id }),
     optimisticUpdate: (id: string) => {
       const hhId = session?.householdId ?? ''
-      return [
+      const patches: {
+        queryKey: string[]
+        previousData: undefined
+        patch: (prev: unknown) => unknown
+      }[] = [
         {
-          queryKey: ['grocery-items', hhId] as string[],
+          queryKey: ['grocery-items', hhId],
           previousData: undefined,
           patch: (_prev: unknown) => {
             // Optimistically remove the item from the cache
@@ -148,8 +177,13 @@ export default function SmartView({ session }: { session: Session | null }) {
             return (_prev as any[]).filter((i: any) => i.id !== id)
           },
         },
-        {
-          queryKey: ['grocery-items-grouped', hhId] as string[],
+      ]
+
+      // The grouped query key is ['grocery-items-grouped', groupBy, hhId] —
+      // patch both dimension variants (at most one is cached).
+      for (const dimension of ['category', 'store'] as const) {
+        patches.push({
+          queryKey: ['grocery-items-grouped', dimension, hhId],
           previousData: undefined,
           patch: (_prev: unknown) => {
             if (!_prev || typeof _prev !== 'object' || _prev === null) return _prev
@@ -164,12 +198,14 @@ export default function SmartView({ session }: { session: Session | null }) {
             }
             return result
           },
-        },
-      ]
+        })
+      }
+
+      return patches
     },
     invalidationKeys: [
       ['grocery-items', session?.householdId ?? ''],
-      ['grocery-items-grouped', session?.householdId ?? ''],
+      ['grocery-items-grouped'],
       ['household-logs', session?.householdId ?? ''],
       ['frequent-items', session?.householdId ?? ''],
       ['quick-add-items', session?.householdId ?? ''],
@@ -192,6 +228,109 @@ export default function SmartView({ session }: { session: Session | null }) {
       })
     },
   })
+
+  // ── Move mutation (drag & drop between buckets) ─────────────
+
+  const moveMutation = useOptimisticMutation<unknown, ItemMoveVars>({
+    mutationFn: (vars) =>
+      updateGroceryItemFn({
+        data: { id: vars.id, data: { ...vars.data } },
+      }),
+    optimisticUpdate: (vars) => {
+      const hhId = session?.householdId ?? ''
+      return [
+        {
+          queryKey: ['grocery-items-grouped', groupBy, hhId] as string[],
+          previousData: undefined,
+          patch: (prev: unknown) => moveItemBetweenGroups(prev, vars),
+        },
+        {
+          queryKey: ['grocery-items', hhId] as string[],
+          previousData: undefined,
+          patch: (prev: unknown) => updateItemInList(prev, vars),
+        },
+      ]
+    },
+    invalidationKeys: [
+      ['grocery-items', session?.householdId ?? ''],
+      ['grocery-items-grouped'],
+      ['household-logs', session?.householdId ?? ''],
+    ],
+  })
+
+  // ── Drag & drop sensors / state ─────────────────────────────
+
+  // TouchSensor owns touch input (long-press; touch events can preventDefault,
+  // the only reliable scroll-prevention on iOS Safari). PointerSensor owns
+  // mouse/pen — gated at the listener level below so it never activates from
+  // touch, avoiding double-activation with the TouchSensor.
+  const sensors = useSensors(
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 500, tolerance: 8 },
+    }),
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+  )
+
+  const [activeDragItem, setActiveDragItem] = useState<GroceryItem | null>(null)
+  const [justMovedId, setJustMovedId] = useState<string | null>(null)
+  const justMovedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Snap-back animation for cancelled drops; skipped after a successful move
+  const [dropAnimation, setDropAnimation] = useState<{ duration: number; easing: string } | null>({
+    duration: 220,
+    easing: 'ease',
+  })
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const item = event.active.data.current?.item as GroceryItem | undefined
+    if (!item) return
+    setActiveDragItem(item)
+    setDropAnimation({ duration: 220, easing: 'ease' })
+    // Haptic confirmation on pickup (Android; no-op elsewhere)
+    navigator.vibrate?.(12)
+  }
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const item = event.active.data.current?.item as GroceryItem | undefined
+    setActiveDragItem(null)
+
+    if (!item) return
+    const targetKey = (event.over?.data.current as { groupId?: string } | undefined)?.groupId
+    if (!targetKey) return
+
+    const currentKey =
+      (groupBy === 'category' ? item.categoryId : item.storeId) || 'unassigned'
+    if (targetKey === currentKey) return
+
+    const newValue = targetKey === 'unassigned' ? null : targetKey
+    moveMutation.mutate({
+      id: item.id,
+      data:
+        groupBy === 'category'
+          ? { categoryId: newValue }
+          : { storeId: newValue },
+    })
+
+    // The item now lives in another bucket — no return animation
+    setDropAnimation(null)
+
+    // Squash-and-stretch settle animation on the row in its new bucket
+    setJustMovedId(item.id)
+    if (justMovedTimerRef.current) clearTimeout(justMovedTimerRef.current)
+    justMovedTimerRef.current = setTimeout(() => setJustMovedId(null), 400)
+  }
+
+  const handleDragCancel = () => {
+    setActiveDragItem(null)
+    setDropAnimation({ duration: 220, easing: 'ease' })
+  }
+
+  useEffect(() => {
+    return () => {
+      if (justMovedTimerRef.current) clearTimeout(justMovedTimerRef.current)
+    }
+  }, [])
 
   // ── Handlers ───────────────────────────────────────────────
 
@@ -295,6 +434,13 @@ export default function SmartView({ session }: { session: Session | null }) {
           variant="banner"
         />
       )}
+      {moveMutation.isError && moveMutation.error instanceof Error && (
+        <InlineError
+          message="Couldn't move item."
+          onRetry={() => moveMutation.variables && moveMutation.mutate(moveMutation.variables as ItemMoveVars)}
+          variant="banner"
+        />
+      )}
 
       {/* ── Group-by toggle ── */}
       <div className={styles.toggleWrapper}>
@@ -319,35 +465,40 @@ export default function SmartView({ session }: { session: Session | null }) {
       </div>
 
       {/* ── Masonry grid ── */}
-      <div className={styles.masonryGrid}>
-        {allEntries.length === 0 ? (
-          <EmptyState
-            title="Your list is clear!"
-            body="Add some items from the Quick Add bar below to get started."
-          />
-        ) : (
-          columnData.map((columnEntries, colIdx) => (
-            <div key={`col-${colIdx}`} className={styles.masonryColumn}>
-              {columnEntries.map(([id, group]: [string, any]) => {
-                const label =
-                  groupBy === 'category'
-                    ? group.category?.name || 'Uncategorized'
-                    : group.store?.name || 'Any Store'
-                const Icon = groupBy === 'category' ? Tag : StoreIcon
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
+      >
+        <div className={styles.masonryGrid}>
+          {allEntries.length === 0 ? (
+            <EmptyState
+              title="Your list is clear!"
+              body="Add some items from the Quick Add bar below to get started."
+            />
+          ) : (
+            columnData.map((columnEntries, colIdx) => (
+              <div key={`col-${colIdx}`} className={styles.masonryColumn}>
+                {columnEntries.map(([id, group]: [string, any]) => {
+                  const label =
+                    groupBy === 'category'
+                      ? group.category?.name || 'Uncategorized'
+                      : group.store?.name || 'Any Store'
+                  const Icon = groupBy === 'category' ? Tag : StoreIcon
 
-                return (
-                  <div key={id} className={`${clay.card} ${styles.groupCard}`}>
-                    <h3 className={styles.groupHeader}>
-                      <div
-                        className={`${styles.groupIconWrapper} ${groupBy === 'category' ? styles.groupIconWrapperCategory : styles.groupIconWrapperStore}`}
-                      >
-                        <Icon className={styles.groupIcon} />
-                      </div>
-                      <span className={styles.groupHeaderLabel}>{label}</span>
-                    </h3>
-                    <div className={styles.itemList}>
+                  return (
+                    <GroupCard
+                      key={id}
+                      groupId={id}
+                      label={label}
+                      groupBy={groupBy}
+                      icon={<Icon className={styles.groupIcon} />}
+                      dragActive={activeDragItem !== null}
+                    >
                       {group.items.map((item: GroceryItem) => (
-                        <ItemRow
+                        <DraggableItemRow
                           key={item.id}
                           item={item}
                           groupBy={groupBy}
@@ -356,16 +507,28 @@ export default function SmartView({ session }: { session: Session | null }) {
                           onComplete={handleComplete}
                           onDelete={handleDelete}
                           onEdit={handleEdit}
+                          justMoved={justMovedId === item.id}
                         />
                       ))}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          ))
-        )}
-      </div>
+                    </GroupCard>
+                  )
+                })}
+              </div>
+            ))
+          )}
+        </div>
+
+        <DragOverlay dropAnimation={dropAnimation}>
+          {activeDragItem && (
+            <ItemDragPreview
+              item={activeDragItem}
+              groupBy={groupBy}
+              stores={stores}
+              categories={categories}
+            />
+          )}
+        </DragOverlay>
+      </DndContext>
 
       {/* ── Item Editor (rendered as dialog outside the grid) ── */}
       {editingItem && (
@@ -380,6 +543,107 @@ export default function SmartView({ session }: { session: Session | null }) {
           onSaved={handleEditorSaved}
         />
       )}
+    </div>
+  )
+}
+
+// ── Draggable wrapper + drag preview ─────────────────────────
+
+interface RowDragProps {
+  item: GroceryItem
+  groupBy: 'category' | 'store'
+  stores?: any[]
+  categories?: any[]
+  onComplete: (item: GroceryItem) => void
+  onDelete: (item: GroceryItem) => void
+  onEdit: (item: GroceryItem) => void
+  justMoved?: boolean
+}
+
+function DraggableItemRow(props: RowDragProps) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: props.item.id,
+    data: { item: props.item },
+    // No KeyboardSensor is registered, so the row shouldn't present itself
+    // as a focusable draggable button (it also nests real buttons inside).
+    attributes: {
+      role: undefined,
+      tabIndex: -1,
+      roleDescription: undefined,
+    },
+  })
+
+  // Touch input is owned by the TouchSensor — keep the PointerSensor's
+  // onPointerDown from ever activating on touch (it would double-activate
+  // and its preventDefault can't stop scrolling on iOS Safari).
+  const gatedListeners = useMemo(() => {
+    const gated: Record<string, unknown> = {}
+    for (const [key, handler] of Object.entries(listeners ?? {})) {
+      if (key === 'onPointerDown') {
+        gated[key] = (e: React.PointerEvent) => {
+          if (e.pointerType === 'touch') return
+          ;(handler as (e: React.PointerEvent) => void)(e)
+        }
+      } else {
+        gated[key] = handler
+      }
+    }
+    return gated
+  }, [listeners])
+
+  return (
+    <ItemRow
+      {...props}
+      dragProps={{ ref: setNodeRef, ...attributes, ...gatedListeners }}
+      dimmed={isDragging}
+    />
+  )
+}
+
+function ItemDragPreview({
+  item,
+  groupBy,
+  stores,
+  categories,
+}: {
+  item: GroceryItem
+  groupBy: 'category' | 'store'
+  stores?: any[]
+  categories?: any[]
+}) {
+  const hasQuantity = item.quantity !== '1'
+  const subLabel =
+    groupBy === 'category' && item.storeId
+      ? stores?.find((s: any) => s.id === item.storeId)?.name
+      : groupBy === 'store' && item.categoryId
+        ? categories?.find((c: any) => c.id === item.categoryId)?.name
+        : null
+
+  return (
+    <div className={`${rowStyles.row} ${rowStyles.dragPreview}`} aria-hidden="true">
+      <span className={rowStyles.checkbox}>
+        <Circle className={rowStyles.checkIcon} />
+      </span>
+      <span className={`${rowStyles.body}`}>
+        <span className={rowStyles.name}>{item.name}</span>
+        <span className={rowStyles.metaRow}>
+          {hasQuantity && (
+            <span className={rowStyles.quantityBadge}>x{item.quantity}</span>
+          )}
+          {subLabel && (
+            <span
+              className={`${rowStyles.subTag} ${
+                groupBy === 'category' ? rowStyles.subTagStore : rowStyles.subTagCategory
+              }`}
+            >
+              {subLabel}
+            </span>
+          )}
+        </span>
+      </span>
+      <span className={rowStyles.overflowButton}>
+        <MoreHorizontal className={rowStyles.overflowIcon} />
+      </span>
     </div>
   )
 }

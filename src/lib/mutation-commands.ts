@@ -20,13 +20,24 @@ const QUERY_KEYS_TO_INVALIDATE = [
   ['quick-add-items'],
 ] as const
 
+/** Invalidation keys scoped to a household. The grouped key stays bare so
+ *  its prefix matches both dimension variants of the real query key:
+ *  ['grocery-items-grouped', 'category'|'store', householdId]. */
+function invalidatedKeys(householdId: string): string[][] {
+  return QUERY_KEYS_TO_INVALIDATE.map((partialKey) =>
+    partialKey[0] === 'grocery-items-grouped'
+      ? [...partialKey]
+      : [...partialKey, householdId],
+  )
+}
+
 /** Build cache patches that simply nil out the previous data for each key.
  *  The undo path restores by invalidating, not by replaying patches. */
 function emptyCachePatches(
   householdId: string,
 ): ReversibleCommand['optimisticCachePatches'] {
-  return QUERY_KEYS_TO_INVALIDATE.map((partialKey) => ({
-    queryKey: [...partialKey, householdId],
+  return invalidatedKeys(householdId).map((queryKey) => ({
+    queryKey,
     operation: 'set' as const,
     data: undefined,
   }))
@@ -42,11 +53,10 @@ export function buildCachePatches(
   /** Map of queryKey serialised → previous cache data */
   previousData: Map<string, unknown>,
 ): ReversibleCommand['optimisticCachePatches'] {
-  return QUERY_KEYS_TO_INVALIDATE.map((partialKey) => {
-    const fullKey = [...partialKey, householdId]
-    const key = JSON.stringify(fullKey)
+  return invalidatedKeys(householdId).map((queryKey) => {
+    const key = JSON.stringify(queryKey)
     return {
-      queryKey: fullKey,
+      queryKey,
       operation: 'set' as const,
       data: previousData.get(key),
     }
@@ -55,6 +65,15 @@ export function buildCachePatches(
 
 // ── Real cache patch helpers (for optimisticUpdate callbacks) ─
 
+/** The grouped query key is ['grocery-items-grouped', 'category'|'store', hhId]
+ *  — emit one patch per dimension so the undo path hits the real key. */
+function groupedPatchKeys(householdId: string): string[][] {
+  return [
+    ['grocery-items-grouped', 'category', householdId],
+    ['grocery-items-grouped', 'store', householdId],
+  ]
+}
+
 export function patchCompleteInCache(
   item: GroceryItem,
   householdId: string,
@@ -62,7 +81,11 @@ export function patchCompleteInCache(
   const itemId = item.id
   return [
     { queryKey: ['grocery-items', householdId], operation: 'update' as const, data: { id: itemId, checked: 'true' as const } },
-    { queryKey: ['grocery-items-grouped', householdId], operation: 'update' as const, data: { id: itemId, checked: 'true' as const } },
+    ...groupedPatchKeys(householdId).map((queryKey) => ({
+      queryKey,
+      operation: 'update' as const,
+      data: { id: itemId, checked: 'true' as const },
+    })),
   ]
 }
 
@@ -72,7 +95,11 @@ export function patchDeleteFromCache(
 ): CachePatch[] {
   return [
     { queryKey: ['grocery-items', householdId], operation: 'remove' as const, data: { id: item.id } },
-    { queryKey: ['grocery-items-grouped', householdId], operation: 'remove' as const, data: { id: item.id } },
+    ...groupedPatchKeys(householdId).map((queryKey) => ({
+      queryKey,
+      operation: 'remove' as const,
+      data: { id: item.id },
+    })),
   ]
 }
 
@@ -83,7 +110,11 @@ export function patchRestoreInCache(
   const itemId = item.id
   return [
     { queryKey: ['grocery-items', householdId], operation: 'update' as const, data: { id: itemId, checked: 'false' as const } },
-    { queryKey: ['grocery-items-grouped', householdId], operation: 'update' as const, data: { id: itemId, checked: 'false' as const } },
+    ...groupedPatchKeys(householdId).map((queryKey) => ({
+      queryKey,
+      operation: 'update' as const,
+      data: { id: itemId, checked: 'false' as const },
+    })),
   ]
 }
 

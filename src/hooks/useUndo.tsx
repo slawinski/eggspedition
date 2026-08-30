@@ -267,7 +267,7 @@ export function UndoProvider({
             queryKey: ['grocery-items', command.householdId],
           })
           await queryClient.invalidateQueries({
-            queryKey: ['grocery-items-grouped', command.householdId],
+            queryKey: ['grocery-items-grouped'],
           })
           await queryClient.invalidateQueries({
             queryKey: ['household-logs', command.householdId],

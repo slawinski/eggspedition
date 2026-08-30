@@ -11,6 +11,15 @@ interface ItemRowProps {
   onComplete: (item: GroceryItem) => void
   onDelete: (item: GroceryItem) => void
   onEdit: (item: GroceryItem) => void
+  /** dnd-kit props spread onto the row container (makes the row draggable). */
+  dragProps?: {
+    ref?: (node: HTMLDivElement | null) => void
+    [key: string]: unknown
+  }
+  /** The row is the source of an active drag (visual dim). */
+  dimmed?: boolean
+  /** The item was just dropped into this bucket (settle animation). */
+  justMoved?: boolean
 }
 
 export default function ItemRow({
@@ -21,7 +30,12 @@ export default function ItemRow({
   onComplete,
   onDelete,
   onEdit,
+  dragProps,
+  dimmed = false,
+  justMoved = false,
 }: ItemRowProps) {
+  const { ref: dragRef, ...dragRest } = dragProps ?? {}
+
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -65,12 +79,18 @@ export default function ItemRow({
         : null
 
   return (
-    <div className={`${styles.row} ${isChecked ? styles.rowChecked : ''}`}>
-      {/* ── Checkbox area (44×44 minimum target) ── */}
+    <div
+      ref={dragRef}
+      {...dragRest}
+      className={`${styles.row} ${isChecked ? styles.rowChecked : ''} ${dimmed ? styles.rowDimmed : ''} ${justMoved ? styles.rowJustMoved : ''}`}
+    >
+      {/* ── Checkbox area (40×40 dense mobile target; 44×44 desktop) ── */}
       <button
         type="button"
         className={styles.checkbox}
         onClick={() => onComplete(item)}
+        onPointerDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
         aria-label={isChecked ? `Restore ${item.name}` : `Mark ${item.name} as completed`}
       >
         {isChecked ? (
@@ -104,11 +124,17 @@ export default function ItemRow({
       </button>
 
       {/* ── Overflow menu (right, 44×44 minimum target) ── */}
-      <div className={styles.overflowWrapper} ref={menuRef}>
+      <div
+        className={styles.overflowWrapper}
+        ref={menuRef}
+        onPointerDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+      >
         <button
           type="button"
           className={styles.overflowButton}
           onClick={() => setMenuOpen((prev) => !prev)}
+          onPointerDown={(e) => e.stopPropagation()}
           aria-label={`More actions for ${item.name}`}
           aria-haspopup="true"
           aria-expanded={menuOpen}

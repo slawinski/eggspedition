@@ -35,6 +35,41 @@
   opacity: 0.55;
 }
 
+/* ── Drag & drop states ───────────────────────────────── */
+.rowDimmed {
+  opacity: 0.35;
+  transform: scale(0.98);
+}
+
+.rowJustMoved {
+  animation: rowDropSettle 260ms var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+
+@keyframes rowDropSettle {
+  0% {
+    transform: scale(1.06);
+  }
+  55% {
+    transform: scale(0.96);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.dragPreview {
+  cursor: grabbing;
+  transform: scale(1.04) rotate(-1.5deg);
+  box-shadow:
+    0 24px 48px rgba(30, 90, 72, 0.22),
+    inset 2px 2px 4px var(--clay-shadow-inner-light);
+}
+
+.dragPreview * {
+  cursor: grabbing !important;
+  pointer-events: none;
+}
+
 /* ── Checkbox (40×40 dense mobile target; 44×44 desktop) ── */
 .checkbox {
   display: flex;
@@ -356,6 +391,15 @@
   .checkbox:active,
   .body:active,
   .overflowButton:active {
+    transform: none;
+  }
+
+  .rowJustMoved {
+    animation: none;
+  }
+
+  .rowDimmed,
+  .dragPreview {
     transform: none;
   }
 }

@@ -194,6 +194,21 @@
   padding: 0.5rem;
   border-radius: 1.25rem;
   width: 100%;
+  transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+
+/* While a drag is active: every bucket hints it's a drop zone */
+.groupCardDropZone {
+  border: 1px dashed var(--lagoon);
+}
+
+/* Bucket under the dragged item: full highlight */
+.groupCardOver {
+  border: 1px solid var(--lagoon);
+  box-shadow:
+    0 0 0 3px rgba(79, 211, 196, 0.22),
+    4px 4px 8px var(--shadow-color),
+    inset 2px 2px 4px var(--clay-shadow-inner-light);
 }
 
 /* Keep the card containing an open item menu above sibling cards.

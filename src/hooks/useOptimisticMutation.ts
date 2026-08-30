@@ -189,10 +189,11 @@ export function useOptimisticMutation<TData, TVariables>(
       if (configRef.current.commandFactory) {
         optimisticCommand = configRef.current.commandFactory(null as any, vars)
         if (optimisticCommand) {
+          const command = optimisticCommand
           const rollbackFn = configRef.current.undoRollback
-            ? () => configRef.current.undoRollback!(vars, optimisticCommand)
+            ? () => configRef.current.undoRollback!(vars, command)
             : undefined
-          undo.pushCommand(optimisticCommand, rollbackFn)
+          undo.pushCommand(command, rollbackFn)
         }
       }
 
