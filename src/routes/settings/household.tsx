@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect, useRouter } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start'
 import { useQueryClient } from '@tanstack/react-query'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -54,6 +54,7 @@ function HouseholdSettings() {
   const { session } = Route.useRouteContext()
   const householdId = session?.householdId
   const queryClient = useQueryClient()
+  const router = useRouter()
 
   const createInvite = useServerFn(createHouseholdInviteFn)
   const revokeInvite = useServerFn(revokeHouseholdInviteFn)
@@ -100,6 +101,8 @@ function HouseholdSettings() {
     mutationFn: (name: string) => updateName({ data: name }),
     onSuccess: () => {
       queryClient.invalidateQueries()
+      // Refetch route loaders so the header's household chip updates
+      router.invalidate()
       setNameDirty(false)
     },
   })

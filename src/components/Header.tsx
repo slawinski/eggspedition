@@ -130,12 +130,23 @@ export default function Header() {
   return (
     <header className={styles.header}>
       <nav className={styles.nav}>
-        <h1>
-          <Link to="/" className={styles.logoLink}>
-            <ShoppingBasket className={styles.logoIcon} aria-hidden="true" />
-            <span className={styles.logoText}>Eggspedition</span>
-          </Link>
-        </h1>
+        {session?.householdId ? (
+          // Authenticated in-app view: passive household context chip.
+          // Navigation lives in the bottom bar, so no link/button here.
+          <div className={styles.householdChip} title={session.householdName ?? 'My Household'}>
+            <ShoppingBasket className={styles.householdChipIcon} aria-hidden="true" />
+            <span className={styles.householdChipName}>
+              {session.householdName ?? 'My Household'}
+            </span>
+          </div>
+        ) : (
+          <h1>
+            <Link to="/" className={styles.logoLink}>
+              <ShoppingBasket className={styles.logoIcon} aria-hidden="true" />
+              <span className={styles.logoText}>Eggspedition</span>
+            </Link>
+          </h1>
+        )}
 
         {!session && (
           <div className={styles.publicNav}>

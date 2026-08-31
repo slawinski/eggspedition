@@ -36,6 +36,8 @@ export const sessionSchema = z.object({
   userId: z.string().uuid(),
   email: z.string().email(),
   householdId: z.string().uuid().optional(),
+  // Attached server-side by getSessionServerFn (not part of the JWT)
+  householdName: z.string().optional(),
 })
 
 export type User = z.infer<typeof userSchema>

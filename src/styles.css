@@ -12,6 +12,8 @@
   --sea-ink-soft: #416166;
   --lagoon: #4fb8b2;
   --lagoon-deep: #328f97;
+  /* Text on light surfaces — ≥4.5:1, for accent labels/icons (nav active, links) */
+  --lagoon-ink: #0c7c74;
   --palm: #2f6a4a;
   --sand: #e7f0e8;
   --foam: #f3faf5;
@@ -202,6 +204,8 @@
   --sea-ink-soft: #a1a1aa;
   --lagoon: #4fd3c4;
   --lagoon-deep: #26a69a;
+  /* Text on dark surfaces — bright lagoon keeps contrast */
+  --lagoon-ink: #4fd3c4;
   --palm: #4ade80;
   --sand: #1c1c23;
   --foam: #13131a;

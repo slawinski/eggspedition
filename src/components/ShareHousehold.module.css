@@ -47,10 +47,12 @@
 }
 
 .joinForm {
-  padding: 1rem;
+  /* !important: composes clay.card — guard against CSS bundle order flips
+     (same class of regression as the group-card bloat) */
+  padding: 1rem !important;
+  border-radius: 1rem !important;
   display: flex;
   gap: 0.5rem;
-  border-radius: 1rem;
   animation: animateIn 0.15s ease-out;
 }
 

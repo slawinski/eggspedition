@@ -191,24 +191,27 @@
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
-  padding: 0.5rem;
-  border-radius: 1.25rem;
+  /* !important: the card composes clay.card (for background + shadow), whose
+     padding/border-radius must never win — CSS bundle order varies between
+     builds (see the GroupCard extraction regression). */
+  padding: 0.5rem !important;
+  border-radius: 1.25rem !important;
   width: 100%;
-  transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
+  transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out !important;
 }
 
 /* While a drag is active: every bucket hints it's a drop zone */
 .groupCardDropZone {
-  border: 1px dashed var(--lagoon);
+  border: 1px dashed var(--lagoon) !important;
 }
 
 /* Bucket under the dragged item: full highlight */
 .groupCardOver {
-  border: 1px solid var(--lagoon);
+  border: 1px solid var(--lagoon) !important;
   box-shadow:
     0 0 0 3px rgba(79, 211, 196, 0.22),
     4px 4px 8px var(--shadow-color),
-    inset 2px 2px 4px var(--clay-shadow-inner-light);
+    inset 2px 2px 4px var(--clay-shadow-inner-light) !important;
 }
 
 /* Keep the card containing an open item menu above sibling cards.
@@ -222,8 +225,8 @@
 @media (min-width: 768px) {
   .groupCard {
     gap: 1rem;
-    padding: 1.5rem;
-    border-radius: 2.5rem;
+    padding: 1.5rem !important;
+    border-radius: 2.5rem !important;
   }
 }
 

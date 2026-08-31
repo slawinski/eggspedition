@@ -7,7 +7,16 @@ export const getSessionServerFn = createServerFn({ method: 'GET' }).handler(asyn
   const token = getCookie('session_token')
   if (!token) return null
   const { verifySession } = await import('../lib/auth-utils')
-  return await verifySession(token)
+  const session = await verifySession(token)
+
+  // Attach the household name for header context (keeps the JWT stateless)
+  if (session?.householdId) {
+    const { getHouseholdName } = await import('./household.service')
+    const householdName = await getHouseholdName(session.householdId)
+    return { ...session, householdName }
+  }
+
+  return session
 })
 
 export const loginServerFn = createServerFn({ method: 'POST' })

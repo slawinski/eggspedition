@@ -48,6 +48,8 @@
 
 /* ---- Navigation items ---- */
 .navItem {
+  position: relative;
+
   display: inline-flex;
   flex-direction: column;
   align-items: center;
@@ -83,15 +85,29 @@
   outline-offset: 3px;
 }
 
+/* Active tab: a small raised clay chip floating in the glass bar —
+   the same recipe as the list rows, with a lagoon squish dot. */
 .navItemActive {
-  color: var(--lagoon);
-  background: rgba(79, 184, 178, 0.12);
+  color: var(--lagoon-ink);
+  background: var(--surface-card);
   border-color: var(--line);
-  border-bottom: 2px solid var(--lagoon);
+  transform: translateY(-1px);
   box-shadow:
-    6px 6px 12px var(--clay-shadow-outer),
+    4px 4px 8px var(--shadow-color),
     inset 2px 2px 4px var(--clay-shadow-inner-light),
     inset -2px -2px 4px var(--clay-shadow-inner-dark);
+}
+
+.navItemActive::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  width: 3.5px;
+  height: 3.5px;
+  margin-left: -1.75px;
+  border-radius: 9999px;
+  background: var(--lagoon);
 }
 
 .navIcon {
@@ -179,4 +195,15 @@
   width: 1.75rem;
   height: 1.75rem;
   stroke-width: 3px;
+}
+
+/* ---- Reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  .navItem {
+    transition: none;
+  }
+
+  .navItemActive {
+    transform: none;
+  }
 }
