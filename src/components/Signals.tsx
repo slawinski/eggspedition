@@ -27,8 +27,6 @@ function useHouseholdSignals() {
             queryClient.invalidateQueries({ queryKey: ['grocery-items'], exact: false })
             queryClient.invalidateQueries({ queryKey: ['grocery-items-grouped'], exact: false })
             queryClient.invalidateQueries({ queryKey: ['household-logs'], exact: false })
-            queryClient.invalidateQueries({ queryKey: ['quick-add-items'], exact: false })
-            queryClient.invalidateQueries({ queryKey: ['frequent-items'], exact: false })
           }
         }
       } catch (err) {

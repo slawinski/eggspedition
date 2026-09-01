@@ -1,10 +1,9 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { z } from 'zod'
 import AddItemForm from '../components/AddItemForm'
-import QuickAdd from '../components/QuickAdd'
 import SmartView from '../components/SmartView'
 import LandingPage from '../components/landing/LandingPage'
-import { getGroceryItemsFn, getFrequentItemsFn, getQuickAddItemsFn, getGroceryItemsGroupedFn, getCategoriesFn, getStoresFn, getHouseholdLogsFn } from '../services/grocery.api'
+import { getGroceryItemsFn, getGroceryItemsGroupedFn, getCategoriesFn, getStoresFn, getHouseholdLogsFn } from '../services/grocery.api'
 import styles from './index.module.css'
 
 export const Route = createFileRoute('/')({
@@ -30,14 +29,6 @@ export const Route = createFileRoute('/')({
       queryClient.ensureQueryData({
         queryKey: ['grocery-items', householdId],
         queryFn: () => getGroceryItemsFn(),
-      }),
-      queryClient.ensureQueryData({
-        queryKey: ['frequent-items', householdId],
-        queryFn: () => getFrequentItemsFn(),
-      }),
-      queryClient.ensureQueryData({
-        queryKey: ['quick-add-items', householdId],
-        queryFn: () => getQuickAddItemsFn(),
       }),
       queryClient.ensureQueryData({
         queryKey: ['grocery-items-grouped', 'category', householdId],
@@ -78,10 +69,6 @@ function Home() {
 
         <div className={styles.addItemWrapper}>
           <AddItemForm />
-        </div>
-        
-        <div className={styles.quickAddWrapper}>
-          <QuickAdd />
         </div>
         
         <SmartView

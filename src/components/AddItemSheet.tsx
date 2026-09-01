@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { X, Check } from 'lucide-react'
 import type { RefObject } from 'react'
 import AddItemForm from './AddItemForm'
-import QuickAdd from './QuickAdd'
 import styles from './AddItemSheet.module.css'
 
 interface AddItemSheetProps {
@@ -114,13 +113,6 @@ export default function AddItemSheet({
     [clearStatusAfterDelay],
   )
 
-  const handleQuickAddItem = useCallback(
-    (name: string) => {
-      clearStatusAfterDelay(`${name} added.`)
-    },
-    [clearStatusAfterDelay],
-  )
-
   return (
     <dialog
       ref={dialogRef}
@@ -181,17 +173,6 @@ export default function AddItemSheet({
             {statusMessage}
           </div>
         )}
-
-        {/* Scrollable content: QuickAdd */}
-        <div className={styles.scrollContent}>
-          {isOpen && (
-            <QuickAdd
-              variant="sheet"
-              limit={8}
-              onItemAdded={handleQuickAddItem}
-            />
-          )}
-        </div>
 
         {/* Footer safe area */}
         <div className={styles.footerSafeArea} />

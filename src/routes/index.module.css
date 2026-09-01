@@ -67,16 +67,6 @@
   }
 }
 
-.quickAddWrapper {
-  display: none;
-}
-
-@media (min-width: 768px) {
-  .quickAddWrapper {
-    display: block;
-  }
-}
-
 .headerTitle {
   margin: 0;
   font-size: 1rem;

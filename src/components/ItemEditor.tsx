@@ -11,7 +11,7 @@ import {
 } from '../services/grocery.api'
 import { useOptimisticMutation } from '../hooks/useOptimisticMutation'
 import { createDeleteCommand } from '../lib/mutation-commands'
-import { normalizeItemName } from '../lib/quickAddKey'
+import { normalizeItemName } from '../lib/normalizeItemName'
 import { toItemSnapshot, type ReversibleCommand } from '../lib/commands'
 import { useUndo } from '../hooks/useUndo'
 import styles from './ItemEditor.module.css'
@@ -267,7 +267,6 @@ export default function ItemEditor({
       // Bare grouped key — prefix-matches both dimension variants
       ['grocery-items-grouped'],
       ['household-logs', session?.householdId ?? ''],
-      ['frequent-items', session?.householdId ?? ''],
     ]
     return keys.map((queryKey) => ({
       queryKey,
@@ -287,7 +286,6 @@ export default function ItemEditor({
       ['grocery-items', session?.householdId ?? ''],
       ['grocery-items-grouped'],
       ['household-logs', session?.householdId ?? ''],
-      ['frequent-items', session?.householdId ?? ''],
     ],
     commandFactory: (result, _vars) => {
       const updated = result as GroceryItem
@@ -338,8 +336,6 @@ export default function ItemEditor({
       ['grocery-items', session?.householdId ?? ''],
       ['grocery-items-grouped'],
       ['household-logs', session?.householdId ?? ''],
-      ['frequent-items', session?.householdId ?? ''],
-      ['quick-add-items', session?.householdId ?? ''],
     ],
     commandFactory: () => {
       return createDeleteCommand(item, session?.householdId ?? '')
@@ -466,8 +462,6 @@ export default function ItemEditor({
         ['grocery-items', session?.householdId ?? ''],
         ['grocery-items-grouped'],
         ['household-logs', session?.householdId ?? ''],
-        ['frequent-items', session?.householdId ?? ''],
-        ['quick-add-items', session?.householdId ?? ''],
       ]
       await Promise.all(keys.map((k) => queryClient.invalidateQueries({ queryKey: k })))
 

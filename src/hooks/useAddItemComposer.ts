@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query'
 import {
   getCategoriesFn,
   getStoresFn,
-  getQuickAddItemsFn,
 } from '../services/grocery.api'
 import { useAddGroceryItem } from '../hooks/useAddGroceryItem'
 import {
@@ -15,7 +14,7 @@ import type { GroceryItem } from '../lib/schemas'
 
 export type Suggestion = {
   name: string
-  type: 'category' | 'store' | 'Quick Add' | 'New Item'
+  type: 'category' | 'store' | 'New Item'
   isNew?: boolean
   categoryId?: string | null
   storeId?: string | null
@@ -74,12 +73,6 @@ export function useAddItemComposer(options?: UseAddItemComposerOptions) {
   const { data: stores = [] } = useQuery({
     queryKey: ['stores', session?.householdId],
     queryFn: () => getStoresFn(),
-    enabled: !!session?.householdId,
-  })
-
-  const { data: quickAddItems = [] } = useQuery({
-    queryKey: ['quick-add-items', session?.householdId],
-    queryFn: () => getQuickAddItemsFn(),
     enabled: !!session?.householdId,
   })
 
@@ -154,28 +147,16 @@ export function useAddItemComposer(options?: UseAddItemComposerOptions) {
     }
 
     if (parsed.name.length > 0) {
-      const quickMatches: Suggestion[] = quickAddItems
-        .filter((i) =>
-          i.name.toLowerCase().includes(parsed.name.toLowerCase()),
-        )
-        .map((i) => ({ ...i, type: 'Quick Add' as const }))
+      const suggestions: Suggestion[] = []
 
-      const hasExactMatch = quickMatches.some(
-        (m) => m.name.toLowerCase() === parsed.name.toLowerCase(),
-      )
-
-      const suggestions: Suggestion[] = [...quickMatches]
-
-      if (!hasExactMatch) {
-        suggestions.push({
-          name: parsed.name,
-          type: 'New Item' as const,
-          isNew: true,
-          categoryName: effectiveCategory,
-          storeName: effectiveStore,
-          quantity: effectiveQuantity,
-        })
-      }
+      suggestions.push({
+        name: parsed.name,
+        type: 'New Item' as const,
+        isNew: true,
+        categoryName: effectiveCategory,
+        storeName: effectiveStore,
+        quantity: effectiveQuantity,
+      })
 
       return suggestions.slice(0, 6)
     }
@@ -262,39 +243,8 @@ export function useAddItemComposer(options?: UseAddItemComposerOptions) {
       return
     }
 
-    if (suggestion.type === 'New Item') {
-      handleSubmit()
-      return
-    }
-
-    // Use template metadata with explicit > DSL precedence
-    const resolvedCategoryName =
-      explicitCategory ??
-      parsed.categoryName ??
-      (suggestion.categoryId
-        ? categories.find((c) => c.id === suggestion.categoryId)?.name
-        : null)
-
-    const resolvedStoreName =
-      explicitStore ??
-      parsed.storeName ??
-      (suggestion.storeId
-        ? stores.find((s) => s.id === suggestion.storeId)?.name
-        : null)
-
-    const resolvedQuantity =
-      explicitQuantity !== '1'
-        ? explicitQuantity
-        : parsed.quantity !== '1'
-          ? parsed.quantity
-          : undefined
-
-    mutation.mutate({
-      name: suggestion.name,
-      quantity: resolvedQuantity,
-      categoryName: resolvedCategoryName,
-      storeName: resolvedStoreName,
-    })
+    // Only "New Item" suggestions reach this branch
+    handleSubmit()
   }
 
   function handleSubmit() {

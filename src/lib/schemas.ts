@@ -1,8 +1,8 @@
 import { createSelectSchema, createInsertSchema } from 'drizzle-zod'
 import { z } from 'zod'
-import { users, households, memberships, categories, stores, groceryItems, householdLogs, quickAddItems } from '../db/schema'
+import { users, households, memberships, categories, stores, groceryItems, householdLogs } from '../db/schema'
 
-export { users, households, memberships, categories, stores, groceryItems, householdLogs, quickAddItems }
+export { users, households, memberships, categories, stores, groceryItems, householdLogs }
 
 export const userSchema = createSelectSchema(users)
 export const insertUserSchema = createInsertSchema(users, {
@@ -23,9 +23,6 @@ export const insertStoreSchema = createInsertSchema(stores)
 export const groceryItemSchema = createSelectSchema(groceryItems)
 export const insertGroceryItemSchema = createInsertSchema(groceryItems)
 
-export const quickAddItemSchema = createSelectSchema(quickAddItems)
-export const insertQuickAddItemSchema = createInsertSchema(quickAddItems)
-
 export const householdLogSchema = createSelectSchema(householdLogs)
 
 export const loginSchema = z.object({
@@ -45,6 +42,5 @@ export type Session = z.infer<typeof sessionSchema>
 export type Category = z.infer<typeof categorySchema>
 export type Store = z.infer<typeof storeSchema>
 export type GroceryItem = z.infer<typeof groceryItemSchema>
-export type QuickAddItem = z.infer<typeof quickAddItemSchema>
 export type HouseholdLog = z.infer<typeof householdLogSchema>
 

@@ -109,63 +109,6 @@ export const getHouseholdLogsFn = createServerFn({ method: 'GET' })
     return logs
   })
 
-export const getFrequentItemsFn = createServerFn({ method: 'GET' })
-  .middleware([protectedMiddleware])
-  .handler(async ({ context }) => {
-    const { getFrequentItems } = await import('./grocery.service')
-    return await getFrequentItems(context.session.householdId)
-  })
-
-export const getQuickAddItemsFn = createServerFn({ method: 'GET' })
-  .middleware([protectedMiddleware])
-  .handler(async ({ context }) => {
-    const { getQuickAddItems } = await import('./grocery.service')
-    return await getQuickAddItems(context.session.householdId)
-  })
-
-export const addQuickAddItemFn = createServerFn({ method: 'POST' })
-  .inputValidator(
-    zodValidator(
-      z.object({
-        name: z.string().min(1),
-        categoryName: z.string().optional().nullable(),
-        storeName: z.string().optional().nullable(),
-      })
-    )
-  )
-  .middleware([protectedMiddleware])
-  .handler(async ({ data, context }) => {
-    const { addQuickAddItem } = await import('./grocery.service')
-    return await addQuickAddItem(context.session.householdId, data)
-  })
-
-export const updateQuickAddItemFn = createServerFn({ method: 'POST' })
-  .inputValidator(
-    zodValidator(
-      z.object({
-        id: z.string().uuid(),
-        data: z.object({
-          name: z.string().min(1).optional(),
-          categoryName: z.string().optional().nullable(),
-          storeName: z.string().optional().nullable(),
-        }),
-      })
-    )
-  )
-  .middleware([protectedMiddleware])
-  .handler(async ({ data, context }) => {
-    const { updateQuickAddItem } = await import('./grocery.service')
-    return await updateQuickAddItem(data.id, context.session.householdId, data.data)
-  })
-
-export const deleteQuickAddItemFn = createServerFn({ method: 'POST' })
-  .inputValidator(zodValidator(z.string().uuid()))
-  .middleware([protectedMiddleware])
-  .handler(async ({ data: id, context }) => {
-    const { deleteQuickAddItem } = await import('./grocery.service')
-    return await deleteQuickAddItem(id, context.session.householdId)
-  })
-
 export const joinHouseholdFn = createServerFn({ method: 'POST' })
   .inputValidator(zodValidator(z.string().uuid()))
   .middleware([protectedMiddleware])

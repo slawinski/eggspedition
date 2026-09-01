@@ -339,11 +339,13 @@ export default function AddItemNameCombobox({
 
                   <div className={formStyles.suggestionHint}>
                     <span className={formStyles.suggestionType}>
-                      {s.type === 'Quick Add'
-                        ? 'Saved item'
-                        : s.type === 'New Item'
-                          ? 'Add new item'
-                          : 'Quick Add'}
+                      {s.type === 'New Item'
+                        ? 'Add new item'
+                        : s.type === 'category'
+                          ? 'Category'
+                          : s.type === 'store'
+                            ? 'Store'
+                            : s.type}
                     </span>
                     {isHighlighted && (
                       <CornerDownLeft

@@ -182,16 +182,6 @@
   flex-shrink: 0;
 }
 
-/* ---- Scrollable Quick Add area ---- */
-.scrollContent {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  padding: 0 1.25rem;
-}
-
 /* ---- Footer safe area ---- */
 .footerSafeArea {
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));

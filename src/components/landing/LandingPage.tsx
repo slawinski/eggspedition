@@ -2,8 +2,8 @@ import { Link } from '@tanstack/react-router'
 import ProductPreview from './ProductPreview'
 import styles from './LandingPage.module.css'
 import {
-  Mail, Users, ShoppingBasket, Zap, Smartphone, Tag, Store,
-  Share2, Check, ChevronRight, Plus
+  Mail, Users, ShoppingBasket, CheckCircle2, Smartphone, Tag, Store,
+  Share2, Check, ChevronRight
 } from 'lucide-react'
 
 export default function LandingPage() {
@@ -47,7 +47,7 @@ export default function LandingPage() {
             {[
               { icon: Share2, label: 'Shared in real time', desc: 'Changes appear across your household list.' },
               { icon: Tag, label: 'Organised your way', desc: 'View the same items by category or store.' },
-              { icon: Zap, label: 'Staples in one tap', desc: 'Quick Add the products you buy repeatedly.' },
+              { icon: CheckCircle2, label: 'Check as you shop', desc: 'Tap items off as they land in the basket.' },
               { icon: Smartphone, label: 'Made for your phone', desc: 'Install Eggspedition from your browser.' },
             ].map(cap => (
               <div key={cap.label} className={styles.capItem}>
@@ -170,34 +170,6 @@ export default function LandingPage() {
                     <div key={s} className={styles.viewItem}>{s}</div>
                   ))}
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Feature 3: Quick Add */}
-          <div className={styles.featureRow}>
-            <div className={styles.featureText}>
-              <p className={styles.eyebrow}>Your regulars</p>
-              <h2 className={styles.featureHeading}>
-                The weekly staples are already waiting.
-              </h2>
-              <p className={styles.featureDesc}>
-                Milk, eggs, coffee, bananas&mdash;the things you buy repeatedly should not
-                require repeated typing. Quick Add puts household staples one tap away.
-              </p>
-              <ul className={styles.featurePoints}>
-                <li><Check className={styles.pointIcon} aria-hidden="true" /> Household Quick Add templates</li>
-                <li><Check className={styles.pointIcon} aria-hidden="true" /> Frequently added suggestions</li>
-                <li><Check className={styles.pointIcon} aria-hidden="true" /> Category and store metadata included</li>
-              </ul>
-            </div>
-            <div className={styles.featureVisual} aria-hidden="true">
-              <div className={styles.chipsDemo}>
-                {['Milk', 'Eggs', 'Coffee', 'Bread', 'Bananas'].map(name => (
-                  <span key={name} className={styles.demoChip}>
-                    <Plus className={styles.demoChipIcon} /> {name}
-                  </span>
-                ))}
               </div>
             </div>
           </div>

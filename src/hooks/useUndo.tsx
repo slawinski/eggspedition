@@ -272,12 +272,6 @@ export function UndoProvider({
           await queryClient.invalidateQueries({
             queryKey: ['household-logs', command.householdId],
           })
-          await queryClient.invalidateQueries({
-            queryKey: ['frequent-items', command.householdId],
-          })
-          await queryClient.invalidateQueries({
-            queryKey: ['quick-add-items', command.householdId],
-          })
         })
 
       // Create wrapper

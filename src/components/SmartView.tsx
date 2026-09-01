@@ -136,7 +136,6 @@ export default function SmartView({ session }: { session: Session | null }) {
       ['grocery-items', session?.householdId ?? ''],
       ['grocery-items-grouped'],
       ['household-logs', session?.householdId ?? ''],
-      ['frequent-items', session?.householdId ?? ''],
     ],
     commandFactory: (_, vars) => {
       const item = findItemById(
@@ -207,8 +206,6 @@ export default function SmartView({ session }: { session: Session | null }) {
       ['grocery-items', session?.householdId ?? ''],
       ['grocery-items-grouped'],
       ['household-logs', session?.householdId ?? ''],
-      ['frequent-items', session?.householdId ?? ''],
-      ['quick-add-items', session?.householdId ?? ''],
     ],
     commandFactory: (_, id) => {
       const item = findItemById(id as string, groupedData as Record<string, { items: GroceryItem[] }> | undefined)
@@ -476,7 +473,7 @@ export default function SmartView({ session }: { session: Session | null }) {
           {allEntries.length === 0 ? (
             <EmptyState
               title="Your list is clear!"
-              body="Add some items from the Quick Add bar below to get started."
+              body="Add some items with the + button below to get started."
             />
           ) : (
             columnData.map((columnEntries, colIdx) => (

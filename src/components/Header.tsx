@@ -237,20 +237,6 @@ export default function Header() {
 
                   <div className={styles.dropdownDivider} />
 
-                  <div className={styles.dropdownSection}>
-                    <p className={styles.sectionLabel}>Manage</p>
-                    <Link
-                      to="/settings/quick-add"
-                      onClick={() => setIsProfileOpen(false)}
-                      className={styles.dropdownItem}
-                      role="menuitem"
-                      tabIndex={-1}
-                    >
-                      <Settings className={styles.dropdownIcon} aria-hidden="true" />
-                      Quick Add templates
-                    </Link>
-                  </div>
-
                   <button
                     onClick={handleLogout}
                     className={`${styles.dropdownItem} ${styles.logoutItem}`}

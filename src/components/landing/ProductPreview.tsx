@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Tag, Store, Plus, Cloud, User, Clock } from 'lucide-react'
+import { Tag, Store, Cloud, User, Clock } from 'lucide-react'
 import styles from './ProductPreview.module.css'
 
 function useDemoAnimation() {
@@ -43,16 +43,6 @@ export default function ProductPreview() {
         <div className={styles.appHeader}>
           <span className={styles.appTitle}>Saturday shop</span>
           <span className={styles.appStatus}><Cloud className={styles.statusIcon} /> Synced</span>
-        </div>
-
-        {/* Quick Add chips */}
-        <div className={styles.quickAddRow}>
-          {['Eggs', 'Milk', 'Bananas', 'Coffee'].map((name) => (
-            <span key={name} className={`${styles.quickChip} ${name === 'Coffee' && demoStep >= 1 ? styles.quickChipAdded : ''}`}>
-              <Plus className={styles.chipIcon} />
-              {name}
-            </span>
-          ))}
         </div>
 
         {/* Category/Store toggle */}
@@ -107,7 +97,7 @@ export default function ProductPreview() {
 
         {/* Store chip floating */}
         <div className={styles.storeChip}>
-          <Store className={styles.chipIcon} />
+          <Store className={styles.storeChipIcon} />
           Biedronka · 5 items
         </div>
       </div>

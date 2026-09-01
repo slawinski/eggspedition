@@ -16,8 +16,6 @@ const QUERY_KEYS_TO_INVALIDATE = [
   ['grocery-items'],
   ['grocery-items-grouped'],
   ['household-logs'],
-  ['frequent-items'],
-  ['quick-add-items'],
 ] as const
 
 /** Invalidation keys scoped to a household. The grouped key stays bare so
@@ -169,22 +167,6 @@ export function createRestoreCommand(
     previousSnapshot,
     optimisticCachePatches: patchCompleteInCache(item, householdId), // undo → mark checked again
     userMessage: `${item.quantity !== '1' ? `${item.quantity}× ` : ''}${item.name} restored`,
-    expiryTimestamp: Date.now() + 5_000,
-  }
-}
-
-export function createQuickAddCommand(
-  item: GroceryItem,
-  householdId: string,
-): ReversibleCommand {
-  return {
-    id: crypto.randomUUID(),
-    type: 'quickAddItem',
-    householdId,
-    itemId: item.id,
-    itemSnapshot: toItemSnapshot(item),
-    optimisticCachePatches: emptyCachePatches(householdId), // undo → invalidate
-    userMessage: `${item.quantity !== '1' ? `${item.quantity}× ` : ''}${item.name} added`,
     expiryTimestamp: Date.now() + 5_000,
   }
 }

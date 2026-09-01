@@ -8,7 +8,6 @@ export type CommandType =
   | 'completeItem'
   | 'restoreItem'
   | 'deleteItem'
-  | 'quickAddItem'
   | 'incrementItem'
 
 /**

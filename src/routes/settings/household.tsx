@@ -2,7 +2,7 @@ import { createFileRoute, Link, redirect, useRouter } from '@tanstack/react-rout
 import { useServerFn } from '@tanstack/react-start'
 import { useQueryClient } from '@tanstack/react-query'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { ArrowLeft, UserPlus, Trash2, Loader2 } from 'lucide-react'
 import HouseholdShareActions from '../../components/onboarding/HouseholdShareActions'
 import {
@@ -61,8 +61,9 @@ function HouseholdSettings() {
   const updateName = useServerFn(updateHouseholdNameFn)
 
   const [inviteData, setInviteData] = useState<{ id: string; token: string; inviteUrl: string } | null>(null)
-  const [newName, setNewName] = useState('')
-  const [nameDirty, setNameDirty] = useState(false)
+  // Prepopulate with the current household name (attached to the session by
+  // getSessionServerFn — available at SSR, so no hydration mismatch).
+  const [newName, setNewName] = useState(session?.householdName ?? '')
 
   const { data: memberCount } = useQuery({
     queryKey: ['household-member-count', householdId],
@@ -103,17 +104,8 @@ function HouseholdSettings() {
       queryClient.invalidateQueries()
       // Refetch route loaders so the header's household chip updates
       router.invalidate()
-      setNameDirty(false)
     },
   })
-
-  useEffect(() => {
-    // Load current household name from members data
-    if (members && members.length > 0 && !nameDirty) {
-      // Name is on the household, not on members. Let's get it from session or a query.
-      // For now, leave newName empty until user edits.
-    }
-  }, [members, nameDirty])
 
   if (!householdId) {
     return (
@@ -154,7 +146,6 @@ function HouseholdSettings() {
             value={newName}
             onChange={(e) => {
               setNewName(e.target.value)
-              setNameDirty(true)
             }}
             placeholder="Household name..."
             aria-label="Household name"
