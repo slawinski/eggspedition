@@ -107,14 +107,16 @@ export default function ItemRow({
         onClick={() => onEdit(item)}
         aria-label={`Edit ${item.name}`}
       >
-        <span className={`${styles.name} ${isChecked ? styles.nameChecked : ''}`}>
-          {item.name}
-        </span>
-
-        <div className={styles.metaRow}>
+        <span className={styles.nameRow}>
+          <span className={`${styles.name} ${isChecked ? styles.nameChecked : ''}`}>
+            {item.name}
+          </span>
           {hasQuantity && (
             <span className={styles.quantityBadge}>x{item.quantity}</span>
           )}
+        </span>
+
+        <div className={styles.metaRow}>
           {subLabel && (
             <span className={`${styles.subTag} ${subIcon === 'store' ? styles.subTagStore : styles.subTagCategory}`}>
               {subLabel}

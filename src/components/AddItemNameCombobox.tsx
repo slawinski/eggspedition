@@ -341,11 +341,13 @@ export default function AddItemNameCombobox({
                     <span className={formStyles.suggestionType}>
                       {s.type === 'New Item'
                         ? 'Add new item'
-                        : s.type === 'category'
-                          ? 'Category'
-                          : s.type === 'store'
-                            ? 'Store'
-                            : s.type}
+                        : s.type === 'Existing Item'
+                          ? 'Add again'
+                          : s.type === 'category'
+                            ? 'Category'
+                            : s.type === 'store'
+                              ? 'Store'
+                              : s.type}
                     </span>
                     {isHighlighted && (
                       <CornerDownLeft

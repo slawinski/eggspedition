@@ -622,11 +622,13 @@ function ItemDragPreview({
         <Circle className={rowStyles.checkIcon} />
       </span>
       <span className={`${rowStyles.body}`}>
-        <span className={rowStyles.name}>{item.name}</span>
-        <span className={rowStyles.metaRow}>
+        <span className={rowStyles.nameRow}>
+          <span className={rowStyles.name}>{item.name}</span>
           {hasQuantity && (
             <span className={rowStyles.quantityBadge}>x{item.quantity}</span>
           )}
+        </span>
+        <span className={rowStyles.metaRow}>
           {subLabel && (
             <span
               className={`${rowStyles.subTag} ${

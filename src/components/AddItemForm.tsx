@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import {
   getCategoriesFn,
   getStoresFn,
+  getGroceryItemsFn,
 } from '../services/grocery.api'
 import { useAddGroceryItem } from '../hooks/useAddGroceryItem'
 import {
@@ -35,7 +36,7 @@ export interface AddItemFormProps {
 
 type Suggestion = {
   name: string
-  type: 'category' | 'store' | 'New Item'
+  type: 'category' | 'store' | 'Existing Item' | 'New Item'
   isNew?: boolean
   categoryId?: string | null
   storeId?: string | null
@@ -87,6 +88,13 @@ export default function AddItemForm({
   const { data: stores = [] } = useQuery({
     queryKey: ['stores', session?.householdId],
     queryFn: () => getStoresFn(),
+    enabled: !!session?.householdId,
+  })
+
+  // Historical items — powers the "existing item" suggestions
+  const { data: groceryItems = [] } = useQuery({
+    queryKey: ['grocery-items', session?.householdId],
+    queryFn: () => getGroceryItemsFn(),
     enabled: !!session?.householdId,
   })
 
@@ -159,18 +167,45 @@ export default function AddItemForm({
     }
 
     if (parsed.name.length > 0) {
-      const suggestions: Suggestion[] = []
+      const nameLower = parsed.name.toLowerCase()
+      const matches: Suggestion[] = []
+      const seen = new Set<string>()
 
-      suggestions.push({
-        name: parsed.name,
-        type: 'New Item' as const,
-        isNew: true,
-        categoryName: effectiveCategory,
-        storeName: effectiveStore,
-        quantity: effectiveQuantity,
-      })
+      // Historical items: exact name match first, then newest-first
+      const exact = groceryItems.filter((i) => i.name.toLowerCase() === nameLower)
+      const partial = groceryItems.filter(
+        (i) =>
+          i.name.toLowerCase().includes(nameLower) &&
+          i.name.toLowerCase() !== nameLower,
+      )
+      for (const item of [...exact, ...partial]) {
+        const key = item.name.toLowerCase()
+        if (seen.has(key)) continue
+        seen.add(key)
+        matches.push({
+          name: item.name,
+          type: 'Existing Item',
+          id: item.id,
+          categoryId: item.categoryId ?? null,
+          storeId: item.storeId ?? null,
+          quantity: item.quantity ?? null,
+        })
+        if (matches.length >= 5) break
+      }
 
-      return suggestions.slice(0, 6)
+      const hasExact = matches.some((m) => m.name.toLowerCase() === nameLower)
+      if (!hasExact) {
+        matches.push({
+          name: parsed.name,
+          type: 'New Item' as const,
+          isNew: true,
+          categoryName: effectiveCategory,
+          storeName: effectiveStore,
+          quantity: effectiveQuantity,
+        })
+      }
+
+      return matches.slice(0, 6)
     }
 
     return []
@@ -299,7 +334,37 @@ export default function AddItemForm({
       return
     }
 
-    // Only "New Item" suggestions reach this branch
+    if (suggestion.type === 'Existing Item') {
+      // Re-add a historical item with explicit > DSL > item metadata precedence
+      const resolvedCategoryName =
+        explicitCategory ??
+        parsed.categoryName ??
+        (suggestion.categoryId
+          ? categories.find((c) => c.id === suggestion.categoryId)?.name
+          : null)
+
+      const resolvedStoreName =
+        explicitStore ??
+        parsed.storeName ??
+        (suggestion.storeId
+          ? stores.find((s) => s.id === suggestion.storeId)?.name
+          : null)
+
+      mutation.mutate({
+        name: suggestion.name,
+        quantity:
+          explicitQuantity !== '1'
+            ? explicitQuantity
+            : parsed.quantity !== '1'
+              ? parsed.quantity
+              : undefined,
+        categoryName: resolvedCategoryName,
+        storeName: resolvedStoreName,
+      })
+      return
+    }
+
+    // New Item
     handleSubmit()
   }
 
@@ -540,11 +605,13 @@ export default function AddItemForm({
                       <span className={styles.suggestionType}>
                         {s.type === 'New Item'
                           ? 'Add new item'
-                          : s.type === 'category'
-                            ? 'Category'
-                            : s.type === 'store'
-                              ? 'Store'
-                              : s.type}
+                          : s.type === 'Existing Item'
+                            ? 'Add again'
+                            : s.type === 'category'
+                              ? 'Category'
+                              : s.type === 'store'
+                                ? 'Store'
+                                : s.type}
                       </span>
                       {isHighlighted && (
                         <CornerDownLeft
