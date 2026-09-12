@@ -102,13 +102,17 @@ export default function ItemEditor({
   })
 
   // ── dialog open / close ────────────────────────────────────
+  // NOTE: showModal() is deferred to the next animation frame. Calling it
+  // synchronously in the same commit that mounts the <dialog> leaves iOS
+  // Safari painting only the ::backdrop (grey overlay) while the sheet
+  // itself stays invisible. Giving the browser a frame to lay the dialog
+  // out first avoids that race.
 
   useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
 
     if (isOpen && !dialog.open) {
-      dialog.showModal()
       // Reset state when opening
       versionTimestampRef.current = item.updatedAt
       setName(item.name)
@@ -127,6 +131,15 @@ export default function ItemEditor({
         categoryId: item.categoryId ?? null,
         storeId: item.storeId ?? null,
       }
+
+      const frame = requestAnimationFrame(() => {
+        try {
+          if (!dialog.open) dialog.showModal()
+        } catch {
+          // Already open or not yet attached — safe to ignore.
+        }
+      })
+      return () => cancelAnimationFrame(frame)
     }
 
     if (!isOpen && dialog.open) {
@@ -134,6 +147,20 @@ export default function ItemEditor({
       resetStatusTimer()
     }
   }, [isOpen, item, categories, stores])
+
+  // Ensure the top-layer dialog is closed if the component unmounts while
+  // open (e.g. the parent clears `editingItem`). Otherwise iOS Safari can
+  // leave the ::backdrop behind.
+  useEffect(() => {
+    const dialog = dialogRef.current
+    return () => {
+      try {
+        if (dialog?.open) dialog.close()
+      } catch {
+        // Ignore — dialog already gone.
+      }
+    }
+  }, [])
 
   function resetStatusTimer() {
     if (statusTimerRef.current) {
@@ -624,25 +651,17 @@ export default function ItemEditor({
     onClose()
   }
 
-  // ── desktop detection ──────────────────────────────────────
-
-  const [isDesktop, setIsDesktop] = useState(false)
-  useEffect(() => {
-    const check = () => setIsDesktop(window.innerWidth >= 768)
-    check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [])
-
   // ── render ─────────────────────────────────────────────────
-
-  if (!isOpen) return null
+  // NOTE: the <dialog> stays mounted while this component is mounted (the
+  // parent mounts it per edit session). Early-returning null on close would
+  // remove the dialog without dialog.close(), which can strand the
+  // ::backdrop on iOS Safari.
 
   return (
     <dialog
       ref={dialogRef}
       id="item-editor"
-      className={`${styles.dialog} ${isDesktop ? styles.dialogDesktop : ''}`}
+      className={styles.dialog}
       aria-labelledby="item-editor-title"
       onClick={handleDialogClick}
       onCancel={handleCancel}
@@ -650,11 +669,9 @@ export default function ItemEditor({
       <div className={styles.sheet}>
         {/* ── Header ── */}
         <div className={styles.header}>
-          {!isDesktop && (
-            <div className={styles.dragHandle} aria-hidden="true">
-              <span className={styles.dragHandleBar} />
-            </div>
-          )}
+          <div className={styles.dragHandle} aria-hidden="true">
+            <span className={styles.dragHandleBar} />
+          </div>
           <div className={styles.headerRow}>
             <h2 id="item-editor-title" className={styles.title}>
               Edit item

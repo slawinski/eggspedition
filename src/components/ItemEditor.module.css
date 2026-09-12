@@ -8,8 +8,12 @@
   inset: auto 0 0 0;
   width: 100%;
   max-width: 40rem;
+  /* vh fallback first for iOS versions without dvh support */
+  max-height: calc(100vh - max(0.5rem, env(safe-area-inset-top, 0px)));
   max-height: calc(100dvh - max(0.5rem, env(safe-area-inset-top, 0px)));
   margin: 0 auto;
+  margin-bottom: 0;
+  box-sizing: border-box;
   padding: 0;
   overflow: hidden;
   border: 1px solid var(--line);
@@ -22,20 +26,17 @@
     0 -0.5rem 1.5rem var(--shadow-color);
 }
 
-/* NOTE: no backdrop-filter on ::backdrop — on iOS Safari, combining it with
-   the dialog's transform animation can prevent the dialog content from
-   painting (backdrop shows, sheet stays invisible). Slightly stronger dim
-   compensates for the missing blur. */
+/* Blur is safe here because (a) showModal() is deferred a frame in TSX,
+   (b) the ::backdrop itself is never animated, and (c) phones skip the
+   dialog's transform animation entirely (see below). */
 .dialog::backdrop {
-  background: rgba(10, 24, 28, 0.4);
+  background: rgba(10, 24, 28, 0.34);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
 }
 
 .dialog[open] {
   animation: editorSheetIn 260ms var(--ease-out-expo) both;
-}
-
-.dialog[open]::backdrop {
-  animation: backdropIn 180ms ease-out both;
 }
 
 @keyframes editorSheetIn {
@@ -43,16 +44,40 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes backdropIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+/* ── Desktop centred dialog ────────────────────────────
+   Pure CSS breakpoint (no JS toggle): swapping classes right after
+   showModal() restarts the open animation, which can leave the sheet
+   unpainted on iOS Safari. */
+@media (min-width: 768px) {
+  .dialog {
+    inset: 50% auto auto 50%;
+    transform: translate(-50%, -50%);
+    width: min(92vw, 560px);
+    max-height: calc(100vh - 4rem);
+    max-height: calc(100dvh - 4rem);
+    border-radius: 2rem;
+    border-bottom: 1px solid var(--line);
+    box-shadow:
+      24px 24px 48px var(--clay-shadow-outer),
+      inset 8px 8px 12px var(--clay-shadow-inner-light),
+      inset -8px -8px 12px var(--clay-shadow-inner-dark);
+  }
+
+  .dialog[open] {
+    animation: modalIn 260ms var(--ease-out-expo) both;
+  }
+
+  .dragHandle {
+    display: none;
+  }
 }
 
-/* ── Desktop centred dialog ──────────────────────────── */
+/* Keep the legacy JS-driven class working (now unused) just in case. */
 .dialogDesktop {
-  inset: 50% auto auto 50% !important;
+  inset: 50% auto auto 50%;
   transform: translate(-50%, -50%);
   width: min(92vw, 560px);
+  max-height: calc(100vh - 4rem);
   max-height: calc(100dvh - 4rem);
   border-radius: 2rem;
   border-bottom: 1px solid var(--line);
@@ -73,8 +98,17 @@
 
 @media (prefers-reduced-motion: reduce) {
   .dialog[open],
-  .dialog[open]::backdrop,
   .dialogDesktop[open] {
+    animation: none;
+  }
+}
+
+/* iOS Safari: animating the dialog's transform at the same time as a
+   blurred ::backdrop can prevent the sheet from painting at all
+   (backdrop shows, sheet stays invisible). On phones the sheet simply
+   appears with no animation; desktop keeps the entrance motion. */
+@media (max-width: 767px) {
+  .dialog[open] {
     animation: none;
   }
 }
@@ -84,7 +118,6 @@
   display: flex;
   flex-direction: column;
   max-height: inherit;
-  height: 100%;
 }
 
 /* ── Header ──────────────────────────────────────────── */

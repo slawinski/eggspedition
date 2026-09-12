@@ -26,21 +26,16 @@
     0 -0.5rem 1.5rem var(--shadow-color);
 }
 
-/* NOTE: no backdrop-filter on ::backdrop — on iOS Safari, combining it with
-   the dialog's transform animation can prevent the dialog content from
-   painting (backdrop shows, sheet stays invisible). Slightly stronger dim
-   compensates for the missing blur. */
+/* Blur is safe here because the ::backdrop itself is never animated. */
 .dialog::backdrop {
-  background: rgba(10, 24, 28, 0.4);
+  background: rgba(10, 24, 28, 0.34);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
 }
 
 /* Open animation */
 .dialog[open] {
   animation: sheetIn 260ms var(--ease-out-expo) both;
-}
-
-.dialog[open]::backdrop {
-  animation: backdropIn 180ms ease-out both;
 }
 
 @keyframes sheetIn {
@@ -54,18 +49,8 @@
   }
 }
 
-@keyframes backdropIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .dialog[open],
-  .dialog[open]::backdrop {
+  .dialog[open] {
     animation: none;
   }
 }
