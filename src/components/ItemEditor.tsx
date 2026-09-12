@@ -10,6 +10,7 @@ import {
   addCategoryFn, addStoreFn, addGroceryItemFn,
 } from '../services/grocery.api'
 import { useOptimisticMutation } from '../hooks/useOptimisticMutation'
+import ManageTagsButton from './ManageTagsButton'
 import { createDeleteCommand } from '../lib/mutation-commands'
 import { normalizeItemName } from '../lib/normalizeItemName'
 import { toItemSnapshot, type ReversibleCommand } from '../lib/commands'
@@ -886,6 +887,7 @@ export default function ItemEditor({
                     </button>
                   )}
                 </div>
+                <ManageTagsButton label="Manage categories" />
               </div>
             )}
           </div>
@@ -956,6 +958,7 @@ export default function ItemEditor({
                     </button>
                   )}
                 </div>
+                <ManageTagsButton label="Manage stores" />
               </div>
             )}
           </div>

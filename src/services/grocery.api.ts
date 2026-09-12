@@ -100,6 +100,43 @@ export const addStoreFn = createServerFn({ method: 'POST' })
     return await addStore(context.session.householdId, name)
   })
 
+const renameTagInput = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1),
+})
+
+export const updateCategoryFn = createServerFn({ method: 'POST' })
+  .inputValidator(zodValidator(renameTagInput))
+  .middleware([protectedMiddleware])
+  .handler(async ({ data, context }) => {
+    const { renameCategory } = await import('./grocery.service')
+    return await renameCategory(data.id, context.session.householdId, data.name)
+  })
+
+export const deleteCategoryFn = createServerFn({ method: 'POST' })
+  .inputValidator(zodValidator(z.string().uuid()))
+  .middleware([protectedMiddleware])
+  .handler(async ({ data: id, context }) => {
+    const { deleteCategory } = await import('./grocery.service')
+    return await deleteCategory(id, context.session.householdId)
+  })
+
+export const updateStoreFn = createServerFn({ method: 'POST' })
+  .inputValidator(zodValidator(renameTagInput))
+  .middleware([protectedMiddleware])
+  .handler(async ({ data, context }) => {
+    const { renameStore } = await import('./grocery.service')
+    return await renameStore(data.id, context.session.householdId, data.name)
+  })
+
+export const deleteStoreFn = createServerFn({ method: 'POST' })
+  .inputValidator(zodValidator(z.string().uuid()))
+  .middleware([protectedMiddleware])
+  .handler(async ({ data: id, context }) => {
+    const { deleteStore } = await import('./grocery.service')
+    return await deleteStore(id, context.session.householdId)
+  })
+
 export const getHouseholdLogsFn = createServerFn({ method: 'GET' })
   .middleware([protectedMiddleware])
   .handler(async ({ context }) => {

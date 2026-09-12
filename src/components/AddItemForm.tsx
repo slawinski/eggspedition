@@ -12,6 +12,7 @@ import {
   type ParsedAddItemInput,
 } from '../lib/parseAddItemInput'
 import type { GroceryItem } from '../lib/schemas'
+import ManageTagsButton from './ManageTagsButton'
 import styles from './AddItemForm.module.css'
 import {
   Tag,
@@ -761,6 +762,7 @@ export default function AddItemForm({
                 </button>
               )}
           </div>
+          <ManageTagsButton label="Manage categories" />
         </div>
       )}
 
@@ -817,6 +819,7 @@ export default function AddItemForm({
                 </button>
               )}
           </div>
+          <ManageTagsButton label="Manage stores" />
         </div>
       )}
     </div>

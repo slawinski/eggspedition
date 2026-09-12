@@ -3,7 +3,7 @@ import { useServerFn } from '@tanstack/react-start'
 import { useQueryClient } from '@tanstack/react-query'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
-import { ArrowLeft, UserPlus, Trash2, Loader2 } from 'lucide-react'
+import { ArrowLeft, UserPlus, Trash2, Loader2, ChevronRight } from 'lucide-react'
 import HouseholdShareActions from '../../components/onboarding/HouseholdShareActions'
 import {
   getHouseholdMembersFn,
@@ -13,6 +13,10 @@ import {
   revokeHouseholdInviteFn,
   updateHouseholdNameFn,
 } from '../../services/household.api'
+import {
+  getCategoriesFn,
+  getStoresFn,
+} from '../../services/grocery.api'
 import styles from './household.module.css'
 
 export const Route = createFileRoute('/settings/household')({
@@ -42,6 +46,14 @@ export const Route = createFileRoute('/settings/household')({
       queryClient.ensureQueryData({
         queryKey: ['household-member-count', householdId],
         queryFn: () => getHouseholdMemberCountFn(),
+      }),
+      queryClient.ensureQueryData({
+        queryKey: ['categories', householdId],
+        queryFn: () => getCategoriesFn(),
+      }),
+      queryClient.ensureQueryData({
+        queryKey: ['stores', householdId],
+        queryFn: () => getStoresFn(),
       }),
     ])
 
@@ -80,6 +92,20 @@ function HouseholdSettings() {
   const { data: members } = useQuery({
     queryKey: ['household-members', householdId],
     queryFn: () => getHouseholdMembersFn(),
+    enabled: !!householdId,
+  })
+
+  // ── Categories / stores summary (managed on /settings/tags) ──
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories', householdId],
+    queryFn: () => getCategoriesFn(),
+    enabled: !!householdId,
+  })
+
+  const { data: stores = [] } = useQuery({
+    queryKey: ['stores', householdId],
+    queryFn: () => getStoresFn(),
     enabled: !!householdId,
   })
 
@@ -233,6 +259,20 @@ function HouseholdSettings() {
         {pendingInvites && pendingInvites.length === 0 && !inviteData && (
           <p className={styles.emptyText}>No active invites yet. Create one to share with your household.</p>
         )}
+      </div>
+
+      {/* Categories & stores */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>Categories &amp; stores</h2>
+        <Link to="/settings/tags" className={styles.linkCard}>
+          <span className={styles.linkCardText}>
+            <span className={styles.linkCardTitle}>Manage categories &amp; stores</span>
+            <span className={styles.linkCardSub}>
+              {categories.length} {categories.length === 1 ? 'category' : 'categories'} · {stores.length} {stores.length === 1 ? 'store' : 'stores'}
+            </span>
+          </span>
+          <ChevronRight size={18} className={styles.linkCardChevron} aria-hidden="true" />
+        </Link>
       </div>
     </main>
   )

@@ -248,6 +248,176 @@ export async function addStore(householdId: string, name: string) {
   return store
 }
 
+// ── Category / store management ─────────────────────────────
+
+export interface RenameTagResult<T> {
+  merged: boolean
+  entry: T
+  /** Present when the renamed entry was merged into an existing one. */
+  removedId?: string
+  /** Items repointed (merge) — 0 for a plain rename. */
+  movedItems: number
+}
+
+export interface DeleteTagResult {
+  /** Items moved to Uncategorized / Any Store. */
+  unassignedItems: number
+}
+
+async function findHouseholdCategory(id: string, householdId: string) {
+  const [existing] = await db
+    .select()
+    .from(categories)
+    .where(and(eq(categories.id, id), eq(categories.householdId, householdId)))
+    .limit(1)
+  return existing
+}
+
+async function findHouseholdStore(id: string, householdId: string) {
+  const [existing] = await db
+    .select()
+    .from(stores)
+    .where(and(eq(stores.id, id), eq(stores.householdId, householdId)))
+    .limit(1)
+  return existing
+}
+
+function normalizeTagName(name: string): string {
+  const normalized = name.trim().toLowerCase()
+  if (!normalized) throw new Error('Name cannot be empty')
+  return normalized
+}
+
+export async function renameCategory(
+  id: string,
+  householdId: string,
+  name: string,
+): Promise<RenameTagResult<Category>> {
+  const normalized = normalizeTagName(name)
+  const existing = await findHouseholdCategory(id, householdId)
+  if (!existing) throw new Error('Category not found')
+  if (existing.name === normalized) {
+    return { merged: false, entry: existing, movedItems: 0 }
+  }
+
+  // Collision → merge the renamed entry into the surviving one.
+  const [clash] = await db
+    .select()
+    .from(categories)
+    .where(and(eq(categories.householdId, householdId), eq(categories.name, normalized)))
+    .limit(1)
+
+  if (clash) {
+    const moved = await db
+      .update(groceryItems)
+      .set({ categoryId: clash.id, updatedAt: new Date() })
+      .where(and(eq(groceryItems.categoryId, id), eq(groceryItems.householdId, householdId)))
+      .returning({ id: groceryItems.id })
+    await db
+      .update(householdLogs)
+      .set({ categoryId: clash.id })
+      .where(and(eq(householdLogs.categoryId, id), eq(householdLogs.householdId, householdId)))
+    await db
+      .delete(categories)
+      .where(and(eq(categories.id, id), eq(categories.householdId, householdId)))
+    await notifyHousehold(householdId, 'update')
+    return { merged: true, entry: clash, removedId: id, movedItems: moved.length }
+  }
+
+  const [updated] = await db
+    .update(categories)
+    .set({ name: normalized })
+    .where(and(eq(categories.id, id), eq(categories.householdId, householdId)))
+    .returning()
+  await notifyHousehold(householdId, 'update')
+  return { merged: false, entry: updated, movedItems: 0 }
+}
+
+export async function deleteCategory(id: string, householdId: string): Promise<DeleteTagResult> {
+  const existing = await findHouseholdCategory(id, householdId)
+  if (!existing) throw new Error('Category not found')
+
+  // FKs are NO ACTION — unassign first, in items and in history.
+  const unassigned = await db
+    .update(groceryItems)
+    .set({ categoryId: null, updatedAt: new Date() })
+    .where(and(eq(groceryItems.categoryId, id), eq(groceryItems.householdId, householdId)))
+    .returning({ id: groceryItems.id })
+  await db
+    .update(householdLogs)
+    .set({ categoryId: null })
+    .where(and(eq(householdLogs.categoryId, id), eq(householdLogs.householdId, householdId)))
+  await db
+    .delete(categories)
+    .where(and(eq(categories.id, id), eq(categories.householdId, householdId)))
+  await notifyHousehold(householdId, 'update')
+  return { unassignedItems: unassigned.length }
+}
+
+export async function renameStore(
+  id: string,
+  householdId: string,
+  name: string,
+): Promise<RenameTagResult<Store>> {
+  const normalized = normalizeTagName(name)
+  const existing = await findHouseholdStore(id, householdId)
+  if (!existing) throw new Error('Store not found')
+  if (existing.name === normalized) {
+    return { merged: false, entry: existing, movedItems: 0 }
+  }
+
+  const [clash] = await db
+    .select()
+    .from(stores)
+    .where(and(eq(stores.householdId, householdId), eq(stores.name, normalized)))
+    .limit(1)
+
+  if (clash) {
+    const moved = await db
+      .update(groceryItems)
+      .set({ storeId: clash.id, updatedAt: new Date() })
+      .where(and(eq(groceryItems.storeId, id), eq(groceryItems.householdId, householdId)))
+      .returning({ id: groceryItems.id })
+    await db
+      .update(householdLogs)
+      .set({ storeId: clash.id })
+      .where(and(eq(householdLogs.storeId, id), eq(householdLogs.householdId, householdId)))
+    await db
+      .delete(stores)
+      .where(and(eq(stores.id, id), eq(stores.householdId, householdId)))
+    await notifyHousehold(householdId, 'update')
+    return { merged: true, entry: clash, removedId: id, movedItems: moved.length }
+  }
+
+  const [updated] = await db
+    .update(stores)
+    .set({ name: normalized })
+    .where(and(eq(stores.id, id), eq(stores.householdId, householdId)))
+    .returning()
+  await notifyHousehold(householdId, 'update')
+  return { merged: false, entry: updated, movedItems: 0 }
+}
+
+export async function deleteStore(id: string, householdId: string): Promise<DeleteTagResult> {
+  const existing = await findHouseholdStore(id, householdId)
+  if (!existing) throw new Error('Store not found')
+
+  const unassigned = await db
+    .update(groceryItems)
+    .set({ storeId: null, updatedAt: new Date() })
+    .where(and(eq(groceryItems.storeId, id), eq(groceryItems.householdId, householdId)))
+    .returning({ id: groceryItems.id })
+  await db
+    .update(householdLogs)
+    .set({ storeId: null })
+    .where(and(eq(householdLogs.storeId, id), eq(householdLogs.householdId, householdId)))
+  await db
+    .delete(stores)
+    .where(and(eq(stores.id, id), eq(stores.householdId, householdId)))
+  await notifyHousehold(householdId, 'update')
+  return { unassignedItems: unassigned.length }
+}
+
 export async function joinHousehold(userId: string, householdId: string) {
   const [existing] = await db
     .select()

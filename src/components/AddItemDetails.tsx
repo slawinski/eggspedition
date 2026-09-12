@@ -7,6 +7,7 @@ import {
   Search,
 } from 'lucide-react'
 import formStyles from './AddItemForm.module.css'
+import ManageTagsButton from './ManageTagsButton'
 
 export interface AddItemDetailsProps {
   variant: 'inline' | 'sheet'
@@ -188,6 +189,7 @@ export default function AddItemDetails({
                 </button>
               )}
           </div>
+          <ManageTagsButton label="Manage categories" />
         </div>
       )}
 
@@ -244,6 +246,7 @@ export default function AddItemDetails({
                 </button>
               )}
           </div>
+          <ManageTagsButton label="Manage stores" />
         </div>
       )}
     </>

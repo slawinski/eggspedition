@@ -1,0 +1,31 @@
+.manageBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.625rem 0.75rem;
+  border: none;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  color: var(--lagoon-deep);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.manageBtn:hover {
+  background: var(--bg-base);
+}
+
+.manageBtn:focus-visible {
+  outline: 2px solid var(--lagoon);
+  outline-offset: -2px;
+}
+
+.manageIcon {
+  flex-shrink: 0;
+}

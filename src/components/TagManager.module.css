@@ -1,0 +1,230 @@
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.row {
+  padding: 0.625rem 0.75rem;
+  border-radius: calc(var(--radius-base) * 0.9);
+  border: 1px solid var(--line);
+  background: var(--surface-card);
+  box-shadow:
+    4px 4px 8px var(--clay-shadow-outer),
+    inset 2px 2px 4px var(--clay-shadow-inner-light);
+}
+
+.main {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 2.75rem;
+}
+
+.typeIcon {
+  flex-shrink: 0;
+  color: var(--sea-ink-soft);
+  opacity: 0.6;
+}
+
+.tagName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--sea-ink);
+}
+
+.count {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--sea-ink-soft);
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.iconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--sea-ink-soft);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.iconBtn:hover:not(:disabled) {
+  background: var(--bg-base);
+  color: var(--sea-ink);
+}
+
+.iconBtn:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.iconBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.iconBtn:focus-visible {
+  outline: 2px solid var(--lagoon);
+  outline-offset: 2px;
+}
+
+.dangerBtn {
+  color: var(--danger);
+}
+
+.dangerBtn:hover:not(:disabled) {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+/* ── Inline rename ── */
+
+.renameForm {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.renameInput {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--lagoon);
+  background: var(--bg-base);
+  color: var(--sea-ink);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  outline: none;
+  box-shadow:
+    inset 3px 3px 6px var(--clay-shadow-outer),
+    inset -2px -2px 4px var(--clay-shadow-inner-light);
+}
+
+/* ── Two-tap delete confirm ── */
+
+.confirmBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.625rem;
+  padding-top: 0.625rem;
+  border-top: 1px solid var(--line);
+}
+
+.confirmText {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--sea-ink-soft);
+}
+
+.confirmActions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.confirmDeleteBtn {
+  padding: 0.5rem 1rem;
+  min-height: 2.5rem;
+  border: none;
+  border-radius: 0.75rem;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.confirmDeleteBtn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.confirmDeleteBtn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.confirmDeleteBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cancelBtn {
+  padding: 0.5rem 1rem;
+  min-height: 2.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: transparent;
+  color: var(--sea-ink-soft);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cancelBtn:hover:not(:disabled) {
+  background: var(--bg-base);
+}
+
+/* ── Status / error / empty ── */
+
+.statusMsg {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--success);
+}
+
+.errorMsg {
+  margin: 0 0 0.75rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.75rem;
+  background: var(--danger-soft);
+  border: 1px solid var(--danger);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.emptyText {
+  font-size: 0.8125rem;
+  color: var(--sea-ink-soft);
+  opacity: 0.7;
+  text-align: center;
+  padding: 1.5rem 0;
+  margin: 0;
+}

@@ -366,11 +366,26 @@ input, button, textarea, select {
    ═══════════════════════════════════════════════════════ */
 html,
 body {
-  overflow-x: hidden;
+  /* clip (not hidden): identical rendering — no horizontal scrolling — but
+     it never creates a scroll container on body. overflow-x: hidden is a
+     notorious iOS Safari scroll-breaker when combined with fixed-position
+     descendants and content that grows after hydration; it can pin the
+     document scroll height so a long page won't budge under a finger
+     (desktop Chrome is immune, hence iPhone-only). clip also preserves
+     position: sticky (the Header). */
+  overflow-x: clip;
   min-height: 100%;
   -webkit-text-size-adjust: 100%;
   -moz-text-size-adjust: 100%;
   text-size-adjust: 100%;
+}
+
+/* iOS < 16 has no overflow: clip — fall back to hidden there. */
+@supports not (overflow: clip) {
+  html,
+  body {
+    overflow-x: hidden;
+  }
 }
 
 body {
@@ -383,7 +398,7 @@ body {
     radial-gradient(1050px 620px at 112% -12%, var(--hero-b), transparent 62%),
     radial-gradient(720px 380px at 50% 115%, rgba(79, 184, 178, 0.1), transparent 68%),
     linear-gradient(180deg, color-mix(in oklab, var(--sand) 68%, white) 0%, var(--foam) 44%, var(--bg-base) 100%);
-  overflow-x: hidden;
+  overflow-x: clip;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
