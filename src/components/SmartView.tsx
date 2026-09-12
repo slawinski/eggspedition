@@ -29,6 +29,20 @@ import ItemEditor from './ItemEditor'
 
 // ── helpers ──────────────────────────────────────────────────
 
+// Persisted "by category / by store" view preference. Unprefixed (like the
+// `theme` key) so it survives logout, matching the theme's sticky behaviour.
+const GROUP_BY_STORAGE_KEY = 'groupBy'
+
+function readStoredGroupBy(): 'category' | 'store' | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const stored = window.localStorage.getItem(GROUP_BY_STORAGE_KEY)
+    return stored === 'category' || stored === 'store' ? stored : null
+  } catch {
+    return null
+  }
+}
+
 function findItemById(
   id: string,
   groupedData: Record<string, { items: GroceryItem[] }> | undefined,
@@ -45,6 +59,16 @@ function findItemById(
 
 export default function SmartView({ session }: { session: Session | null }) {
   const [groupBy, setGroupBy] = useState<'category' | 'store'>('category')
+  // Client-only hydration of the persisted view preference. Gated so the SSR
+  // HTML (always 'category') matches the first client render — no hydration
+  // mismatch, no flash of the wrong grouping.
+  const [hydrated, setHydrated] = useState(false)
+
+  useEffect(() => {
+    const stored = readStoredGroupBy()
+    if (stored) setGroupBy(stored)
+    setHydrated(true)
+  }, [])
 
   const queryClient = useQueryClient()
 
@@ -334,6 +358,11 @@ export default function SmartView({ session }: { session: Session | null }) {
   const handleToggle = (newGroupBy: 'category' | 'store') => {
     if (newGroupBy === groupBy) return
     setGroupBy(newGroupBy)
+    try {
+      window.localStorage.setItem(GROUP_BY_STORAGE_KEY, newGroupBy)
+    } catch {
+      // Storage unavailable (private mode / quota) — state still updates.
+    }
   }
 
   const handleComplete = (item: GroceryItem) => {
@@ -378,7 +407,7 @@ export default function SmartView({ session }: { session: Session | null }) {
 
   // ── Loading state ──────────────────────────────────────────
 
-  if (isLoading && !groupedData) {
+  if (!hydrated || (isLoading && !groupedData)) {
     return (
       <div className={styles.masonryGrid}>
         {[1, 2, 3].map((col) => (
