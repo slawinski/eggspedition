@@ -16,7 +16,7 @@
   gap: 0.5rem;
 
   padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4.5rem);
+  padding-bottom: 5.5rem;
   padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
 
   pointer-events: none;

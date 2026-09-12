@@ -1,13 +1,21 @@
 .mobileNav {
-  --mobile-nav-row-height: 3.25rem;
-  --mobile-nav-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --mobile-nav-row-height: 3.75rem;
+  --mobile-nav-item-height: 3rem;
   --mobile-nav-fab-column: 4.75rem;
+  --mobile-nav-radius: 1.5rem;
 
   position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  right: 1rem;
+  bottom: 1rem;
+  left: 1rem;
   z-index: 100;
+
+  /* Floating dock: detached pill, centered with a max width so it never
+     stretches edge-to-edge on wider phones/tablets. Bottom offset is a
+     fixed 1rem (no safe-area addition) — the home indicator crosses the
+     empty gap below, not the controls. */
+  max-width: 26rem;
+  margin-inline: auto;
 
   display: grid;
   grid-template-columns:
@@ -16,27 +24,30 @@
     minmax(0, 1fr);
   align-items: center;
 
-  height: calc(
-    var(--mobile-nav-row-height) +
-    var(--mobile-nav-safe-bottom)
-  );
+  /* Deliberately no safe-area-inset-bottom here: the bar bottom stays
+     flush with the screen edge, and the 3rem pills sit optically
+     centered with an even cushion above and below. */
+  height: var(--mobile-nav-row-height);
 
   padding-right: max(
-    0.75rem,
+    1rem,
     env(safe-area-inset-right, 0px)
   );
-  padding-bottom: var(--mobile-nav-safe-bottom);
+  padding-bottom: 0;
   padding-left: max(
-    0.75rem,
+    1rem,
     env(safe-area-inset-left, 0px)
   );
 
   background-color: var(--header-bg);
+  -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
-  border-top: 1px solid var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--mobile-nav-radius);
 
   box-shadow:
-    0 -10px 30px var(--shadow-color),
+    0 12px 32px var(--shadow-color-strong),
+    0 2px 8px var(--shadow-color),
     inset 0 1px 0 var(--inset-glint);
 }
 
@@ -46,7 +57,7 @@
   }
 }
 
-/* ---- Navigation items ---- */
+/* ---- Navigation items: quiet ghosts, lagoon pressed-pill when active ---- */
 .navItem {
   position: relative;
 
@@ -55,29 +66,41 @@
   align-items: center;
   justify-content: center;
   justify-self: center;
+  gap: 0.2rem;
 
-  width: min(100%, 7rem);
+  width: min(100%, 5rem);
   min-width: 0;
-  height: 3rem;
-  padding: 0.25rem 0.5rem;
+  height: var(--mobile-nav-item-height);
+  padding: 0.375rem 0.5rem;
 
   color: var(--sea-ink-soft);
   text-decoration: none;
 
   border: 1px solid transparent;
-  border-radius: var(--radius-base);
+  /* Concentric corners: inner radius = outer radius − edge offset, so the
+     pill's curve runs parallel to the dock's. Offset here is the even
+     cushion above/below the pill: (bar height − pill height) / 2.
+     Resolves to 1.5rem − 0.375rem = 1.125rem (18px vs dock's 24px). */
+  border-radius: calc(
+    var(--mobile-nav-radius) -
+    (var(--mobile-nav-row-height) - var(--mobile-nav-item-height)) / 2
+  );
   background: transparent;
 
   transition:
-    color 0.2s var(--ease-out-quint),
-    background-color 0.2s var(--ease-out-quint),
-    border-color 0.2s var(--ease-out-quint),
-    box-shadow 0.2s var(--ease-out-quint),
-    transform 0.2s var(--ease-out-quint);
+    color 0.25s var(--ease-out-quint),
+    background-color 0.25s var(--ease-out-quint),
+    border-color 0.25s var(--ease-out-quint),
+    box-shadow 0.25s var(--ease-out-quint),
+    transform 0.18s var(--ease-spring);
+}
+
+.navItem:hover {
+  color: var(--sea-ink);
 }
 
 .navItem:active {
-  transform: scale(0.92);
+  transform: scale(0.94);
 }
 
 .navItem:focus-visible {
@@ -85,43 +108,54 @@
   outline-offset: 3px;
 }
 
-/* Active tab: a small raised clay chip floating in the glass bar —
-   the same recipe as the list rows, with a lagoon squish dot. */
+/* Active tab: pressed lagoon clay pill — reads as "pushed in" rather than
+   floating above the bar, so it needs no extra dot or badge. */
 .navItemActive {
   color: var(--lagoon-ink);
-  background: var(--surface-card);
-  border-color: var(--line);
-  transform: translateY(-1px);
+  background: color-mix(in oklab, var(--lagoon) 14%, var(--surface-card));
+  border-color: color-mix(in oklab, var(--lagoon) 40%, transparent);
+  transform: none;
   box-shadow:
-    4px 4px 8px var(--shadow-color),
-    inset 2px 2px 4px var(--clay-shadow-inner-light),
-    inset -2px -2px 4px var(--clay-shadow-inner-dark);
+    inset 2px 2px 5px var(--clay-shadow-outer),
+    inset -2px -2px 4px var(--clay-shadow-inner-light),
+    0 2px 12px color-mix(in oklab, var(--lagoon) 28%, transparent);
 }
 
-.navItemActive::after {
-  content: "";
-  position: absolute;
-  bottom: 2px;
-  left: 50%;
-  width: 3.5px;
-  height: 3.5px;
-  margin-left: -1.75px;
-  border-radius: 9999px;
-  background: var(--lagoon);
+.navItemActive:hover {
+  color: var(--lagoon-ink);
+}
+
+/* Hug the FAB: instead of centering in their (often wide) grid columns,
+   the tabs dock toward the middle with a fixed gap to the FAB column.
+   Keeps List ↔ FAB ↔ Activity visually grouped on every screen width. */
+.mobileNav > .navItem:nth-child(1) {
+  justify-self: end;
+  margin-right: 0.75rem;
+}
+
+.mobileNav > .navItem:nth-child(3) {
+  justify-self: start;
+  margin-left: 0.75rem;
 }
 
 .navIcon {
   width: 1.25rem;
   height: 1.25rem;
-  stroke-width: 2.5px;
+  stroke-width: 2.25px;
+  transition: filter 0.25s ease;
+}
+
+.navItemActive .navIcon {
+  filter: drop-shadow(
+    0 1px 2px color-mix(in oklab, var(--lagoon) 45%, transparent)
+  );
 }
 
 .navLabel {
-  font-size: 0.6875rem;
-  line-height: 1;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+  font-size: 0.75rem;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   white-space: nowrap;
 }
 
@@ -134,7 +168,7 @@
   justify-content: center;
 
   width: var(--mobile-nav-fab-column);
-  height: 3rem;
+  height: var(--mobile-nav-item-height);
 
   transform: translateY(-1.5rem);
 }
