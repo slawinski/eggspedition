@@ -7,10 +7,6 @@ import {
   getGroceryItemsFn,
 } from '../services/grocery.api'
 import { useAddGroceryItem } from '../hooks/useAddGroceryItem'
-import {
-  parseAddItemInput,
-  type ParsedAddItemInput,
-} from '../lib/parseAddItemInput'
 import type { GroceryItem } from '../lib/schemas'
 import ManageTagsButton from './ManageTagsButton'
 import styles from './AddItemForm.module.css'
@@ -37,7 +33,7 @@ export interface AddItemFormProps {
 
 type Suggestion = {
   name: string
-  type: 'category' | 'store' | 'Existing Item' | 'New Item'
+  type: 'Existing Item' | 'New Item'
   isNew?: boolean
   categoryId?: string | null
   storeId?: string | null
@@ -58,7 +54,6 @@ export default function AddItemForm({
 }: AddItemFormProps) {
   const { session } = useRouteContext({ from: '__root__' })
   const [inputValue, setInputValue] = useState(initialName ?? '')
-  const [cursorPosition, setCursorPosition] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(-1)
@@ -99,17 +94,19 @@ export default function AddItemForm({
     enabled: !!session?.householdId,
   })
 
-  const parsed: ParsedAddItemInput = parseAddItemInput(inputValue)
+  // The input is the item name, verbatim: trimmed with collapsed spaces.
+  // No #/@/xN syntax — category, store and quantity come from the pickers,
+  // which accept multi-word values.
+  const itemName = inputValue.trim().replace(/\s{2,}/g, ' ')
 
-  // Resolve effective metadata with precedence: explicit > DSL > default
-  const effectiveQuantity = explicitQuantity !== '1' ? explicitQuantity : parsed.quantity
-  const effectiveCategory = explicitCategory ?? parsed.categoryName
-  const effectiveStore = explicitStore ?? parsed.storeName
+  // Effective metadata comes from the explicit picker state only.
+  const effectiveQuantity = explicitQuantity
+  const effectiveCategory = explicitCategory
+  const effectiveStore = explicitStore
 
   const mutation = useAddGroceryItem({
     onSuccess: (_result: GroceryItem) => {
       setInputValue('')
-      setCursorPosition(0)
       setShowSuggestions(false)
       setSelectedIndex(-1)
       setError(null)
@@ -118,7 +115,7 @@ export default function AddItemForm({
       setExplicitStore(null)
       setActivePicker(null)
       onItemAdded?.({
-        name: parsed.name,
+        name: itemName,
         quantity: effectiveQuantity,
       })
     },
@@ -127,89 +124,48 @@ export default function AddItemForm({
     },
   })
 
-  // Determine what type of suggestions to show
-  const getActiveProperty = () => {
-    if (cursorPosition > 0 && inputValue[cursorPosition - 1] === ' ') {
-      return null
-    }
-
-    const textBeforeCursor = inputValue.substring(0, cursorPosition)
-    const words = textBeforeCursor.split(/\s+/)
-    const currentWord = words[words.length - 1]
-
-    if (currentWord.startsWith('#')) {
-      return { type: 'category' as const, query: currentWord.substring(1) }
-    }
-    if (currentWord.startsWith('@')) {
-      return { type: 'store' as const, query: currentWord.substring(1) }
-    }
-    return null
-  }
-
-  const activeProperty = getActiveProperty()
-
   const getSuggestions = (): Suggestion[] => {
-    if (activeProperty) {
-      const { type, query } = activeProperty
-      const list = type === 'category' ? categories : stores
-      const matches: Suggestion[] = list
-        .filter((i) =>
-          i.name.toLowerCase().includes(query.toLowerCase()),
-        )
-        .map((i) => ({ name: i.name, type }))
+    if (itemName.length === 0) return []
 
-      const hasExactMatch = matches.some(
-        (m) => m.name.toLowerCase() === query.toLowerCase(),
-      )
-      if (query && !hasExactMatch) {
-        matches.push({ name: query, type, isNew: true })
-      }
-      return matches.slice(0, 5)
+    const nameLower = itemName.toLowerCase()
+    const matches: Suggestion[] = []
+    const seen = new Set<string>()
+
+    // Historical items: exact name match first, then newest-first
+    const exact = groceryItems.filter((i) => i.name.toLowerCase() === nameLower)
+    const partial = groceryItems.filter(
+      (i) =>
+        i.name.toLowerCase().includes(nameLower) &&
+        i.name.toLowerCase() !== nameLower,
+    )
+    for (const item of [...exact, ...partial]) {
+      const key = item.name.toLowerCase()
+      if (seen.has(key)) continue
+      seen.add(key)
+      matches.push({
+        name: item.name,
+        type: 'Existing Item',
+        id: item.id,
+        categoryId: item.categoryId ?? null,
+        storeId: item.storeId ?? null,
+        quantity: item.quantity ?? null,
+      })
+      if (matches.length >= 5) break
     }
 
-    if (parsed.name.length > 0) {
-      const nameLower = parsed.name.toLowerCase()
-      const matches: Suggestion[] = []
-      const seen = new Set<string>()
-
-      // Historical items: exact name match first, then newest-first
-      const exact = groceryItems.filter((i) => i.name.toLowerCase() === nameLower)
-      const partial = groceryItems.filter(
-        (i) =>
-          i.name.toLowerCase().includes(nameLower) &&
-          i.name.toLowerCase() !== nameLower,
-      )
-      for (const item of [...exact, ...partial]) {
-        const key = item.name.toLowerCase()
-        if (seen.has(key)) continue
-        seen.add(key)
-        matches.push({
-          name: item.name,
-          type: 'Existing Item',
-          id: item.id,
-          categoryId: item.categoryId ?? null,
-          storeId: item.storeId ?? null,
-          quantity: item.quantity ?? null,
-        })
-        if (matches.length >= 5) break
-      }
-
-      const hasExact = matches.some((m) => m.name.toLowerCase() === nameLower)
-      if (!hasExact) {
-        matches.push({
-          name: parsed.name,
-          type: 'New Item' as const,
-          isNew: true,
-          categoryName: effectiveCategory,
-          storeName: effectiveStore,
-          quantity: effectiveQuantity,
-        })
-      }
-
-      return matches.slice(0, 6)
+    const hasExact = matches.some((m) => m.name.toLowerCase() === nameLower)
+    if (!hasExact) {
+      matches.push({
+        name: itemName,
+        type: 'New Item' as const,
+        isNew: true,
+        categoryName: effectiveCategory,
+        storeName: effectiveStore,
+        quantity: effectiveQuantity,
+      })
     }
 
-    return []
+    return matches.slice(0, 6)
   }
 
   const suggestions = getSuggestions()
@@ -301,64 +257,24 @@ export default function AddItemForm({
       (s) => s.name.toLowerCase() === pickerSearch.toLowerCase(),
     )
 
-  const handlePropertyClick = (propName: string) => {
-    if (!activeProperty) return
-    const symbol = activeProperty.type === 'category' ? '#' : '@'
-    const textBeforeCursor = inputValue.substring(0, cursorPosition)
-    const textAfterCursor = inputValue.substring(cursorPosition)
-
-    const replacement = `${symbol}${propName} `
-    const newTextBefore = textBeforeCursor.replace(
-      new RegExp(`${symbol}[^\\s#@]*$`),
-      replacement,
-    )
-    const newText = newTextBefore + textAfterCursor
-    const newPos = newTextBefore.length
-
-    setInputValue(newText)
-    setCursorPosition(newPos)
-    setShowSuggestions(true)
-    setSelectedIndex(-1)
-
-    setTimeout(() => {
-      if (inputRef.current) {
-        inputRef.current.selectionStart = newPos
-        inputRef.current.selectionEnd = newPos
-        inputRef.current.focus()
-      }
-    }, 0)
-  }
-
   const handleSuggestionClick = (suggestion: Suggestion) => {
-    if (activeProperty) {
-      handlePropertyClick(suggestion.name)
-      return
-    }
-
     if (suggestion.type === 'Existing Item') {
-      // Re-add a historical item with explicit > DSL > item metadata precedence
+      // Re-add a historical item with explicit > item metadata precedence
       const resolvedCategoryName =
         explicitCategory ??
-        parsed.categoryName ??
         (suggestion.categoryId
           ? categories.find((c) => c.id === suggestion.categoryId)?.name
           : null)
 
       const resolvedStoreName =
         explicitStore ??
-        parsed.storeName ??
         (suggestion.storeId
           ? stores.find((s) => s.id === suggestion.storeId)?.name
           : null)
 
       mutation.mutate({
         name: suggestion.name,
-        quantity:
-          explicitQuantity !== '1'
-            ? explicitQuantity
-            : parsed.quantity !== '1'
-              ? parsed.quantity
-              : undefined,
+        quantity: explicitQuantity !== '1' ? explicitQuantity : undefined,
         categoryName: resolvedCategoryName,
         storeName: resolvedStoreName,
       })
@@ -370,11 +286,6 @@ export default function AddItemForm({
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    setTimeout(() => {
-      if (inputRef.current)
-        setCursorPosition(inputRef.current.selectionStart || 0)
-    }, 0)
-
     if (!showSuggestions || suggestions.length === 0) {
       if (e.key === 'Enter' && inputValue.trim()) {
         handleSubmit(e)
@@ -408,11 +319,11 @@ export default function AddItemForm({
 
   const handleSubmit = (e?: React.FormEvent | React.KeyboardEvent) => {
     e?.preventDefault()
-    if (!parsed.name) return
+    if (!itemName) return
     setError(null)
 
     mutation.mutate({
-      name: parsed.name,
+      name: itemName,
       quantity: effectiveQuantity !== '1' ? effectiveQuantity : undefined,
       categoryName: effectiveCategory ?? undefined,
       storeName: effectiveStore ?? undefined,
@@ -421,10 +332,10 @@ export default function AddItemForm({
 
   const isSheet = variant === 'sheet'
 
-  // Determine chip display values
-  const displayQuantity = isSheet ? effectiveQuantity : parsed.quantity
-  const displayCategory = isSheet ? effectiveCategory ?? parsed.categoryName : parsed.categoryName
-  const displayStore = isSheet ? effectiveStore ?? parsed.storeName : parsed.storeName
+  // Chip display values come from the explicit picker state.
+  const displayQuantity = effectiveQuantity
+  const displayCategory = effectiveCategory
+  const displayStore = effectiveStore
 
   return (
     <div
@@ -444,14 +355,9 @@ export default function AddItemForm({
               value={inputValue}
               onChange={(e) => {
                 setInputValue(e.target.value)
-                setCursorPosition(e.target.selectionStart || 0)
                 setShowSuggestions(true)
               }}
-              onMouseUp={() =>
-                setCursorPosition(inputRef.current?.selectionStart || 0)
-              }
               onFocus={() => {
-                setCursorPosition(inputRef.current?.selectionStart || 0)
                 setShowSuggestions(true)
               }}
               onKeyDown={handleKeyDown}
@@ -470,7 +376,7 @@ export default function AddItemForm({
           <button
             type="submit"
             className={styles.submitButton}
-            disabled={!parsed.name || mutation.isPending}
+            disabled={!itemName || mutation.isPending}
             aria-busy={mutation.isPending}
             aria-label={mutation.isPending ? 'Adding item' : 'Add item'}
           >
@@ -480,6 +386,55 @@ export default function AddItemForm({
             <span className={styles.submitButtonLabel}>Add</span>
           </button>
         </div>
+
+        {/* Inline quantity stepper (desktop form has no pickers — this
+            replaces the removed xN shorthand) */}
+        {!isSheet && (
+          <div className={styles.inlineQuantity}>
+            <span className={styles.inlineQuantityLabel}>Quantity</span>
+            <div className={styles.quantityControls}>
+              <button
+                type="button"
+                className={styles.quantityBtn}
+                disabled={parseInt(effectiveQuantity, 10) <= 1}
+                onClick={() =>
+                  handleQuantityChange(
+                    String(
+                      Math.max(1, parseInt(effectiveQuantity, 10) - 1),
+                    ),
+                  )
+                }
+                aria-label="Decrease quantity"
+              >
+                <Minus className={styles.quantityBtnIcon} />
+              </button>
+              <input
+                type="number"
+                className={styles.quantityInput}
+                value={effectiveQuantity}
+                onChange={(e) =>
+                  handleQuantityChange(e.target.value)
+                }
+                min="1"
+                step="1"
+                inputMode="numeric"
+                aria-label="Quantity"
+              />
+              <button
+                type="button"
+                className={styles.quantityBtn}
+                onClick={() =>
+                  handleQuantityChange(
+                    String(parseInt(effectiveQuantity, 10) + 1),
+                  )
+                }
+                aria-label="Increase quantity"
+              >
+                <Plus className={styles.quantityBtnIcon} />
+              </button>
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className={styles.errorMessage} role="alert">
@@ -491,47 +446,6 @@ export default function AddItemForm({
           <div className={styles.suggestionsList}>
               {suggestions.map((s, idx) => {
                 const isHighlighted = idx === selectedIndex
-
-                if (activeProperty) {
-                  const Icon =
-                    activeProperty.type === 'category' ? Tag : StoreIcon
-                  return (
-                    <button
-                      key={`${s.name}-${idx}`}
-                      type="button"
-                      className={`${styles.suggestionItem} ${isHighlighted ? styles.highlighted : ''}`}
-                      onClick={() => handleSuggestionClick(s)}
-                      onMouseEnter={() => setSelectedIndex(idx)}
-                    >
-                      <div className={styles.suggestionMain}>
-                        <Icon
-                          className={styles.iconXs}
-                          style={{
-                            color:
-                              activeProperty.type === 'category'
-                                ? 'var(--accent-coral)'
-                                : 'var(--accent-lavender)',
-                          }}
-                        />
-                        <span className={styles.suggestionName}>
-                          {s.name}
-                        </span>
-                        {s.isNew && (
-                          <span className={styles.miniTag}>
-                            New {activeProperty.type}
-                          </span>
-                        )}
-                      </div>
-                      <div className={styles.suggestionHint}>
-                        {isHighlighted && (
-                          <CornerDownLeft
-                            className={styles.enterIcon}
-                          />
-                        )}
-                      </div>
-                    </button>
-                  )
-                }
 
                 const displayCategoryVal =
                   s.type === 'New Item'
@@ -606,13 +520,7 @@ export default function AddItemForm({
                       <span className={styles.suggestionType}>
                         {s.type === 'New Item'
                           ? 'Add new item'
-                          : s.type === 'Existing Item'
-                            ? 'Add again'
-                            : s.type === 'category'
-                              ? 'Category'
-                              : s.type === 'store'
-                                ? 'Store'
-                                : s.type}
+                          : 'Add again'}
                       </span>
                       {isHighlighted && (
                         <CornerDownLeft

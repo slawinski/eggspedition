@@ -476,6 +476,22 @@
   flex-wrap: wrap;
 }
 
+/* ---- Inline quantity stepper (inline mode only — replaces xN) ---- */
+.inlineQuantity {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.inlineQuantityLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--sea-ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .metadataChip {
   display: flex;
   align-items: center;
