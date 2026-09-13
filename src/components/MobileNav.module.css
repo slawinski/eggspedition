@@ -2,7 +2,15 @@
   --mobile-nav-row-height: 3.75rem;
   --mobile-nav-item-height: 3rem;
   --mobile-nav-fab-column: 4.75rem;
-  --mobile-nav-radius: 1.5rem;
+  /* Screen-matched corners: measured iPhone display radii run 39pt (X/11)
+     → 47.33pt (12/13/14) → 55pt (14 Pro/15/16) → 62pt (16 Pro/17).
+     Concentric with the screen (R − 16px dock offset) lands at ≥30px for
+     every iPhone 12 and newer — i.e. a full capsule on this 60px dock.
+     2rem documents that directly (anything ≥ half the height renders as
+     a stadium). The pills follow via the formula below. Note iOS draws a
+     continuous (squircle) curve while CSS draws circular arcs, so this is
+     a close approximation, never pixel-perfect. */
+  --mobile-nav-radius: 2rem;
 
   position: fixed;
   right: 1rem;
@@ -24,9 +32,9 @@
     minmax(0, 1fr);
   align-items: center;
 
-  /* Deliberately no safe-area-inset-bottom here: the bar bottom stays
-     flush with the screen edge, and the 3rem pills sit optically
-     centered with an even cushion above and below. */
+  /* Deliberately no safe-area-inset-bottom here: the dock floats 1rem
+     above the screen edge, and the 3rem pills sit optically centered
+     with an even cushion above and below. */
   height: var(--mobile-nav-row-height);
 
   padding-right: max(
@@ -80,7 +88,8 @@
   /* Concentric corners: inner radius = outer radius − edge offset, so the
      pill's curve runs parallel to the dock's. Offset here is the even
      cushion above/below the pill: (bar height − pill height) / 2.
-     Resolves to 1.5rem − 0.375rem = 1.125rem (18px vs dock's 24px). */
+     Currently resolves to 2rem − 0.375rem = 1.625rem — past half the pill
+     height, so tabs render as capsules echoing the dock. */
   border-radius: calc(
     var(--mobile-nav-radius) -
     (var(--mobile-nav-row-height) - var(--mobile-nav-item-height)) / 2
