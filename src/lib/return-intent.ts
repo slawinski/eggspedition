@@ -17,8 +17,8 @@
 export function validateReturnTo(raw: string | undefined): string | undefined {
   if (!raw) return undefined
 
-  // Reject anything with newlines (header injection)
-  if (raw.includes('\n') || raw.includes('\r')) return undefined
+  // Reject header injection and backslashes (URL parsing can turn /\ into //).
+  if (raw.includes('\n') || raw.includes('\r') || raw.includes('\\')) return undefined
 
   // Must start with `/`
   if (!raw.startsWith('/')) return undefined

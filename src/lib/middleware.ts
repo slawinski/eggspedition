@@ -1,10 +1,9 @@
 import { createMiddleware } from '@tanstack/react-start'
-import { getCookie } from '@tanstack/react-start/server'
-import { verifySession } from '../lib/auth-utils'
+import { readSessionCookie } from './session-cookies'
 
 export const authMiddleware = createMiddleware({ type: 'request' }).server(async ({ next }) => {
-  const token = getCookie('session_token')
-  const session = token ? await verifySession(token) : null
+  // Request context alone is not admitted activity (it may be static or later denied).
+  const session = await readSessionCookie('session', false)
 
   return next({
     context: {
@@ -15,8 +14,7 @@ export const authMiddleware = createMiddleware({ type: 'request' }).server(async
 
 /** Requires only authentication (userId), not household membership. */
 export const authOnlyMiddleware = createMiddleware().server(async ({ next }) => {
-  const token = getCookie('session_token')
-  const session = token ? await verifySession(token) : null
+  const session = await readSessionCookie('auth-only')
 
   if (!session || !session.userId) {
     throw new Error('Unauthorized')
@@ -31,8 +29,7 @@ export const authOnlyMiddleware = createMiddleware().server(async ({ next }) => 
 
 /** Requires authentication AND household membership. */
 export const protectedMiddleware = createMiddleware().server(async ({ next }) => {
-  const token = getCookie('session_token')
-  const session = token ? await verifySession(token) : null
+  const session = await readSessionCookie('household')
 
   if (!session || !session.userId || !session.householdId) {
     throw new Error('Unauthorized or Household not set')

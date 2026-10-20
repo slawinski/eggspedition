@@ -93,6 +93,7 @@ export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
   session: Session | null
 }>()({
+  headers: () => ({ 'Cache-Control': 'private, no-store' }),
   beforeLoad: async (opts) => {
     const session = await getSessionServerFn()
 
@@ -320,20 +321,16 @@ function RootComponent() {
       {session && <Signals />}
       <OfflineBanner />
       <Header />
-      {session ? (
-        <UndoProvider householdId={session.householdId}>
-          <div className={styles.main}>
-            <Outlet />
-          </div>
-          <ToastViewport>
-            <UndoToastRenderer />
-          </ToastViewport>
-        </UndoProvider>
-      ) : (
+      <UndoProvider householdId={session?.householdId}>
         <div className={styles.main}>
           <Outlet />
         </div>
-      )}
+        {session && (
+          <ToastViewport>
+            <UndoToastRenderer />
+          </ToastViewport>
+        )}
+      </UndoProvider>
       {session && (
         <MobileNav
           fabRef={fabRef}

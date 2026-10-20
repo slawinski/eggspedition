@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Friendlier sign-in for Eggspedition</title>
+  <style>
+    :root{color-scheme:light;--bg:#f6f4ef;--paper:#fffefb;--ink:#26312e;--muted:#53605a;--line:#d8dfd8;--green:#dceade;--blue:#e4edf7;--link:#245e50}
+    *{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:1rem}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    main{max-width:58rem;margin:auto;padding:3rem 1.4rem}header{padding-bottom:1.6rem}h1{font-size:2rem;line-height:1.2;letter-spacing:-.035em;max-width:25ch;margin:.5rem 0 1rem}h2{font-size:1.4rem;line-height:1.35;margin:0 0 1rem}h3{font-size:1.15rem;line-height:1.4;margin:0 0 .8rem}p{max-width:72ch;margin:.7rem 0}a{color:var(--link);text-underline-offset:.2em}a:focus-visible{outline:3px solid #326f9b;outline-offset:3px}code{font-size:.88em;overflow-wrap:anywhere}
+    .eyebrow{font-size:.75rem;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}.lead{font-size:1.08rem}.meta{display:flex;flex-wrap:wrap;gap:.6rem 1.5rem;color:var(--muted);font-size:.9rem}.meta div{display:flex;gap:.4rem}.meta dt{font-weight:650}.meta dd{margin:0}
+    nav{margin:1.3rem 0}nav ul{display:flex;flex-wrap:wrap;gap:.4rem 1.5rem;list-style:none;padding:0;font-size:.9rem}.callout{background:var(--green);padding:1.2rem 1.4rem;border-radius:1.2rem;margin:1.4rem 0}.callout p:first-child{margin-top:0}.callout p:last-child{margin-bottom:0}
+    section{margin:2.5rem 0}.facts{padding-left:1.2rem}.facts li{margin:.7rem 0}.axes{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;list-style:none;padding:0}.axes li{background:#edece6;border-radius:1rem;padding:.8rem 1rem}.axes b{display:block;font-size:.8rem}
+    article{background:var(--paper);border:1px solid var(--line);border-radius:1.4rem;padding:1.5rem;margin:1.2rem 0;box-shadow:inset 1px 1px 2px #fff,inset -1px -1px 2px #e7e9e1}.chips{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem}.chip{background:var(--blue);color:#294452;border-radius:1rem;padding:.15rem .65rem;font-size:.78rem}.fields{margin:.9rem 0 0}.fields dt{font-size:.8rem;font-weight:750;margin-top:.8rem;text-transform:uppercase;letter-spacing:.035em}.fields dd{margin:.2rem 0 0;max-width:72ch}.compare{margin-top:.8rem;font-size:.9rem;color:var(--muted)}
+    .jump{padding-left:1.3rem}.jump li{margin:.35rem 0}figure{margin:1.2rem 0;background:#f0f4ef;border-radius:1rem;padding:.8rem}svg{display:block;width:100%;height:auto}svg text{fill:#26312e;font:15px ui-sans-serif,system-ui,sans-serif}svg .small{font-size:12px}figcaption{font-size:.8rem;color:var(--muted);margin:.5rem .3rem 0}.table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.88rem}th{text-align:left;background:#e8ece6}td,th{border-bottom:1px solid var(--line);padding:.7rem;vertical-align:top}td:first-child{white-space:nowrap}footer{border-top:1px solid var(--line);padding-top:1rem;font-size:.78rem;color:var(--muted)}.sources li{margin:.6rem 0}
+    @media(max-width:600px){main{padding:1.5rem 1rem}h1{font-size:1.7rem}.axes{grid-template-columns:1fr}article{padding:1.1rem}.meta{display:block}.meta div{margin:.3rem 0}svg text{font-size:14px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}@media print{body{background:white}main{max-width:none;padding:0}article{box-shadow:none;break-inside:avoid}a{color:inherit}nav{display:none}}
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">Eggspedition · Authentication ideas</p>
+    <h1>A sign-in that brings you back to the same app</h1>
+    <p class="lead">Passkeys are the strongest direction for routine return visits. Real email codes are the closest alternative to today’s flow. Either can work alongside longer session continuity and a clear way to reconnect the existing installation.</p>
+    <dl class="meta">
+      <div><dt>Date</dt><dd><time datetime="2026-10-20">2026-10-20</time></dd></div>
+      <div><dt>Topic</dt><dd>pwa-authentication</dd></div>
+      <div><dt>Mode</dt><dd>Auth exploration grounded in this codebase</dd></div>
+    </dl>
+    <p><strong>Focus:</strong> Replace the frustrating email sign-in experience that currently sends the user to a browser and leads them to delete and reinstall the home-screen PWA after losing access.</p>
+    <nav aria-label="Document sections"><ul><li><a href="#context">Codebase context</a></li><li><a href="#axes">Topic axes</a></li><li><a href="#ideas">Ranked ideas</a></li><li><a href="#cuts">Rejection summary</a></li><li><a href="#sources">Sources</a></li></ul></nav>
+  </header>
+
+  <aside class="callout" aria-label="Main finding">
+    <p><strong>Two separate problems:</strong> the current sign-in uses a clickable magic link, so completion depends on the context that opens it. Sessions also expire after a fixed 30 days without ordinary renewal.</p>
+    <p>A passkey or an entered code can make reauthentication easier. Session renewal can make automatic reauthentication less frequent. Neither means an intentional signout should leave the device authenticated.</p>
+  </aside>
+
+  <section id="context">
+    <h2>Codebase Context</h2>
+    <ul class="facts">
+      <li><strong>“OTP” currently means a magic link.</strong> The login screen accepts an email and shows “We’ve sent a squishy magic link.” It has no code-entry step. The email opens <code>/api/auth/verify</code>, which establishes the cookie in the context handling verification. See <code>src/routes/login.tsx:29–82</code> and <code>src/services/auth.api.ts:47–60</code>.</li>
+      <li><strong>Regular use does not extend the session.</strong> The JWT expires at <code>30d</code>; the cookie lasts 30 days. The normal session reader verifies the token without reissuing it. Some household actions do reissue a session. See <code>src/lib/auth-utils.ts:8–22</code>, <code>src/services/auth.api.ts:6–19</code>, and <code>src/services/household.api.ts:18–31,81–94</code>.</li>
+      <li><strong>The same icon launches the root URL.</strong> The manifest uses root scope, root start URL, and standalone display. Without a session, the root renders the marketing landing page, including installation guidance. That may reinforce the impression that a signed-out installation needs replacing; the effect has not been observed on the user’s device.</li>
+      <li><strong>Reinstallation is not a coded requirement.</strong> Logout deletes the cookie and clears selected query/localStorage data. The service worker separately caches navigation responses and can serve cached pages offline. Neither cookie-context isolation nor stale cache has been established as the cause of the reported loop.</li>
+      <li><strong>Existing households have a durable identity anchor.</strong> Memberships reference a user UUID. Login currently resolves that user through email. New sign-in methods can therefore be attached to the existing identity, rather than creating another household member.</li>
+      <li><strong>Product fit:</strong> a shared grocery list with passwordless simplicity, offline-first use, and 30–90-day sticky-session intent. Shopping interruptions matter more than authentication feature breadth.</li>
+    </ul>
+    <p><strong>Evidence limits:</strong> no device/OS/browser reproduction was performed. Current MDN WebAuthn documentation was checked through Context7; broad web search and a vendor comparison were unavailable. That documentation establishes the mechanism, not compatibility on the user’s installed PWA. No application code was changed.</p>
+  </section>
+
+  <section id="axes">
+    <h2>Topic Axes</h2>
+    <ul class="axes">
+      <li><b>A · In-app sign-in</b>Complete authentication inside the installed app.</li>
+      <li><b>B · Session continuity</b>Control how often this device asks again.</li>
+      <li><b>C · Same-install recovery</b>Return through the existing home-screen icon.</li>
+      <li><b>D · Account continuity</b>Keep the same person and household as credentials change.</li>
+    </ul>
+  </section>
+
+  <section id="ideas">
+    <h2>Ranked Ideas</h2>
+    <p><strong>7 survivors from 44 raw ideas:</strong> 17 distinct candidates after deduplication, plus 3 combined directions; 13 of those 20 were cut. Alternatives and supporting improvements are labeled below, so this is not a seven-feature prescription.</p>
+    <p class="compare">Ranking weighs evidence and likely user value most, then pragmatism, future leverage, novelty, burden, and overlap. All four axes are represented. Confidence is a judgment of fit—not a measured success rate or a device-compatibility guarantee. Evidence depth varied: generators could make up to five targeted reads, with one sharing that budget across two lenses.</p>
+    <ol class="jump">
+      <li><a href="#idea-1">Passkeys for returning sign-in</a></li>
+      <li><a href="#idea-2">Enter an email code in the installed app</a></li>
+      <li><a href="#idea-3">Keep active personal devices signed in</a></li>
+      <li><a href="#idea-4">Reconnect through the same home-screen icon</a></li>
+      <li><a href="#idea-5">Let email approve the waiting app</a></li>
+      <li><a href="#idea-6">One account, replaceable sign-in methods</a></li>
+      <li><a href="#idea-7">Approve this installation from a signed-in device</a></li>
+    </ol>
+
+    <article id="idea-1">
+      <div class="chips"><span class="chip">Primary replacement</span><span class="chip">A · In-app sign-in</span></div>
+      <h3>1. Passkeys for returning sign-in</h3>
+      <p>Once someone has authenticated, offer to add a passkey to their existing account. When they later need to sign in through the home-screen app, they approve their device’s authenticator prompt—such as biometrics or device PIN—instead of opening email. Keep a recovery route for unavailable credentials and unsupported contexts.</p>
+      <figure>
+        <svg viewBox="0 0 690 140" role="img" aria-labelledby="passkey-diagram-title">
+          <title id="passkey-diagram-title">Proposed return visit stays in the installed app instead of routing through mail and a browser.</title>
+          <rect x="10" y="42" width="185" height="58" rx="16" fill="#dceade"/><text x="102" y="77" text-anchor="middle">Existing app icon</text>
+          <path d="M205 71H239" stroke="#53605a" stroke-width="2"/><path d="m231 65 8 6-8 6" fill="none" stroke="#53605a" stroke-width="2"/>
+          <rect x="250" y="42" width="190" height="58" rx="16" fill="#e4edf7"/><text x="345" y="77" text-anchor="middle">Device sign-in prompt</text>
+          <path d="M450 71H484" stroke="#53605a" stroke-width="2"/><path d="m476 65 8 6-8 6" fill="none" stroke="#53605a" stroke-width="2"/>
+          <rect x="495" y="42" width="185" height="58" rx="16" fill="#dceade"/><text x="587" y="77" text-anchor="middle">Same household list</text>
+        </svg>
+        <figcaption>Conceptual return visit after enrollment, subject to device support. Email is absent from the routine path, not necessarily from recovery.</figcaption>
+      </figure>
+      <dl class="fields">
+        <dt>Basis</dt><dd><strong>external:</strong> MDN’s Web Authentication API describes server challenges, credentials tied to a user identity, stored public keys, and server validation. <strong>direct:</strong> <code>src/routes/login.tsx:57–82</code> has only the magic-link flow; <code>src/db/schema.ts:3–8</code> already provides a UUID account anchor.</dd>
+        <dt>Rationale</dt><dd>This changes the everyday authentication gesture and removes mail-link navigation from returning sign-in. It directly addresses the user’s desire for a friendlier replacement. Pairing it with #3 and #4 would address interruption frequency and recovery presentation separately.</dd>
+        <dt>Downsides</dt><dd>Enrollment, credential management, origin/RP configuration, server verification, and lost-credential recovery are new work. Support needs checking in the actual installed app. A passkey does not make a session permanent, and first enrollment still needs a trustworthy way into the existing account.</dd>
+        <dt>Confidence</dt><dd>82%</dd><dt>Complexity</dt><dd>Medium</dd>
+      </dl>
+    </article>
+
+    <article id="idea-2">
+      <div class="chips"><span class="chip">Closest alternative</span><span class="chip">A · In-app sign-in</span></div>
+      <h3>2. Enter an email code in the installed app</h3>
+      <p>Send a short-lived code that the user enters in the same installed app that requested it. Reading the email can happen in any mail client; finishing authentication happens back in Eggspedition. The waiting screen can retain the invitation or grocery action and offer resend and change-email recovery.</p>
+      <dl class="fields">
+        <dt>Basis</dt><dd><strong>reasoned:</strong> today’s screen has no code input (<code>src/routes/login.tsx:57–82</code>), and the message tells the recipient to click a URL (<code>src/services/auth.service.ts:125–147</code>). Returning proof as a code avoids depending on that URL opening the right app context.</dd>
+        <dt>Rationale</dt><dd>This would be actual email OTP, unlike the current magic link. It changes fewer user concepts than passkey enrollment and offers a direct way to complete sign-in inside the existing PWA.</dd>
+        <dt>Downsides</dt><dd>Still depends on email delivery and an inbox round trip. Entry/paste can be annoying. Short codes need suitable attempt limits, expiration, and single-use enforcement; the current high-entropy link-token scheme cannot simply be shortened without reconsidering those protections.</dd>
+        <dt>Confidence</dt><dd>90%</dd><dt>Complexity</dt><dd>Medium</dd>
+      </dl>
+    </article>
+
+    <article id="idea-3">
+      <div class="chips"><span class="chip">Supporting improvement</span><span class="chip">B · Session continuity</span></div>
+      <h3>3. Keep active personal devices signed in</h3>
+      <p>Let successful authenticated use renew a remembered device’s session within bounded inactivity and maximum-lifetime policies. Weekly use would no longer count down toward a surprise deadline set a month earlier. An unused device eventually asks again; explicit signout still ends access.</p>
+      <dl class="fields">
+        <dt>Basis</dt><dd><strong>direct:</strong> <code>src/lib/auth-utils.ts:12</code> uses <code>.setExpirationTime('30d')</code>. <code>src/services/auth.api.ts:6–19</code> reads and verifies the token without renewing it. The product’s sticky-session intent is 30–90 days to avoid aisle-lockout (<code>SPEC.md:25</code>).</dd>
+        <dt>Rationale</dt><dd>Reducing avoidable authentication events matters regardless of which sign-in method wins. This is the clearest code-grounded reason a regular shopper might encounter recurring automatic expiration.</dd>
+        <dt>Downsides</dt><dd>The cause of this user’s sign-offs is still unverified. Renewal cannot fix intentional logout or storage removal. Session duration, renewal, revocation, and stale authorization need a coherent policy; merely increasing both expiry numbers would not settle those choices.</dd>
+        <dt>Confidence</dt><dd>93%</dd><dt>Complexity</dt><dd>Medium</dd>
+      </dl>
+    </article>
+
+    <article id="idea-4">
+      <div class="chips"><span class="chip">Supporting improvement</span><span class="chip">C · Same-install recovery</span></div>
+      <h3>4. Reconnect through the same home-screen icon</h3>
+      <p>A signed-out installed app can say “Sign in to reconnect this app” and offer an authentication path that completes there. It can distinguish being offline from having an expired session or having deliberately signed out. The existing icon remains the place to return; installation advice belongs to first-time visitors.</p>
+      <dl class="fields">
+        <dt>Basis</dt><dd><strong>direct:</strong> <code>public/manifest.json:6–8</code> launches <code>/</code> in standalone mode. <code>src/routes/index.tsx:54–59</code> renders <code>LandingPage</code> without a session, and <code>src/components/landing/LandingPage.tsx:187–189</code> tells visitors to install from their browser.</dd>
+        <dt>Rationale</dt><dd>The current presentation treats an installed, signed-out user like a new website visitor. A reconnect experience directly challenges the reported reinstall ritual and belongs alongside a working in-app authentication method.</dd>
+        <dt>Downsides</dt><dd>Copy alone does not establish a session in the PWA. Authentication-aware navigation/cache behavior and stale-state handling need checking. No cache reset or removal of local shopping data is justified merely because the user reported reinstalling.</dd>
+        <dt>Confidence</dt><dd>88%</dd><dt>Complexity</dt><dd>Medium</dd>
+      </dl>
+    </article>
+
+    <article id="idea-5">
+      <div class="chips"><span class="chip">Alternative email flow</span><span class="chip">A · In-app sign-in</span></div>
+      <h3>5. Let email approve the waiting app</h3>
+      <p>Keep the click-email gesture, but make it approve a sign-in request waiting in the original installed app. The browser confirms approval; the user returns to their existing icon, where the app completes its own bound request and establishes its session. The browser need not share its cookies with the PWA.</p>
+      <figure>
+        <svg viewBox="0 0 690 180" role="img" aria-labelledby="approval-diagram-title">
+          <title id="approval-diagram-title">The original app waits, email approves the request elsewhere, and sign-in completes back in the original app.</title>
+          <rect x="10" y="35" width="190" height="70" rx="16" fill="#dceade"/><text x="105" y="65" text-anchor="middle">App requests sign-in</text><text class="small" x="105" y="87" text-anchor="middle">Original request waits here</text>
+          <path d="M210 70H239" stroke="#53605a" stroke-width="2"/><path d="m231 64 8 6-8 6" fill="none" stroke="#53605a" stroke-width="2"/>
+          <rect x="250" y="35" width="190" height="70" rx="16" fill="#e4edf7"/><text x="345" y="65" text-anchor="middle">Email approves</text><text class="small" x="345" y="87" text-anchor="middle">May open a different window</text>
+          <path d="M450 70H479" stroke="#53605a" stroke-width="2"/><path d="m471 64 8 6-8 6" fill="none" stroke="#53605a" stroke-width="2"/>
+          <rect x="490" y="35" width="190" height="70" rx="16" fill="#dceade"/><text x="585" y="65" text-anchor="middle">Return to original app</text><text class="small" x="585" y="87" text-anchor="middle">Bound request completes</text>
+          <text x="345" y="145" text-anchor="middle">Approval travels between contexts; a browser cookie does not.</text>
+        </svg>
+        <figcaption>Conceptual handoff, not a protocol design. Approval alone must not be enough for an unrelated client to collect the session.</figcaption>
+      </figure>
+      <dl class="fields">
+        <dt>Basis</dt><dd><strong>reasoned:</strong> the current callback sets the cookie (<code>src/services/auth.api.ts:54–60</code>) and redirects into the product (<code>src/routes/api/auth/verify.tsx:30–34</code>). Separating approval from app-side session delivery removes the need to rely on the callback’s browsing context.</dd>
+        <dt>Rationale</dt><dd>Useful if clicking email is otherwise comfortable and the handoff is the real problem. It can preserve the familiar gesture while making the originating installation the destination.</dd>
+        <dt>Downsides</dt><dd>More custom protocol work than entering a code: request binding, expiring approval, one-time redemption, cancellation, and app-resume behavior. A public request ID or “return to app” message alone would not establish trustworthy authentication. Email switching remains.</dd>
+        <dt>Confidence</dt><dd>76%</dd><dt>Complexity</dt><dd>High</dd>
+      </dl>
+    </article>
+
+    <article id="idea-6">
+      <div class="chips"><span class="chip">Migration foundation</span><span class="chip">D · Account continuity</span></div>
+      <h3>6. One account, replaceable sign-in methods</h3>
+      <p>Attach a passkey or another verified sign-in route to the user’s existing account. Changing a credential should preserve the same household membership and person, rather than silently creating a new account. Email replacement and recovery would prove ownership of that existing account, not just possession of a newly supplied inbox.</p>
+      <dl class="fields">
+        <dt>Basis</dt><dd><strong>direct:</strong> users have UUID primary keys and unique emails (<code>src/db/schema.ts:3–8</code>); memberships reference user IDs (<code>:16–23</code>). Magic-link verification finds or creates a user through email (<code>src/services/auth.service.ts:166–174</code>).</dd>
+        <dt>Rationale</dt><dd>The database already has a durable identity independent of the sign-in gesture. Preserving it makes a replacement useful to current households and supports future recovery without duplicate members.</dd>
+        <dt>Downsides</dt><dd>A supporting foundation, not a friendlier gesture by itself. Credential linking, identity normalization, admission rules, and recovery authorization add work. Household invitations grant access; they are not evidence of ownership of another member’s account.</dd>
+        <dt>Confidence</dt><dd>94%</dd><dt>Complexity</dt><dd>Medium</dd>
+      </dl>
+    </article>
+
+    <article id="idea-7">
+      <div class="chips"><span class="chip">Later recovery option</span><span class="chip">D · Account continuity</span></div>
+      <h3>7. Approve this installation from a signed-in device</h3>
+      <p>A signed-out installed app presents a short-lived pairing request. An already-authenticated browser or another personal device explicitly approves that installation into the same account. If the browser is signed in but the home-screen app is not, the working session becomes a recovery route instead of a dead end.</p>
+      <dl class="fields">
+        <dt>Basis</dt><dd><strong>reasoned:</strong> authenticated access is anchored in <code>session.userId</code> (<code>src/lib/middleware.ts:16–49</code>), and memberships attach to that user UUID. A surviving authenticated session can authorize a deliberately matched installation without assuming cookie sharing. There is no existing device/session pairing store.</dd>
+        <dt>Rationale</dt><dd>Matches “I am signed in, but in the wrong place” and helps when a second device still works. It preserves personal identity rather than repurposing a household invite.</dd>
+        <dt>Downsides</dt><dd>Needs a surviving session and a carefully bound, expiring approval. Adds target-confirmation and phishing concerns plus a device-management model. For this app, it is likely more work than passkeys or entered email codes and is not the first direction to pursue.</dd>
+        <dt>Confidence</dt><dd>68%</dd><dt>Complexity</dt><dd>High</dd>
+      </dl>
+    </article>
+  </section>
+
+  <section id="cuts">
+    <h2>Rejection Summary</h2>
+    <p>Every distinct candidate received an independent evidence and relevance check. The cuts below include sound ideas rejected for overlap, as well as ideas that did not clear the relevance bar. No axis was left without a survivor.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Candidate</th><th>Considered direction</th><th>Reason cut</th></tr></thead>
+      <tbody>
+        <tr><td>C06</td><td>Keep shopping while reconnecting</td><td>Broadens into offline-data authorization and sync. A persisted query cache does not prove usable offline capture.</td></tr>
+        <tr><td>C09</td><td>Privacy lock versus forget-device</td><td>Assumes the user signs out for temporary privacy; that intent was not reported. Concealment is not session revocation.</td></tr>
+        <tr><td>C10</td><td>Browser approval receipt</td><td>Supporting copy for #5 or #7, not a working authentication direction on its own.</td></tr>
+        <tr><td>C11</td><td>Fresh proof only for account-control actions</td><td>A separate freshness/authorization policy beyond the demonstrated reconnect problem.</td></tr>
+        <tr><td>C12</td><td>Household recovery helper</td><td>No existing pre-authorized recovery relationship or demand. Household membership alone grants no personal-account recovery authority.</td></tr>
+        <tr><td>C13</td><td>Rejoin through a new account</td><td>Largely the existing invite workflow, still admission-gated; does not recover the original identity.</td></tr>
+        <tr><td>C14</td><td>Resume the unfinished errand</td><td>Invite/add-item routing already exists. Remaining context-bound intent handling belongs inside the chosen sign-in direction.</td></tr>
+        <tr><td>C15</td><td>Personal versus temporary-device duration</td><td>Unestablished temporary-device use case; a policy variant within #3 that adds a user decision.</td></tr>
+        <tr><td>C16</td><td>In-place cache repair</td><td>Cache behavior is real but causation is not. Diagnose before introducing a reset, especially where local work might be lost.</td></tr>
+        <tr><td>C17</td><td>Emergency recovery key</td><td>A new recovery system for simultaneous device/inbox loss, which is not the reported problem.</td></tr>
+        <tr><td>C18</td><td>Passkey + code + renewal bundle</td><td>Sound combination of #1, #2, #3, #4, and #6, not an independent idea. Compatible improvements need not all become release prerequisites.</td></tr>
+        <tr><td>C19</td><td>Email-code-first reconnect bundle</td><td>Sound combination of #2, #3, #4, and existing intent routing; counted once through its component ideas.</td></tr>
+        <tr><td>C20</td><td>Existing-trust recovery bundle</td><td>Sound combination of #7 and #6 with task continuity; no independent evidence beyond those components.</td></tr>
+      </tbody>
+    </table></div>
+    <p class="compare">Raw duplicates from six ideation lenses were merged before critique. The cross-domain analogies produced the same underlying directions—renewable access, bound approval, replaceable credentials—rather than additional products to build.</p>
+  </section>
+
+  <section id="sources">
+    <h2>Sources &amp; References</h2>
+    <ul class="sources">
+      <li><a href="https://github.com/slawinski/eggspedition/blob/main/src/routes/login.tsx#L29-L82">Login UI</a> · email entry and magic-link confirmation.</li>
+      <li><a href="https://github.com/slawinski/eggspedition/blob/main/src/services/auth.api.ts#L6-L64">Auth API</a> · session reads, logout, callback cookie.</li>
+      <li><a href="https://github.com/slawinski/eggspedition/blob/main/src/lib/auth-utils.ts#L8-L22">Session signing and verification</a> · fixed 30-day JWT.</li>
+      <li><a href="https://github.com/slawinski/eggspedition/blob/main/src/services/auth.service.ts#L104-L193">Magic-link service</a> · mail URL, token expiry, email-to-user resolution.</li>
+      <li><a href="https://github.com/slawinski/eggspedition/blob/main/public/manifest.json">PWA manifest</a> · root start URL and standalone mode.</li>
+      <li><a href="https://github.com/slawinski/eggspedition/blob/main/public/sw.js#L73-L89">Service-worker navigation handling</a> · network-first cache/fallback.</li>
+      <li><a href="https://github.com/slawinski/eggspedition/blob/main/src/routes/index.tsx#L54-L59">Signed-out root</a> and <a href="https://github.com/slawinski/eggspedition/blob/main/src/components/landing/LandingPage.tsx#L187-L189">installation guidance</a>.</li>
+      <li><a href="https://github.com/slawinski/eggspedition/blob/main/src/db/schema.ts#L3-L31">User, membership, and magic-link schema</a> · stable UUID identity.</li>
+      <li><a href="https://github.com/slawinski/eggspedition/blob/main/src/lib/post-auth-router.ts#L21-L26">Existing post-auth intent routing</a> · invites, item actions, household/list.</li>
+      <li><a href="https://github.com/slawinski/eggspedition/blob/main/src/lib/middleware.ts#L16-L49">Authentication middleware</a> · session user/household boundary.</li>
+      <li><a href="https://github.com/slawinski/eggspedition/blob/main/SPEC.md#L25">Product session intent</a> · sticky access while shopping.</li>
+      <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API">MDN Web Authentication API</a> · registration, authentication, server verification; checked through Context7.</li>
+      <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredential/getClientCapabilities_static">MDN client capability detection</a> · support must be checked, not assumed.</li>
+    </ul>
+  </section>
+  <footer class="composition-signal">Composed <time datetime="2026-10-20T14:30:26Z">2026-10-20T14:30:26Z</time> by ce-ideate from the user’s PWA email-sign-in report and the current Eggspedition checkout. Point-in-time ideas, not requirements or an implementation plan.</footer>
+</main>
+</body>
+</html>

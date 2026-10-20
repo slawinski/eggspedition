@@ -8,6 +8,7 @@ import { logoutServerFn } from '../services/auth.api'
 import { Route as rootRoute } from '../routes/__root'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import styles from './Header.module.css'
+import { clearAuthNavigations } from '../lib/pwa-auth'
 
 /** Non-interactive menu items (email display) count as separators in keyboard nav */
 const SKIP_KEYBOARD_FOCUS = -1
@@ -124,7 +125,18 @@ export default function Header() {
       }
     }
     keysToRemove.forEach((k) => localStorage.removeItem(k))
-    router.invalidate()
+    try {
+      if (await clearAuthNavigations() === 'reload') {
+        window.location.replace('/login')
+        return
+      }
+    } catch {
+      // Server logout already succeeded; a storage/worker failure must not
+      // leave the signed-in interface mounted indefinitely.
+      window.location.replace('/login')
+      return
+    }
+    await router.invalidate({ sync: true })
   }
 
   return (
@@ -158,7 +170,7 @@ export default function Header() {
             </a>
             <ThemeToggle />
             <Link to="/login" className={styles.publicLoginLink}>
-              Log in
+              Sign in
             </Link>
             <Link to="/login" className={styles.publicPrimaryLink}>
               Start your list

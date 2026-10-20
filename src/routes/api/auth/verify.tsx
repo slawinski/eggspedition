@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute, redirect, Link } from '@tanstack/react-router'
 import { verifyMagicLinkServerFn } from '../../../services/auth.api'
 import { resolvePostAuthDestination } from '../../../lib/post-auth-router'
 import styles from './verify.module.css'
@@ -34,13 +34,14 @@ export const Route = createFileRoute('/api/auth/verify')({
       })
     }
     
-    return { error: 'Invalid or expired magic link.' }
+    return { error: 'This sign-in link is invalid or has expired.' }
   },
   component: VerifyComponent,
 })
 
 function VerifyComponent() {
   const { error } = Route.useLoaderData()
+  const { token: _token, ...intent } = Route.useSearch()
 
   return (
     <div className={styles.page}>
@@ -48,9 +49,9 @@ function VerifyComponent() {
         <h2 className={styles.title}>This link has expired</h2>
         <p className={styles.message}>{error}</p>
         <p className={styles.hint}>
-          Sign-in links are valid for 15 minutes. Request a new one to continue.
+          Sign in with an email code instead. Return here to enter the code without reinstalling the app.
         </p>
-        <a href="/login" className={styles.actionButton}>Send a new link</a>
+        <Link to="/login" search={intent} className={styles.actionButton}>Request an email code</Link>
       </div>
     </div>
   )

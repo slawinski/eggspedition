@@ -1,5 +1,4 @@
 import { createServerFn } from '@tanstack/react-start'
-import { setCookie } from '@tanstack/react-start/server'
 import { protectedMiddleware } from '../lib/middleware'
 import { authOnlyMiddleware } from '../lib/middleware'
 import { z } from 'zod'
@@ -11,24 +10,11 @@ export const createHouseholdFn = createServerFn({ method: 'POST' })
   .middleware([authOnlyMiddleware])
   .handler(async ({ data, context }) => {
     const { createHousehold } = await import('./household.service')
-    const { signSession } = await import('../lib/auth-utils')
+    const { reissueHouseholdCookie } = await import('../lib/session-cookies')
 
     const household = await createHousehold(context.session.userId, data.name)
 
-    // Update session cookie with new householdId
-    const newToken = await signSession({
-      userId: context.session.userId,
-      email: context.session.email,
-      householdId: household.id,
-    })
-
-    setCookie('session_token', newToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 30 * 24 * 60 * 60,
-    })
+    await reissueHouseholdCookie(context.session, household.id)
 
     return { householdId: household.id, name: household.name }
   })
@@ -74,24 +60,11 @@ export const acceptHouseholdInviteFn = createServerFn({ method: 'POST' })
   .middleware([authOnlyMiddleware])
   .handler(async ({ data: token, context }) => {
     const { acceptInvite } = await import('./household.service')
-    const { signSession } = await import('../lib/auth-utils')
+    const { reissueHouseholdCookie } = await import('../lib/session-cookies')
 
     const householdId = await acceptInvite(token, context.session.userId)
 
-    // Update session cookie with new householdId
-    const newToken = await signSession({
-      userId: context.session.userId,
-      email: context.session.email,
-      householdId,
-    })
-
-    setCookie('session_token', newToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 30 * 24 * 60 * 60,
-    })
+    await reissueHouseholdCookie(context.session, householdId)
 
     return { householdId }
   })

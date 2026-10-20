@@ -1,7 +1,12 @@
 // Eggspedition Service Worker — cache-first for static assets, network-first for pages
-const CACHE_NAME = 'eggspedition-v2'
+const CACHE_NAME = 'eggspedition-v3'
+let navigationEpoch = 0
+let navigationWrites = Promise.resolve()
+const authPath = (path) => /^\/(login(?:\/|$)|api\/auth(?:\/|$)|_serverFn(?:\/|$))/.test(path)
+const offlineSignIn = () => new Response('Sign-in needs an internet connection. Reconnect, then open this app again to sign in. You do not need to reinstall.', {
+  status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' },
+})
 const STATIC_ASSETS = [
-  '/',
   '/manifest.json',
 
   '/favicon.svg',
@@ -44,12 +49,40 @@ self.addEventListener('activate', (event) => {
   self.clients.claim()
 })
 
+self.addEventListener('message', (event) => {
+  if (event.data?.type !== 'clear-auth-navigations') return
+  // Increment synchronously, before any pending network response can queue a write.
+  navigationEpoch++
+  navigationWrites = navigationWrites.then(async () => {
+    const cache = await caches.open(CACHE_NAME)
+    const keys = await cache.keys()
+    await Promise.all(keys.map(async (request) => {
+      const response = await cache.match(request)
+      if (response?.headers.get('Content-Type')?.includes('text/html') || new URL(request.url).pathname === '/' || authPath(new URL(request.url).pathname)) {
+        await cache.delete(request)
+      }
+    }))
+  })
+  event.waitUntil(navigationWrites.then(() => {
+    event.ports[0]?.postMessage({ type: 'auth-navigations-cleared' })
+  }, () => {
+    event.ports[0]?.postMessage({ type: 'auth-navigation-clear-failed' })
+  }))
+})
+
 // Fetch: cache-first for static assets, network-first for pages
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url)
 
   // Only handle GET requests from our own origin
   if (event.request.method !== 'GET' || url.origin !== self.location.origin) {
+    return
+  }
+
+  // All server-function GETs (including session reads) are network-only.
+  // Auth pages must never fall back to a previously authenticated root document.
+  if (authPath(url.pathname)) {
+    event.respondWith(fetch(event.request, { cache: 'no-store' }).catch(() => offlineSignIn()))
     return
   }
 
@@ -72,20 +105,27 @@ self.addEventListener('fetch', (event) => {
 
   // Navigation / page requests: network-first with offline fallback
   if (event.request.mode === 'navigate') {
+    const epoch = navigationEpoch
     event.respondWith(
-      fetch(event.request)
+      fetch(event.request, { cache: 'no-store' })
         .then((response) => {
           // Cache successful page responses
-          if (response.ok) {
+          if (response.ok && (!response.url || !authPath(new URL(response.url).pathname))) {
             const clone = response.clone()
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
+            navigationWrites = navigationWrites.then(async () => {
+              if (epoch !== navigationEpoch) return
+              const cache = await caches.open(CACHE_NAME)
+              // The open itself can yield to a logout message.
+              if (epoch === navigationEpoch) await cache.put(event.request, clone)
+            })
+            event.waitUntil(navigationWrites)
           }
           return response
         })
         .catch(() => {
           // Try to serve from cache, fall back to the root
           return caches.match(event.request).then((cached) => {
-            return cached || caches.match('/').then((r) => r || new Response('Offline', { status: 503 }))
+            return cached || caches.match('/').then((r) => r || offlineSignIn())
           })
         })
     )
