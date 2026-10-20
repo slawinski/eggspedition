@@ -18,6 +18,7 @@ export const Route = createFileRoute('/onboarding/household')({
     name: z.string().optional().catch(undefined),
     quantity: z.string().optional().catch(undefined),
     category: z.string().optional().catch(undefined),
+    store: z.string().optional().catch(undefined),
   }),
   beforeLoad: ({ context, search }) => {
     // Must be authenticated
@@ -30,12 +31,13 @@ export const Route = createFileRoute('/onboarding/household')({
           name: search.name,
           quantity: search.quantity,
           category: search.category,
+          store: search.store,
         },
       })
     }
     // Already has a household — redirect to list, preserving add intent
     if (context.session.householdId) {
-      const hasAddParams = search.name || search.quantity || search.category
+      const hasAddParams = search.name || search.quantity || search.category || search.store
       throw redirect({
         to: '/',
         search: hasAddParams ? {
@@ -43,6 +45,7 @@ export const Route = createFileRoute('/onboarding/household')({
           name: search.name,
           quantity: search.quantity,
           category: search.category,
+          store: search.store,
         } : undefined,
       })
     }
@@ -64,7 +67,7 @@ function HouseholdOnboarding() {
 
   // Build the post-setup destination: list page with any preserved deep-link params
   const buildListDestination = () => {
-    const hasAddParams = search.name || search.quantity || search.category
+    const hasAddParams = search.name || search.quantity || search.category || search.store
     return {
       to: '/' as const,
       search: hasAddParams ? {
@@ -72,6 +75,7 @@ function HouseholdOnboarding() {
         name: search.name,
         quantity: search.quantity,
         category: search.category,
+        store: search.store,
       } : undefined,
       replace: true as const,
     }

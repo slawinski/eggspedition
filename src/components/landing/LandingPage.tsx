@@ -26,12 +26,12 @@ export default function LandingPage() {
               <Link to="/login" className={styles.ctaPrimary}>
                 Start your list
               </Link>
-              <a href="#how-it-works" className={styles.ctaSecondary}>
-                See how it works
-              </a>
+              <Link to="/login" className={styles.ctaSecondary}>
+                Sign in to your list
+              </Link>
             </div>
             <p className={styles.heroMagicNote}>
-              No password. We&rsquo;ll email you a secure sign-in link.
+              No password. Sign in with an email code or your passkey.
             </p>
           </div>
           <div className={styles.heroPreview}>
@@ -75,7 +75,7 @@ export default function LandingPage() {
 
           <div className={styles.stepsGrid}>
             {[
-              { num: '1', icon: Mail, title: 'Sign in with your email', desc: 'Enter your email and use the secure magic link we send you. No password to create or remember.' },
+              { num: '1', icon: Mail, title: 'Sign in with your email', desc: 'Enter your email, then type the six-digit code here. You can also use a passkey after optional setup.' },
               { num: '2', icon: Users, title: 'Share your household code', desc: 'Send the household code to the people you shop with so everyone works from the same list.' },
               { num: '3', icon: ShoppingBasket, title: 'Add it. Find it. Tap it done.', desc: 'Add products in seconds, organise the shop and check items off as they reach the basket.' },
             ].map((step, i) => (

@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, uniqueIndex, integer } from 'drizzle-orm/pg-core'
+import { pgTable, text, timestamp, uuid, uniqueIndex, integer, jsonb, bigint, boolean } from 'drizzle-orm/pg-core'
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -28,6 +28,55 @@ export const magicLinks = pgTable('magic_links', {
   token: text('token').notNull().unique(),
   expiresAt: timestamp('expires_at').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
+export const authSessions = pgTable('auth_sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id),
+  authenticatedAt: timestamp('authenticated_at').notNull(),
+  lastActivityAt: timestamp('last_activity_at').notNull(),
+  inactivityExpiresAt: timestamp('inactivity_expires_at').notNull(),
+  absoluteExpiresAt: timestamp('absolute_expires_at').notNull(),
+  revokedAt: timestamp('revoked_at'),
+  // Keep adoption tombstones: an old cookie must never recreate a revoked session.
+  legacyTokenDigest: text('legacy_token_digest').unique(),
+  legacyExpiresAt: timestamp('legacy_expires_at'),
+})
+
+// One lockable row per normalized email, including before its first account exists.
+export const emailCodes = pgTable('email_codes', {
+  email: text('email').primaryKey(),
+  generation: uuid('generation').unique(),
+  codeDigest: text('code_digest'),
+  bindingDigest: text('binding_digest'),
+  expiresAt: timestamp('expires_at'),
+  consumedAt: timestamp('consumed_at'),
+  attempts: integer('attempts').notNull().default(0),
+  issuedAt: jsonb('issued_at').$type<number[]>().notNull().default([]),
+})
+
+export const passkeys = pgTable('passkeys', {
+  credentialId: text('credential_id').primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id),
+  publicKey: text('public_key').notNull(), // base64url COSE key
+  counter: bigint('counter', { mode: 'number' }).notNull(),
+  transports: jsonb('transports').$type<string[]>().notNull().default([]),
+  deviceType: text('device_type').notNull(),
+  backedUp: boolean('backed_up').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  lastUsedAt: timestamp('last_used_at'),
+})
+
+export const webauthnChallenges = pgTable('webauthn_challenges', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  challenge: text('challenge').notNull(),
+  purpose: text('purpose').$type<'registration' | 'authentication'>().notNull(),
+  expectedOrigin: text('expected_origin').notNull(),
+  rpID: text('rp_id').notNull(),
+  userId: uuid('user_id').references(() => users.id),
+  sessionId: uuid('session_id').references(() => authSessions.id),
+  bindingDigest: text('binding_digest').notNull(),
+  expiresAt: timestamp('expires_at').notNull(),
 })
 
 export const categories = pgTable('categories', {

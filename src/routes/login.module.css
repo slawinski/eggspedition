@@ -2,22 +2,20 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  min-height: 70svh;
+  padding: 2rem 0;
   background-color: var(--clay-bg);
 }
 
 .cardContent {
   max-width: 400px;
   width: 90%;
+  overflow-wrap: anywhere;
 }
 
 .title {
   text-align: center;
   margin-bottom: 1rem;
-}
-
-.successMessage {
-  text-align: center;
 }
 
 .hint {
@@ -38,7 +36,28 @@
 }
 
 .error {
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   margin-left: 0.5rem;
   color: var(--danger);
+}
+
+.code {
+  font-size: 1.5rem;
+  letter-spacing: 0.15em;
+  font-variant-numeric: tabular-nums;
+}
+
+.passkey {
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+.cardContent button {
+  min-height: 44px;
+  color: #173a40;
+}
+
+.cardContent button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

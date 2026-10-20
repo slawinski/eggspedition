@@ -36,11 +36,12 @@ export function resolvePostAuthDestination(params: {
   hasHousehold: boolean
 }): PostAuthDestination {
   const { returnTo, invite, name, quantity, category, store, hasHousehold } = params
+  const invitation = invite || /^\/join\/([^/?#]+)\/?$/.exec(validateReturnTo(returnTo) || '')?.[1]
 
   // ═══ Priority 1: Invite acceptance ───
-  if (invite) {
+  if (invitation) {
     return {
-      to: `/join/${invite}`,
+      to: `/join/${invitation}`,
       search: {
         ...(name && { name }),
         ...(quantity && { quantity }),

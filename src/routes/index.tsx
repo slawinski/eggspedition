@@ -5,6 +5,9 @@ import SmartView from '../components/SmartView'
 import LandingPage from '../components/landing/LandingPage'
 import { getGroceryItemsFn, getGroceryItemsGroupedFn, getCategoriesFn, getStoresFn, getHouseholdLogsFn } from '../services/grocery.api'
 import styles from './index.module.css'
+import { useEffect } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import { isStandalone } from '../lib/pwa-auth'
 
 export const Route = createFileRoute('/')({
   validateSearch: z.object({
@@ -12,6 +15,7 @@ export const Route = createFileRoute('/')({
     name: z.string().optional().catch(undefined),
     quantity: z.string().optional().catch(undefined),
     category: z.string().optional().catch(undefined),
+    store: z.string().optional().catch(undefined),
   }),
   beforeLoad: ({ context }) => {
     if (context.session && !context.session.householdId) {
@@ -51,8 +55,16 @@ export const Route = createFileRoute('/')({
   component: Home,
 })
 
-function Home() {
+export function Home() {
   const { session } = Route.useRouteContext()
+  const search = Route.useSearch()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!session && isStandalone()) {
+      void navigate({ to: '/login', search: { ...search, returnTo: '/' }, replace: true })
+    }
+  }, [session, search, navigate])
 
   if (!session) {
     return <LandingPage />

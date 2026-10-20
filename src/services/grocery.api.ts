@@ -151,23 +151,10 @@ export const joinHouseholdFn = createServerFn({ method: 'POST' })
   .middleware([protectedMiddleware])
   .handler(async ({ data: householdId, context }) => {
     const { joinHousehold } = await import('./grocery.service')
-    const { signSession } = await import('../lib/auth-utils')
-    const { setCookie } = await import('@tanstack/react-start/server')
+    const { reissueHouseholdCookie } = await import('../lib/session-cookies')
     const result = await joinHousehold(context.session.userId, householdId)
     
-    // Update the session cookie with the new householdId
-    const newToken = await signSession({
-      ...context.session,
-      householdId: result,
-    })
-
-    setCookie('session_token', newToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 30 * 24 * 60 * 60,
-    })
+    await reissueHouseholdCookie(context.session, result)
 
     return result
   })
