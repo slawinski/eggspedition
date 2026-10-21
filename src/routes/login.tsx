@@ -72,7 +72,6 @@ export function LoginComponent() {
     else taskHeading.current?.focus()
   }, [task])
   useEffect(() => {
-    // Do not leave authenticated enrollment visible after session loss.
     if (hadSession.current && !session) {
       operation.current++
       WebAuthnAbortService.cancelCeremony()
@@ -227,24 +226,33 @@ export function LoginComponent() {
   }
 
   const wait = Math.max(0, Math.ceil((retryAt - now) / 1000))
-  const title = {
-    enrollment: 'You’re signed in',
-    registration: 'Create your passkey',
-    passkey: 'Sign in with your passkey',
-    code: 'Check your email',
-    email: 'Sign in to Eggspedition',
+  const { title, intro } = {
+    enrollment: {
+      title: 'You’re signed in',
+      intro: 'Next time, use a passkey to sign in with your device. Setup is optional; email codes still work.',
+    },
+    registration: {
+      title: 'Create your passkey',
+      intro: 'Confirm on your device to finish optional setup.',
+    },
+    passkey: {
+      title: 'Sign in with your passkey',
+      intro: 'Your device is ready to check for a passkey.',
+    },
+    code: {
+      title: 'Check your email',
+      intro: <>Enter the six-digit code sent to <strong>{email}</strong>. Read your email, then return to this app.</>,
+    },
+    email: {
+      title: 'Sign in to Eggspedition',
+      intro: 'Use an email code to reconnect to your household list.',
+    },
   }[task]
   return (
     <main id="main-content" className={auth.page} tabIndex={-1}>
       <div className={auth.column}>
         <h1 ref={taskHeading} tabIndex={-1} className={auth.title}>{title}</h1>
-        <p id="task-hint" className={auth.intro}>
-          {task === 'enrollment' ? 'Next time, use a passkey to sign in with your device. Setup is optional; email codes still work.'
-            : task === 'registration' ? 'Confirm on your device to finish optional setup.'
-            : task === 'passkey' ? 'Your device is ready to check for a passkey.'
-            : task === 'code' ? <>Enter the six-digit code sent to <strong>{email}</strong>. Read your email, then return to this app.</>
-            : 'Use an email code to reconnect to your household list.'}
-        </p>
+        <p id="task-hint" className={auth.intro}>{intro}</p>
         {!online && <p role="status" className={auth.feedback}>Sign-in needs an internet connection. Reconnect and continue here—no need to reinstall.</p>}
         {household !== null ? (
           <section className={auth.form} aria-label="Optional passkey setup">
