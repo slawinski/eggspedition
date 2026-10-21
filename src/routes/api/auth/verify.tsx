@@ -1,7 +1,8 @@
 import { createFileRoute, redirect, Link } from '@tanstack/react-router'
 import { verifyMagicLinkServerFn } from '../../../services/auth.api'
 import { resolvePostAuthDestination } from '../../../lib/post-auth-router'
-import styles from './verify.module.css'
+import { useEffect, useRef } from 'react'
+import auth from '../../../styles/auth.module.css'
 
 export const Route = createFileRoute('/api/auth/verify')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -42,17 +43,20 @@ export const Route = createFileRoute('/api/auth/verify')({
 function VerifyComponent() {
   const { error } = Route.useLoaderData()
   const { token: _token, ...intent } = Route.useSearch()
+  const heading = useRef<HTMLHeadingElement>(null)
+
+  useEffect(() => { heading.current?.focus() }, [])
 
   return (
-    <div className={styles.page}>
-      <div className={styles.card}>
-        <h2 className={styles.title}>This link has expired</h2>
-        <p className={styles.message}>{error}</p>
-        <p className={styles.hint}>
+    <main id="main-content" className={auth.page} tabIndex={-1}>
+      <div className={auth.column}>
+        <h1 ref={heading} tabIndex={-1} className={auth.title}>This sign-in link is unavailable</h1>
+        <p role="alert" className={auth.error}>{error}</p>
+        <p className={auth.intro}>
           Sign in with an email code instead. Return here to enter the code without reinstalling the app.
         </p>
-        <Link to="/login" search={intent} className={styles.actionButton}>Request an email code</Link>
+        <Link to="/login" search={intent} className={auth.primary}>Request an email code</Link>
       </div>
-    </div>
+    </main>
   )
 }
