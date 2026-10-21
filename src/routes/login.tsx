@@ -109,6 +109,9 @@ export function LoginComponent() {
     setCanCancel(false)
     setOptions(null)
     setError(null)
+    // Preparation can be cancelled without changing tasks. Wait for the email
+    // input to be enabled again before returning focus to it.
+    window.requestAnimationFrame(() => focusTarget.current?.focus())
   }
   const destination = (hasHousehold: boolean) => router.navigate(resolvePostAuthDestination({ ...search, hasHousehold }))
 
