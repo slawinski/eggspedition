@@ -61,6 +61,15 @@ The Bun passkey smoke check verifies real signatures and a database key round-tr
 AUTH_TEST_DATABASE_URL=postgres://localhost:5432/eggspedition_auth_test bun run scripts/auth-passkey-smoke.ts
 ```
 
+After a production build, also exercise the emitted server code rather than only the installed source package:
+
+```bash
+bun run build
+AUTH_TEST_DATABASE_URL=postgres://localhost:5432/eggspedition_auth_test bun run scripts/auth-passkey-smoke.ts --production
+```
+
+Nitro preserves the `reflect-metadata` side effects required by the passkey library's decorator-based dependencies. The production smoke check catches initialization failures that source-package tests cannot detect.
+
 ## Styling
 
 This project uses **CSS Modules** for styling, with a custom "Claymorphism" design system.
