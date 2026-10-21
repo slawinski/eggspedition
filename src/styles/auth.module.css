@@ -4,6 +4,7 @@
 }
 
 .column {
+  --auth-muted: light-dark(var(--sea-ink-soft), #d4d4db);
   max-width: 28rem;
   margin-inline: auto;
   overflow-wrap: anywhere;
@@ -15,6 +16,7 @@
 
 .title {
   margin: 0;
+  font-family: "Fraunces", Georgia, serif;
   font-size: var(--text-display);
   line-height: 1.2;
   letter-spacing: -0.02em;
@@ -24,7 +26,7 @@
 
 .intro {
   margin: 0 0 var(--space-2);
-  color: var(--sea-ink-soft);
+  color: var(--auth-muted);
   line-height: 1.6;
 }
 
@@ -76,6 +78,7 @@
   text-align: center;
   text-decoration: none;
   cursor: pointer;
+  scroll-margin-block: calc(var(--header-h) + var(--space-4)) var(--space-4);
 }
 
 .primary {
@@ -121,7 +124,7 @@
   margin: 0;
   font-size: var(--text-body-sm);
   line-height: 1.6;
-  color: var(--sea-ink-soft);
+  color: var(--auth-muted);
 }
 
 .error {
