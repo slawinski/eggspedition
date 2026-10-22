@@ -63,7 +63,7 @@ async function requestCode() {
 
 async function showLogin() {
   await act(async () => { render(<Suspense fallback="Loading"><LoginComponent /></Suspense>) })
-  await screen.findByRole('heading', { name: 'Welcome Home! 🥚' })
+  await screen.findByRole('heading', { name: 'Sign in to Eggspedition', level: 1 })
 }
 
 async function authenticateWithCode() {
@@ -75,12 +75,16 @@ async function authenticateWithCode() {
 
 it('requests an entered code and offers optional enrollment without navigating', async () => {
   const code = await requestCode()
+  expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+  expect(screen.getByRole('heading', { name: 'Check your email' })).toBeTruthy()
+  expect(document.activeElement).toBe(code)
   expect(code.getAttribute('inputmode')).toBe('numeric')
   expect(code.getAttribute('autocomplete')).toBe('one-time-code')
   expect(code.getAttribute('maxlength')).toBe('6')
   fireEvent.change(code, { target: { value: '001234' } })
   fireEvent.click(screen.getByRole('button', { name: 'Verify code' }))
   await screen.findByRole('button', { name: 'Set up passkey' })
+  expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'You’re signed in', level: 1 }))
   expect(mocks.verify).toHaveBeenCalledWith({ data: { requestId: 'request', code: '001234' } })
   expect(mocks.invalidate).toHaveBeenCalled()
   expect(mocks.navigate).not.toHaveBeenCalled()
@@ -94,6 +98,7 @@ it.each(['expired', 'consumed', 'attempt_limit', 'admission_denied', 'ambiguous_
   fireEvent.change(await requestCode(), { target: { value: '000000' } })
   fireEvent.click(screen.getByRole('button', { name: 'Verify code' }))
   await screen.findByRole('alert')
+  expect(screen.getByLabelText('Six-digit code').hasAttribute('disabled')).toBe(false)
   expect(mocks.invalidate).not.toHaveBeenCalled()
   expect(mocks.navigate).not.toHaveBeenCalled()
   expect(screen.getByRole('button', { name: /Resend code in/ }).hasAttribute('disabled')).toBe(true)
@@ -145,10 +150,12 @@ it.each(['registered', 'duplicate', 'invalid', 'unauthenticated', 'cancelled'])(
   await authenticateWithCode()
   fireEvent.click(screen.getByRole('button', { name: 'Set up passkey' }))
   await screen.findByRole('button', { name: 'Create passkey on this device' })
+  expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Create your passkey', level: 1 }))
   expect(mocks.register).not.toHaveBeenCalled()
   fireEvent.click(screen.getByRole('button', { name: 'Create passkey on this device' }))
   if (status !== 'registered') {
     await screen.findByRole('alert')
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'You’re signed in', level: 1 }))
     fireEvent.click(screen.getByRole('button', { name: 'Continue without a passkey' }))
   }
   await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: '/join/household-invite', replace: true, search: { name: 'Milk', quantity: '2', category: 'Dairy', store: 'Market' } }))
@@ -164,6 +171,7 @@ it.each(['authenticated', 'invalid', 'admission_denied', 'cancelled'])('handles 
   expect(mocks.beginAuthentication).not.toHaveBeenCalled()
   fireEvent.click(screen.getByRole('button', { name: 'Sign in with a passkey' }))
   await screen.findByRole('button', { name: 'Use device passkey' })
+  expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Sign in with your passkey', level: 1 }))
   expect(mocks.authenticate).not.toHaveBeenCalled()
   fireEvent.click(screen.getByRole('button', { name: 'Use device passkey' }))
   if (status === 'authenticated') {
@@ -171,6 +179,7 @@ it.each(['authenticated', 'invalid', 'admission_denied', 'cancelled'])('handles 
     expect(mocks.invalidate).toHaveBeenCalledWith({ sync: true })
   } else {
     await screen.findByRole('alert')
+    expect(document.activeElement).toBe(screen.getByLabelText('Your email'))
     expect(screen.getByRole('button', { name: 'Send email code' }).hasAttribute('disabled')).toBe(false)
     expect(mocks.navigate).not.toHaveBeenCalled()
   }
@@ -182,7 +191,10 @@ it('ignores late options after switching back to email', async () => {
   mocks.beginAuthentication.mockImplementation(() => new Promise((resolve) => { finish = resolve }))
   await showLogin()
   fireEvent.click(screen.getByRole('button', { name: 'Sign in with a passkey' }))
-  fireEvent.click(screen.getByRole('button', { name: 'Use email code instead' }))
+  const fallback = screen.getByRole('button', { name: 'Use email code instead' })
+  fallback.focus()
+  fireEvent.click(fallback)
+  await waitFor(() => expect(document.activeElement).toBe(screen.getByLabelText('Your email')))
   await act(async () => finish({ status: 'options', requestId: 'late', optionsJSON: {} }))
   expect(screen.queryByRole('button', { name: 'Use device passkey' })).toBeNull()
   expect(screen.getByRole('button', { name: 'Send email code' }).hasAttribute('disabled')).toBe(false)
@@ -287,6 +299,30 @@ it('shows shared-schema validation for invalid email without requesting a code',
   expect((await screen.findByRole('alert')).textContent).toBe('Please enter a valid email address')
   expect(mocks.login).not.toHaveBeenCalled()
   expect(screen.queryByLabelText('Six-digit code')).toBeNull()
+})
+
+it('keeps task focus stable through pending updates and countdown ticks', async () => {
+  mocks.beginAuthentication.mockResolvedValue({ status: 'options', requestId: 'authentication', optionsJSON: {} })
+  mocks.authenticate.mockImplementation(() => new Promise(() => {}))
+  await showLogin()
+  fireEvent.click(screen.getByRole('button', { name: 'Sign in with a passkey' }))
+  const heading = await screen.findByRole('heading', { name: 'Sign in with your passkey' })
+  fireEvent.click(screen.getByRole('button', { name: 'Use device passkey' }))
+  expect(screen.getByRole('status').textContent).toBe('Please wait…')
+  expect(document.activeElement).toBe(heading)
+  const fallback = screen.getByRole('button', { name: 'Use email code instead' })
+  fallback.focus()
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 1100)) })
+  expect(document.activeElement).toBe(fallback)
+})
+
+it('offers continuation after email sign-in on unsupported devices', async () => {
+  mocks.supports.mockReturnValue(false)
+  await authenticateWithCode()
+  expect(screen.queryByRole('button', { name: 'Set up passkey' })).toBeNull()
+  expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'You’re signed in' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Continue without a passkey' }))
+  expect(mocks.navigate).toHaveBeenCalledWith({ to: '/', replace: true })
 })
 
 it.each([true, false])('honors an invitation returnTo before household routing (household=%s)', async (hasHousehold) => {

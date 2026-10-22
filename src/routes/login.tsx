@@ -5,7 +5,7 @@ import { browserSupportsWebAuthn, startAuthentication, startRegistration, WebAut
 import { loginServerFn, verifyEmailCodeServerFn, beginPasskeyRegistrationServerFn, finishPasskeyRegistrationServerFn, beginPasskeyAuthenticationServerFn, finishPasskeyAuthenticationServerFn } from '../services/auth.api'
 import { resolvePostAuthDestination } from '../lib/post-auth-router'
 import { requestEmailCodeSchema } from '../lib/auth-inputs'
-import clay from '../styles/clay.module.css'
+import auth from '../styles/auth.module.css'
 import styles from './login.module.css'
 import { z } from 'zod'
 
@@ -48,8 +48,9 @@ export function LoginComponent() {
   const operation = useRef(0)
   const locked = useRef(false)
   const focusTarget = useRef<HTMLInputElement>(null)
-  const enrollmentHeading = useRef<HTMLHeadingElement>(null)
+  const taskHeading = useRef<HTMLHeadingElement>(null)
   const hadSession = useRef(!!session)
+  const task = household !== null ? (options ? 'registration' : 'enrollment') : options ? 'passkey' : request ? 'code' : 'email'
 
   useEffect(() => {
     setSupported(browserSupportsWebAuthn())
@@ -66,11 +67,11 @@ export function LoginComponent() {
       window.removeEventListener('offline', update)
     }
   }, [])
-  useEffect(() => { focusTarget.current?.focus() }, [request])
-  useEffect(() => { enrollmentHeading.current?.focus() }, [household])
   useEffect(() => {
-    // Header can sign out while optional setup is open. Do not leave that
-    // installation showing authenticated enrollment after context refreshes.
+    if (task === 'email' || task === 'code') focusTarget.current?.focus()
+    else taskHeading.current?.focus()
+  }, [task])
+  useEffect(() => {
     if (hadSession.current && !session) {
       operation.current++
       WebAuthnAbortService.cancelCeremony()
@@ -107,6 +108,9 @@ export function LoginComponent() {
     setCanCancel(false)
     setOptions(null)
     setError(null)
+    // Preparation can be cancelled without changing tasks. Wait for the email
+    // input to be enabled again before returning focus to it.
+    window.requestAnimationFrame(() => focusTarget.current?.focus())
   }
   const destination = (hasHousehold: boolean) => router.navigate(resolvePostAuthDestination({ ...search, hasHousehold }))
 
@@ -222,48 +226,70 @@ export function LoginComponent() {
   }
 
   const wait = Math.max(0, Math.ceil((retryAt - now) / 1000))
+  const { title, intro } = {
+    enrollment: {
+      title: 'You’re signed in',
+      intro: 'Next time, use a passkey to sign in with your device. Setup is optional; email codes still work.',
+    },
+    registration: {
+      title: 'Create your passkey',
+      intro: 'Confirm on your device to finish optional setup.',
+    },
+    passkey: {
+      title: 'Sign in with your passkey',
+      intro: 'Your device is ready to check for a passkey.',
+    },
+    code: {
+      title: 'Check your email',
+      intro: <>Enter the six-digit code sent to <strong>{email}</strong>. Read your email, then return to this app.</>,
+    },
+    email: {
+      title: 'Sign in to Eggspedition',
+      intro: 'Use an email code to reconnect to your household list.',
+    },
+  }[task]
   return (
-    <main id="main-content" className={styles.page}>
-      <div className={`${clay.card} ${styles.cardContent}`}>
-        <h1 className={`${clay.puffyText} ${styles.title}`}>Welcome Home! 🥚</h1>
-        {!online && <p role="status" className={styles.hint}>Sign-in needs an internet connection. Reconnect and continue here—no need to reinstall.</p>}
+    <main id="main-content" className={auth.page} tabIndex={-1}>
+      <div className={auth.column}>
+        <h1 ref={taskHeading} tabIndex={-1} className={auth.title}>{title}</h1>
+        <p id="task-hint" className={auth.intro}>{intro}</p>
+        {!online && <p role="status" className={auth.feedback}>Sign-in needs an internet connection. Reconnect and continue here—no need to reinstall.</p>}
         {household !== null ? (
-          <section className={styles.form} aria-label="Optional passkey setup">
-            <h2 ref={enrollmentHeading} tabIndex={-1}>You’re signed in</h2>
-            <p>Next time, a passkey can sign you in with your device. Setup is optional; email codes will still work.</p>
-            {supported && !options && <button className={clay.button} disabled={busy || !online} onClick={preparePasskey}>Set up passkey</button>}
-            {options && <button className={clay.button} disabled={busy || !online} onClick={usePasskey}>Create passkey on this device</button>}
-            <button className={clay.button} disabled={busy && !canCancel} onClick={() => { cancelPasskey(); void destination(household) }}>Continue without a passkey</button>
+          <section className={auth.form} aria-label="Optional passkey setup">
+            {supported && !options && <button className={auth.primary} disabled={busy || !online} onClick={preparePasskey}>Set up passkey</button>}
+            {options && <button className={auth.primary} disabled={busy || !online} onClick={usePasskey}>Create passkey on this device</button>}
+            <button className={supported ? auth.secondary : auth.primary} disabled={busy && !canCancel} onClick={() => { cancelPasskey(); void destination(household) }}>Continue without a passkey</button>
           </section>
         ) : (
           <>
-            {!options && <form className={styles.form} noValidate onSubmit={request ? verifyCode : sendCode}>
+            {!options && <form className={auth.form} noValidate onSubmit={request ? verifyCode : sendCode}>
               {request ? <>
-                <p id="code-hint">Enter the code sent to <strong>{email}</strong>. Read your email, then return to this app.</p>
-                <label htmlFor="sign-in-code" className={styles.label}>Six-digit code</label>
-                <input ref={focusTarget} id="sign-in-code" className={`${clay.input} ${styles.code}`} type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={6} pattern="[0-9]{6}" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} aria-describedby="code-hint" required disabled={busy} />
-                <p className={styles.hint}>{now >= request.expiresAt ? 'Your code has expired. Request a new code.' : 'The code expires 10 minutes after it was sent.'}</p>
-                <button className={clay.button} disabled={busy || !online || code.length !== 6}>Verify code</button>
-                <button type="button" className={clay.button} disabled={busy || !online || wait > 0} onClick={() => void sendCode()}>{wait > 0 ? `Resend code in ${wait}s` : 'Resend code'}</button>
-                <button type="button" className={clay.button} disabled={busy} onClick={() => { setRequest(null); setCode(''); setError(null); setRetryAt(0) }}>Change email</button>
+                <div className={auth.field}>
+                  <label htmlFor="sign-in-code" className={auth.label}>Six-digit code</label>
+                  <input ref={focusTarget} id="sign-in-code" className={`${auth.input} ${styles.code}`} type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={6} pattern="[0-9]{6}" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} aria-describedby="task-hint code-expiry" required disabled={busy} />
+                </div>
+                <p id="code-expiry" className={auth.hint}>{now >= request.expiresAt ? 'Your code has expired. Request a new code.' : 'The code expires 10 minutes after it was sent.'}</p>
+                <button className={auth.primary} disabled={busy || !online || code.length !== 6}>Verify code</button>
+                <button type="button" className={auth.secondary} disabled={busy || !online || wait > 0} onClick={() => void sendCode()}>{wait > 0 ? `Resend code in ${wait}s` : 'Resend code'}</button>
+                <button type="button" className={auth.secondary} disabled={busy} onClick={() => { setRequest(null); setCode(''); setError(null); setRetryAt(0) }}>Change email</button>
               </> : <>
-                <p>Sign in here to reconnect to your household list.</p>
-                <label htmlFor="sign-in-email" className={styles.label}>Your email</label>
-                <input ref={focusTarget} id="sign-in-email" type="email" autoComplete="email" className={clay.input} placeholder="eggs@family.com" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={busy} />
-                <button className={clay.button} disabled={busy || !online || wait > 0}>{wait > 0 ? `Send code in ${wait}s` : 'Send email code'}</button>
+                <div className={auth.field}>
+                  <label htmlFor="sign-in-email" className={auth.label}>Your email</label>
+                  <input ref={focusTarget} id="sign-in-email" type="email" autoComplete="email" className={auth.input} placeholder="eggs@family.com" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={busy} />
+                </div>
+                <button className={auth.primary} disabled={busy || !online || wait > 0}>{wait > 0 ? `Send code in ${wait}s` : 'Send email code'}</button>
               </>}
             </form>}
-            {supported && !options && !request && <button className={`${clay.button} ${styles.passkey}`} disabled={busy || !online} onClick={preparePasskey}>Sign in with a passkey</button>}
-            {options && <div className={styles.form}>
-              <p>Your device is ready to check for a passkey.</p>
-              <button className={clay.button} disabled={busy || !online} onClick={usePasskey}>Use device passkey</button>
-              <button className={clay.button} disabled={busy && !canCancel} onClick={cancelPasskey}>Use email code instead</button>
+            {supported && !options && !request && <button className={auth.secondary} disabled={busy || !online} onClick={preparePasskey}>Sign in with a passkey</button>}
+            {options && <div className={auth.form}>
+              <button className={auth.primary} disabled={busy || !online} onClick={usePasskey}>Use device passkey</button>
+              <button className={auth.secondary} disabled={busy && !canCancel} onClick={cancelPasskey}>Use email code instead</button>
             </div>}
-            {canCancel && !options && <button className={clay.button} onClick={cancelPasskey}>Use email code instead</button>}
+            {canCancel && !options && <button className={auth.secondary} onClick={cancelPasskey}>Use email code instead</button>}
           </>
         )}
-        {busy && <p role="status" className={styles.hint}>Please wait…</p>}
-        {error && <p role="alert" className={styles.error}>{error}</p>}
+        {busy && <p role="status" className={auth.feedback}>Please wait…</p>}
+        {error && <p role="alert" className={auth.error}>{error}</p>}
       </div>
     </main>
   )

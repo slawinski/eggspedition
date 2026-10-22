@@ -139,6 +139,22 @@ export default function Header() {
     await router.invalidate({ sync: true })
   }
 
+  if (/^\/(?:login|api\/auth\/verify)\/?$/.test(pathname)) {
+    return (
+      <header className={styles.header}>
+        <nav className={`${styles.nav} ${styles.authNav}`} aria-label="Authentication">
+          <div>
+            <Link to="/" className={`${styles.logoLink} ${styles.authLogo}`}>
+              <ShoppingBasket className={styles.logoIcon} aria-hidden="true" />
+              <span className={styles.logoText}>Eggspedition</span>
+            </Link>
+          </div>
+          <ThemeToggle />
+        </nav>
+      </header>
+    )
+  }
+
   return (
     <header className={styles.header}>
       <nav className={styles.nav}>
