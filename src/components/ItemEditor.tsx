@@ -315,8 +315,8 @@ export default function ItemEditor({
       ['grocery-items-grouped'],
       ['household-logs', session?.householdId ?? ''],
     ],
-    commandFactory: (result, _vars) => {
-      const updated = result as GroceryItem
+    commandFactory: (_result, vars) => {
+      const updated = { ...item, ...vars.data }
       const previousSnapshot = toItemSnapshot(item)
       const newSnapshot = toItemSnapshot(updated)
       return {
