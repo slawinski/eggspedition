@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile, access, symlink } from 'node:fs/promises'
+import { mkdtemp, readFile, rm, writeFile, access, symlink, copyFile, mkdir } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -41,7 +41,7 @@ it('runs every selected check in order with isolated configuration and explicit 
     expect(root).not.toBe(cwd)
     expect(await readFile(join(root, '.env.schema'), 'utf8')).toContain('@generateTypes')
     if (args.includes('--config')) {
-      expect(await readFile(args[args.indexOf('--config') + 1], 'utf8')).toContain('envDir: false')
+      expect(await readFile(args[args.indexOf('--config') + 1], 'utf8')).toContain('createVerificationConfig as default')
     }
     expect(args.slice(args.indexOf('--') + 1, args.indexOf('--') + (options.env.NODE_ENV === 'development' ? 2 : 3)))
       .toEqual(options.env.NODE_ENV === 'development' ? ['node'] : ['/pinned/bun', '--no-env-file'])
@@ -101,29 +101,78 @@ it('runs a real fresh child with only the supplied environment and propagates it
   expect(await runCommand([process.env.VERIFY_BUN_RUNTIME ?? 'bun', '--no-env-file', script], { cwd, env: {} })).toBe(19)
 })
 
-it('uses real Varlock and Vite without reading fixture checkout dotenv files or writing types there', async () => {
+it.each([
+  { command: 'build', mode: 'production', isolated: true },
+  { command: 'serve', mode: 'development', isolated: true },
+  { command: 'serve', mode: 'test', isolated: true },
+  { command: 'build', mode: 'production', isolated: false },
+  { command: 'serve', mode: 'development', isolated: false },
+] as const)('checks real app/Nitro dotenv isolation=$isolated during $command ($mode)', async ({ command, mode, isolated }) => {
   const cwd = await checkout()
   await symlink(fileURLToPath(new URL('../node_modules', import.meta.url)), join(cwd, 'node_modules'), 'dir')
-  await writeFile(join(cwd, 'vite.config.ts'), 'export default {}')
+  await copyFile(fileURLToPath(new URL('../vite.config.ts', import.meta.url)), join(cwd, 'vite.config.ts'))
+  await writeFile(join(cwd, 'tsconfig.json'), JSON.stringify({ compilerOptions: {} }))
+  await mkdir(join(cwd, 'src/routes'), { recursive: true })
+  await writeFile(join(cwd, 'src/routes/__root.tsx'), 'export const Route = {}')
+  await writeFile(join(cwd, 'src/router.ts'), 'export const getRouter = () => ({})')
+  // build:before runs inside the real Nitro Vite initialization hook, not just the config factory.
+  await writeFile(join(cwd, 'nitro.config.mjs'), `export default {
+    hooks: { 'build:before': (nitro) => { globalThis.__verifyNitro = nitro; } }
+  }`)
   // Only synthetic fixtures are read by the test. The actual checkout dotenv files are never loaded.
   await writeFile(join(cwd, '.env'), 'VERIFY_CHECKOUT_SECRET=secret\nVITE_PRIVATE_TOKEN=secret\nDATABASE_URL=postgres://production\n')
-  await writeFile(join(cwd, '.env.production'), 'VITE_PRODUCTION_SECRET=secret\n')
+  for (const suffix of ['local', 'production', 'production.local', 'development', 'development.local', 'test', 'test.local']) {
+    await writeFile(join(cwd, `.env.${suffix}`), `VERIFY_${suffix.replaceAll('.', '_').toUpperCase()}_SECRET=secret\nVITE_${suffix.replaceAll('.', '_').toUpperCase()}_SECRET=secret\n`)
+  }
   const run = vi.fn(async (args: string[], options: { cwd: string; env: NodeJS.ProcessEnv }) => {
     const root = args[5]
     const config = args[args.indexOf('--config') + 1]
+    if (!isolated) {
+      // Control: ordinary dev/build must still load the synthetic checkout dotenv.
+      await writeFile(config, `export { default } from ${JSON.stringify(join(cwd, 'vite.config.ts'))};\n`)
+    }
     const probe = join(cwd, 'probe.mjs')
     await writeFile(probe, `
       import assert from 'node:assert/strict';
       import { resolveConfig } from 'vite';
       assert.equal(process.env.DATABASE_URL, ${JSON.stringify(database)});
       assert.equal(process.env.VERIFY_CHECKOUT_SECRET, undefined);
-      const config = await resolveConfig({ configFile: ${JSON.stringify(config)} }, 'build', 'production');
-      assert.equal(config.envDir, false);
-      assert.equal(config.env.VITE_PRIVATE_TOKEN, undefined);
-      assert.equal(config.env.VITE_PRODUCTION_SECRET, undefined);
+      const config = await resolveConfig({ root: ${JSON.stringify(cwd)}, configFile: ${JSON.stringify(config)} }, ${JSON.stringify(command)}, ${JSON.stringify(mode)});
+      const nitro = globalThis.__verifyNitro;
+      assert.ok(nitro, 'Nitro Vite build:before hook must actually run');
+      assert.equal(nitro.options.dev, ${command === 'serve'});
+      assert.equal(nitro.options.builder, 'vite');
+      assert.equal(nitro.options.preset, ${JSON.stringify(command === 'build' ? 'bun' : 'nitro-dev')});
+      const reflect = nitro.options.moduleSideEffects.find(path => path.endsWith('/node_modules/reflect-metadata/'));
+      assert.ok(reflect);
+      assert.ok(config.environments.nitro, 'Nitro environment hook must actually run');
+      const server = config.environments.nitro;
+      assert.equal(server.build.rollupOptions.treeshake.moduleSideEffects(reflect + 'Reflect.js'), true);
+      if (${command === 'build'}) {
+        assert.equal(server.resolve.noExternal, true, 'production server must remain bundled');
+        assert.equal(server.define['process.env.NODE_ENV'], '"production"');
+        assert.equal(server.build.rollupOptions.output.entryFileNames, 'index.mjs');
+      }
+      assert.equal(config.css.modules.generateScopedName, '[name]_[local]');
+      assert.ok(config.plugins.some((plugin) => plugin.name.includes('tanstack')));
+      assert.equal(process.env.DATABASE_URL, ${JSON.stringify(database)});
+      for (const key of ['VERIFY_CHECKOUT_SECRET', 'VITE_PRIVATE_TOKEN',
+        ...['LOCAL', 'PRODUCTION', 'PRODUCTION_LOCAL', 'DEVELOPMENT', 'DEVELOPMENT_LOCAL', 'TEST', 'TEST_LOCAL'].flatMap(suffix => ['VERIFY_' + suffix + '_SECRET', 'VITE_' + suffix + '_SECRET'])]) {
+        const active = ['VERIFY_CHECKOUT_SECRET', 'VITE_PRIVATE_TOKEN',
+          ...['LOCAL', ${JSON.stringify(mode.toUpperCase())}, ${JSON.stringify(mode.toUpperCase() + '_LOCAL')}].flatMap(suffix => ['VERIFY_' + suffix + '_SECRET', 'VITE_' + suffix + '_SECRET'])].includes(key);
+        const expected = !${isolated} && active ? 'secret' : undefined;
+        assert.equal(process.env[key], expected, key + ' in process.env');
+        assert.equal(config.env[key], key.startsWith('VITE_') ? expected : undefined, key + ' in Vite env');
+      }
+      assert.equal(config.envDir === false, ${isolated});
+      await nitro.close();
       process.exit(17);
     `)
-    const code = await runCommand([...args.slice(0, args.indexOf('--') + 3), probe], options)
+    // Vitest resolves the app config under Node; production tooling uses pinned Bun.
+    const launcher = mode === 'test'
+      ? [...args.slice(0, args.indexOf('--') + 1), process.execPath]
+      : args.slice(0, args.indexOf('--') + 3)
+    const code = await runCommand([...launcher, probe], options)
     expect(code).toBe(17)
     expect(await readFile(join(root, 'env.d.ts'), 'utf8')).toContain('DATABASE_URL')
     await expect(access(join(cwd, 'env.d.ts'))).rejects.toThrow()

@@ -32,7 +32,6 @@ export async function verify({
   const database = env.AUTH_TEST_DATABASE_URL
   if (!database?.trim()) throw new Error('AUTH_TEST_DATABASE_URL must explicitly name a disposable Postgres database; no DATABASE_URL fallback')
 
-  // Allowlist OS plumbing, not application settings, preload hooks, or home config.
   const childEnv: NodeJS.ProcessEnv = {}
   for (const key of ['PATH', 'TMPDIR', 'TMP', 'TEMP', 'SystemRoot', 'LANG', 'LC_ALL', 'TERM']) {
     if (env[key] !== undefined) childEnv[key] = env[key]
@@ -58,11 +57,10 @@ export async function verify({
     // Varlock's relative generateTypes output stays here, never in the checkout.
     await copyFile(join(cwd, '.env.schema'), join(root, '.env.schema'))
     const config = join(root, 'vite.config.mjs')
-    await writeFile(config, `import config from ${JSON.stringify(join(cwd, 'vite.config.ts'))};\nexport default { ...config, envDir: false };\n`)
+    await writeFile(config, `export { createVerificationConfig as default } from ${JSON.stringify(join(cwd, 'vite.config.ts'))};\n`)
     const stages: [string, string[]][] = [
       ['build', [join(cwd, 'node_modules/vite/bin/vite.js'), 'build', '--config', config]],
       ['typecheck', [join(cwd, 'node_modules/typescript/bin/tsc'), '--noEmit']],
-      // No path filter: includes maintained tests outside src, notably public/sw.test.ts.
       ['test', [join(cwd, 'node_modules/vitest/vitest.mjs'), 'run', '--config', config]],
       ['icons:check', [join(cwd, 'scripts/check-icons.ts')]],
       ['passkey smoke', [join(cwd, 'scripts/auth-passkey-smoke.ts'), '--production']],
@@ -90,7 +88,6 @@ export async function verify({
   }
 }
 
-// Vitest imports this module without starting verification recursively.
 if ((import.meta as ImportMeta & { main?: boolean }).main) {
   verify().then((code) => { process.exitCode = code }, (error) => {
     console.error(error)
