@@ -1,5 +1,9 @@
 {
   "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": [
+    "node_modules", "dist", "dist-ssr", ".output", ".nitro", ".tanstack", ".vinxi", ".wrangler",
+    "eggspedition-ux-audit", "eggspedition-alignment-rework-956deb5"
+  ],
   "compilerOptions": {
     "target": "ES2022",
     "jsx": "react-jsx",
