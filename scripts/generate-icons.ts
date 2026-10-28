@@ -1,6 +1,6 @@
 import sharp from 'sharp'
 import pngToIco from 'png-to-ico'
-import { readFile, writeFile, mkdir } from 'node:fs/promises'
+import { readFile, writeFile } from 'node:fs/promises'
 
 const publicDir = 'public'
 const sourceDir = 'scripts/icon-assets'
