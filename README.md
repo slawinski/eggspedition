@@ -49,10 +49,49 @@ bun --bun run build
 
 ## Testing
 
+### Full local and PR verification
+
+Use **Bun 1.3.11** (matching the Docker image) and **Node 22** on `PATH`. Bun runs the build and production passkey smoke; Node runs Vitest because the current Vitest dependency loader and mocks are incompatible with Bun. Install the committed dependency versions:
+
+```bash
+bun install --no-env-file --frozen-lockfile
+```
+
+Start an explicitly disposable Postgres database. For example, with Docker running:
+
+```bash
+docker run --name eggspedition-verify-db --rm -d \
+  -e POSTGRES_USER=verify -e POSTGRES_PASSWORD=verify \
+  -e POSTGRES_DB=eggspedition_verify -p 55432:5432 postgres:16-alpine
+docker exec eggspedition-verify-db pg_isready -U verify -d eggspedition_verify
+```
+
+Wait until the readiness command reports that Postgres is accepting connections, then run:
+
+```bash
+AUTH_TEST_DATABASE_URL=postgres://verify:verify@localhost:55432/eggspedition_verify bun --no-env-file run verify
+```
+
+The URL must include the disposable database's username and password when required. The database role must be able to create and drop schemas. Stop this example database with `docker stop eggspedition-verify-db` when finished.
+
+`verify` builds production output, checks TypeScript, runs the full Vitest suite (including service-worker and database tests), validates icons, and runs the production-bundled passkey smoke in a fresh Bun process. The first failed stage exits nonzero and is named in the output. Reproduce CI failures with this same command rather than changing your production configuration.
+
+Verification gives child processes disposable application values and an isolated copy of `.env.schema`; it does not use checkout dotenv files or inherited application credentials. Vite dotenv loading is disabled for verification. Email is mocked by the existing tests, and no production database, signing, SMTP, or deployment credentials are needed. Never supply a production database as `AUTH_TEST_DATABASE_URL`.
+
+### Required GitHub check
+
+`.github/workflows/ci.yml` runs on every PR targeting `main`, including docs-only PRs. Its workflow is named **CI** and its job is named **Verify**. Updating the PR cancels obsolete runs; the current revision needs its own passing result.
+
+For administrator setup, open **Settings → Branches → Add branch protection rule**, target `main`, enable **Require status checks to pass before merging**, and select **Verify** from the **GitHub Actions** source after its first run. Require the branch to be up to date before merging so the result applies to the current base. If using rulesets instead, select the equivalent required status check. Do not treat the workflow file alone as proof that enforcement is enabled; read back the repository setting after applying it.
+
+This check is a pre-merge gate, not a deployment gate. The existing SSH deployment still runs independently on pushes to `main`. Full container startup, schema-push preservation, real SMTP, and physical iOS/iPadOS acceptance remain separate release checks.
+
+### Focused checks
+
 This project uses [Vitest](https://vitest.dev/) for testing. Auth integration tests require an explicitly supplied disposable Postgres database and create isolated schemas; they never fall back to the application's `DATABASE_URL`. With a disposable local database running, run:
 
 ```bash
-AUTH_TEST_DATABASE_URL=postgres://localhost:5432/eggspedition_auth_test bun --bun run test
+AUTH_TEST_DATABASE_URL=postgres://localhost:5432/eggspedition_auth_test bun run test
 ```
 
 The Bun passkey smoke check verifies real signatures and a database key round-trip:
